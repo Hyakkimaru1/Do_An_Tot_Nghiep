@@ -1,0 +1,12 @@
+.myimg{
+    border: 5px solid blue;
+}
+
+#videoCanvas {
+    display: flex;
+    align-items: center;
+}
+
+#mycanvas {
+    position: absolute;
+}
