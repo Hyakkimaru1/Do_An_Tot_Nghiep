@@ -51,7 +51,7 @@ function snapPhoto() {
     photoContext.drawImage(video, 0, 0, photo.width, photo.height);
     //show(photo, sendBtn);
 }
-
+let value = 1;
 video.addEventListener('play',() => {
     const canvas = faceapi.createCanvasFromMedia(video);
     canvas.id = "mycanvas";
@@ -62,9 +62,31 @@ video.addEventListener('play',() => {
     setInterval(async () => {
         const detections = await faceapi.detectAllFaces(localVideo, new faceapi.TinyFaceDetectorOptions())
             .withFaceLandmarks()
-            .withFaceExpressions();
         const resizeDetections = faceapi.resizeResults(detections,displaySize);
         canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);
-        faceapi.draw.drawDetections(canvas,resizeDetections)
-    },100)
+        faceapi.draw.drawDetections(canvas,resizeDetections);
+        faceDetectLeftCheek();
+    },1000)
+    const faceDetectLeftCheek = async () => {
+        const landmarks = await faceapi.detectFaceLandmarks(video);
+        const landmarkPositions = landmarks.positions
+
+// or get the positions of individual contours,
+// only available for 68 point face ladnamrks (FaceLandmarks68)
+        const jawOutline = landmarks.getJawOutline()
+        const nose = landmarks.getNose()
+        const mouth = landmarks.getMouth()
+        const leftEye = landmarks.getLeftEye()
+        const rightEye = landmarks.getRightEye()
+        const leftEyeBbrow = landmarks.getLeftEyeBrow()
+        const rightEyeBrow = landmarks.getRightEyeBrow()
+        if (value===10)
+        {
+            return;
+        }
+        value++;
+        console.log(rightEye);
+        console.log(leftEye);
+    }
 })
+
