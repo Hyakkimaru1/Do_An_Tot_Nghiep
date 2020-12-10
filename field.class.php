@@ -52,7 +52,6 @@ class profile_field_myprofilefield extends profile_field_base {
   </div>
   
   <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
-  
   <script src="/user/profile/field/myprofilefield/face-api.js"></script>
   <script src="/user/profile/field/myprofilefield/script.js"></script>
 </script>');
