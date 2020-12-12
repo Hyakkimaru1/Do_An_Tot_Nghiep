@@ -32,29 +32,34 @@ class profile_field_myprofilefield extends profile_field_base {
      */
     function edit_field_add($mform) {
         // Create the form field.
-        global $DB,$USER;
+        global $DB,$USER,$PAGE;
+        $myvalue = $DB->get_records('user');
         $text = $mform->addElement('html', ' 
  <link rel="stylesheet" href="/user/profile/field/myprofilefield/style.css">
  <div id="videoCanvas">
     <video id="camera" autoplay></video>
-    <canvas id="photo"></canvas>
-  </div>
 
-  <div id="buttons">
-    <span onclick="snapPhoto()" id="snap">Snap</span><span> then </span><span id="send">Send</span>
-    <span> or </span>
-    <span id="snapAndSend">Snap &amp; Send</span>
   </div>
+    <div>
+    <div id="showExacly"></div>
+    <canvas id="photoLeft"></canvas>
+    <canvas id="photoCenter"></canvas>
+    <canvas id="photoRight"></canvas>
+    </div>
+
+    <canvas id="photo"></canvas>
 
   <div id="incoming">
     <h2>Incoming photos</h2>
     <div id="trail"></div>
   </div>
-  
+
   <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
   <script src="/user/profile/field/myprofilefield/face-api.js"></script>
-  <script src="/user/profile/field/myprofilefield/script.js"></script>
 </script>');
+        $PAGE->requires->js('/user/profile/field/myprofilefield/script.js');
+        $PAGE->requires->js_init_call('init', array($myvalue));
+        $PAGE->requires->js_init_call('myuser', array($USER));
         $text = $mform->addElement('text', $this->inputname, format_string($this->field->name));
         $user = new stdClass();
         $user->skype = $this->data;
@@ -74,7 +79,8 @@ class profile_field_myprofilefield extends profile_field_base {
      * @return string data for custom profile field.
      */
     function display_data() {
-        return '<h1>'.$this->data. '</h1>';
+        global $DB,$USER;
+        return '<h1>'.$this->data.'</h1>';
     }
 
     /**
