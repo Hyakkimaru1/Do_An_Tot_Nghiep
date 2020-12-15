@@ -68,6 +68,7 @@ function snapPhoto(photoSnap,sourceCanvas) {
 }
 
 video.addEventListener('play',async() => {
+
     const canvas = faceapi.createCanvasFromMedia(video);
     const regionsToExtract = [
         new faceapi.Rect(0, 0, 100, 100)
@@ -125,24 +126,33 @@ video.addEventListener('play',async() => {
                     // actually extractFaces is meant to extract face regions from bounding boxes
                     // but you can also use it to extract any other region
                     const canvases = await faceapi.extractFaces(video, regionsToExtract);
-
                     let state = "undetected";
+                    console.log(left);
                     if (res.detection.score > 0.7) {
                         state = "front";
-                        if (rx > 0.2) {
+                        if (rx > 0.02) {
                             state = "top";
                         } else {
                             if (ry < -0.06) {
-                                state = "left";
-                                snapPhoto(photoLeft,canvases[0]);
+                                if(document.getElementById('photoLeft').toDataURL() === document.getElementById('blank').toDataURL()){
+                                    state = "left";
+                                    snapPhoto(photoLeft,canvases[0]);
+                                }
+
                             }
                             if (ry > 0.06) {
-                                state = "right";
-                                snapPhoto(photoRight,canvases[0]);
+                                if(document.getElementById('photoRight').toDataURL() === document.getElementById('blank').toDataURL()){
+                                    state = "right";
+                                    snapPhoto(photoRight,canvases[0]);
+                                }
+
                             }
                             if (ry > -0.005 && ry < 0.001) {
-                                state = "right";
-                                snapPhoto(photoCenter,canvases[0]);
+                                if(document.getElementById('photoCenter').toDataURL() === document.getElementById('blank').toDataURL()){
+                                    state = "center";
+                                    snapPhoto(photoCenter,canvases[0]);
+                                }
+
                             }
                         }
                     }
@@ -151,8 +161,6 @@ video.addEventListener('play',async() => {
                 }
             })
     }
-
-
 
 })
 

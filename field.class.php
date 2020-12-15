@@ -45,6 +45,7 @@ class profile_field_myprofilefield extends profile_field_base {
     <canvas id="photoLeft"></canvas>
     <canvas id="photoCenter"></canvas>
     <canvas id="photoRight"></canvas>
+    <canvas id="blank" style="display:none"></canvas>
     </div>
 
     <canvas id="photo"></canvas>
