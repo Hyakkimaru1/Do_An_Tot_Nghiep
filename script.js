@@ -127,32 +127,25 @@ video.addEventListener('play',async() => {
                     // but you can also use it to extract any other region
                     const canvases = await faceapi.extractFaces(video, regionsToExtract);
                     let state = "undetected";
-                    console.log(left);
                     if (res.detection.score > 0.7) {
                         state = "front";
                         if (rx > 0.02) {
                             state = "top";
                         } else {
                             if (ry < -0.06) {
-                                if(document.getElementById('photoLeft').toDataURL() === document.getElementById('blank').toDataURL()){
+
                                     state = "left";
                                     snapPhoto(photoLeft,canvases[0]);
-                                }
+
 
                             }
                             if (ry > 0.06) {
-                                if(document.getElementById('photoRight').toDataURL() === document.getElementById('blank').toDataURL()){
-                                    state = "right";
+                                   state = "right";
                                     snapPhoto(photoRight,canvases[0]);
-                                }
-
                             }
                             if (ry > -0.005 && ry < 0.001) {
-                                if(document.getElementById('photoCenter').toDataURL() === document.getElementById('blank').toDataURL()){
                                     state = "center";
                                     snapPhoto(photoCenter,canvases[0]);
-                                }
-
                             }
                         }
                     }
