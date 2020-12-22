@@ -48,13 +48,6 @@ class profile_field_myprofilefield extends profile_field_base {
     <canvas id="blank" style="display:none"></canvas>
     </div>
 
-    <canvas id="photo"></canvas>
-
-  <div id="incoming">
-    <h2>Incoming photos</h2>
-    <div id="trail"></div>
-  </div>
-
   <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
   <script src="/user/profile/field/myprofilefield/face-api.js"></script>
 </script>');
