@@ -5,6 +5,20 @@ Promise.all([faceapi.nets.tinyFaceDetector.loadFromUri('/user/profile/field/mypr
     ]);
 
 
+let photoCenter = document.getElementById('photoCenter');
+const photoRight = document.getElementById('photoRight');
+const photoLeft = document.getElementById('photoLeft');
+const textCenter = document.getElementById('text-center');
+const textRight = document.getElementById('text-right');
+const textLeft = document.getElementById('text-left');
+const recapCenter = document.getElementById('recapture-center');
+const recapRight = document.getElementById('recapture-right');
+const recapLeft = document.getElementById('recapture-left');
+const buttonSubmit = document.getElementById('button-submit');
+
+
+
+
 // On this codelab, you will be streaming only video (video: true).
 const mediaStreamConstraints = {
     video: true,
@@ -17,7 +31,7 @@ function init(Y, initvariables){
 }
 function myuser(Y, initvariables){
     user = initvariables;
-    console.log(user);
+    // console.log(user);
 }
 
 // Video element where stream will be placed.
@@ -47,6 +61,53 @@ function handleClickOpenCam(){
     document.getElementById("dontshow").style.display= "block";
     navigator.mediaDevices.getUserMedia(mediaStreamConstraints)
         .then(gotLocalMediaStream).catch(handleLocalMediaStreamError);
+
+    var ctxCenter = photoCenter.getContext('2d');
+    var ctxLeft = photoLeft.getContext('2d');
+    var ctxRight = photoRight.getContext('2d');
+
+    var imgLeft = new Image();
+    var imgRight = new Image();
+    var imgCenter = new Image();
+
+    imgCenter.onload = function(){
+        ctxCenter.drawImage(imgCenter,0,0,photoCenter.width,photoCenter.height); // Or at whatever offset you like
+    };
+    imgLeft.onload = function(){
+        ctxLeft.drawImage(imgLeft,0,0,photoCenter.width,photoCenter.height); // Or at whatever offset you like
+    };
+    imgRight.onload = function(){
+        ctxRight.drawImage(imgRight,0,0,photoCenter.width,photoCenter.height); // Or at whatever offset you like
+    };
+    try {
+        axios({
+            method: 'get',
+            url: "http://127.0.0.1:5000/api/users/1",
+            // headers: {
+            //     Accept: 'application/json',
+            //     'Content-Type': 'multipart/form-data',
+            // },
+            // headers: { 'Content-Type': 'multipart/form-data' }
+        })
+            .then(function (response) {
+                // console.log('response1', response);
+                if (response.data.user.photo) {
+                    imgCenter.src = response.data.user.photo[0];
+                    imgLeft.src = response.data.user.photo[1];
+                    imgRight.src = response.data.user.photo[2];
+                }
+            });
+
+        // img.setAttribute('crossOrigin', '');
+        // imgCenter.src = 'https://cdn.sstatic.net/Sites/stackoverflow/company/img/logos/so/so-icon.svg?v=6e4af45f4d66';
+
+        textCenter.style.display = "none";
+        recapCenter.style.display="block";
+
+    }
+    catch (err) {
+        console.log("err111", err);
+    }
 }
 
 var video = document.getElementById('camera');
@@ -62,16 +123,8 @@ function grabWebCamVideo() {
         });
 }
 
-const photoCenter = document.getElementById('photoCenter');
-const photoRight = document.getElementById('photoRight');
-const photoLeft = document.getElementById('photoLeft');
-const textCenter = document.getElementById('text-center');
-const textRight = document.getElementById('text-right');
-const textLeft = document.getElementById('text-left');
-const recapCenter = document.getElementById('recapture-center');
-const recapRight = document.getElementById('recapture-right');
-const recapLeft = document.getElementById('recapture-left');
-const buttonSubmit = document.getElementById('button-submit');
+
+
 
 function snapPhoto(photoSnap,sourceCanvas) {
     const photoContext = photoSnap.getContext('2d');
@@ -112,6 +165,37 @@ function handleResetCenterPicture(){
 function handleSubmitPicture(){
     if ( !isCanvasBlank(photoRight) && !isCanvasBlank(photoLeft) && !isCanvasBlank(photoCenter)) {
         alert('Ảnh của bạn đã được lưu');
+    }
+
+    try{
+        const formData = new FormData();
+        const dataCenter = photoCenter.toDataURL('image/jpeg');
+        const dataLeft = photoLeft.toDataURL('image/jpeg');
+        const dataRight = photoRight.toDataURL('image/jpeg');
+
+        var blobC = dataURItoBlob(dataCenter);
+        var blobL = dataURItoBlob(dataLeft);
+        var blobR = dataURItoBlob(dataRight);
+        formData.append("file", blobC);
+        formData.append("file", blobL);
+        formData.append("file", blobR);
+
+        axios({
+            method: 'post',
+            url: "http://127.0.0.1:5000/api/users",
+            data: formData,
+            // headers: {
+            //     Accept: 'application/json',
+            //     'Content-Type': 'multipart/form-data',
+            // },
+            // headers: { 'Content-Type': 'multipart/form-data' }
+        })
+            .then(function (response) {
+                console.log('response1', response);
+            });
+    }
+    catch (e) {
+        console.log(e);
     }
 }
 
@@ -169,7 +253,9 @@ video.addEventListener("play", async () => {
                     }
                     if (ry > -0.002 && ry < 0.002) {
                         state = "center";
+
                         if (isCanvasBlank(photoCenter)){
+
                             textCenter.style.display = "none";
                             recapCenter.style.display="block";
                             snapPhoto(photoCenter, canvases[0]);
@@ -186,13 +272,19 @@ video.addEventListener("play", async () => {
         if (resizeDetections.length>0){
            const detection = resizeDetections[0].detection._box;
         }
-    },100)
-})
+    },100);
+});
 
 function isCanvasBlank(canvas) {
-    return !canvas.getContext('2d')
-        .getImageData(0, 0, canvas.width, canvas.height).data
-        .some(channel => channel !== 0);
+    try{
+        return !canvas.getContext('2d')
+            .getImageData(0, 0, canvas.width, canvas.height).data
+            .some(channel => channel !== 0);
+    }
+    catch (e) {
+        console.log(e);
+    }
+    return false;
 }
 
 function getTop(l) {
@@ -206,4 +298,24 @@ function getMeanPosition(l) {
         .map((a) => [a.x, a.y])
         .reduce((a, b) => [a[0] + b[0], a[1] + b[1]])
         .map((a) => a / l.length)
+}
+
+function dataURItoBlob (dataURI) {
+    // convert base64/URLEncoded data component to raw binary data held in a string
+    var byteString;
+    if (dataURI.split(',')[0].indexOf('base64') >= 0)
+        byteString = atob(dataURI.split(',')[1]);
+    else
+        byteString = unescape(dataURI.split(',')[1]);
+
+    // separate out the mime component
+    var mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+
+    // write the bytes of the string to a typed array
+    var ia = new Uint8Array(byteString.length);
+    for (var i = 0; i < byteString.length; i++) {
+        ia[i] = byteString.charCodeAt(i);
+    }
+
+    return new Blob([ia], {type: mimeString});
 }

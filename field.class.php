@@ -65,6 +65,7 @@ class profile_field_myprofilefield extends profile_field_base {
            
         </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
   <script src="/user/profile/field/myprofilefield/face-api.js"></script>
 </script>');
