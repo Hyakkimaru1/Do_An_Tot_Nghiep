@@ -34,6 +34,13 @@ class profile_field_myprofilefield extends profile_field_base {
         // Create the form field.
         global $DB,$USER,$PAGE;
         $myvalue = $DB->get_records('user');
+
+        $ch  = curl_init("http://4abc8cad03d1.ngrok.io/api/users/$USER->id");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HEADER, 0);
+        $data = curl_exec($ch);
+        curl_close($ch);
+
         $PAGE->requires->css("/user/profile/field/myprofilefield/style.css");
         $text = $mform->addElement('html', ' 
  <link rel="stylesheet" href="/user/profile/field/myprofilefield/style.css">
@@ -70,7 +77,7 @@ class profile_field_myprofilefield extends profile_field_base {
   <script src="/user/profile/field/myprofilefield/face-api.js"></script>
 </script>');
         $PAGE->requires->js('/user/profile/field/myprofilefield/mytest.js');
-        $PAGE->requires->js_init_call('init', array($myvalue));
+        $PAGE->requires->js_init_call('init', array($data));
         $PAGE->requires->js_init_call('myuser', array($USER));
        /* $text = $mform->addElement('text', $this->inputname, format_string($this->field->name));
         $user = new stdClass();
@@ -92,7 +99,7 @@ class profile_field_myprofilefield extends profile_field_base {
      */
     function display_data() {
         global $DB,$USER;
-        return '<h1>'.$this->data.'</h1>';
+        return '<h1>'.$USER->id.'</h1>';
     }
 
     /**

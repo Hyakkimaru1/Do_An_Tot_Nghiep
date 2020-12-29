@@ -31,7 +31,7 @@ function init(Y, initvariables){
 }
 function myuser(Y, initvariables){
     user = initvariables;
-    // console.log(user);
+    console.log(user);
 }
 
 // Video element where stream will be placed.
@@ -79,35 +79,7 @@ function handleClickOpenCam(){
     imgRight.onload = function(){
         ctxRight.drawImage(imgRight,0,0,photoCenter.width,photoCenter.height); // Or at whatever offset you like
     };
-    try {
-        axios({
-            method: 'get',
-            url: "http://127.0.0.1:5000/api/users/1",
-            // headers: {
-            //     Accept: 'application/json',
-            //     'Content-Type': 'multipart/form-data',
-            // },
-            // headers: { 'Content-Type': 'multipart/form-data' }
-        })
-            .then(function (response) {
-                // console.log('response1', response);
-                if (response.data.user.photo) {
-                    imgCenter.src = response.data.user.photo[0];
-                    imgLeft.src = response.data.user.photo[1];
-                    imgRight.src = response.data.user.photo[2];
-                }
-            });
 
-        // img.setAttribute('crossOrigin', '');
-        // imgCenter.src = 'https://cdn.sstatic.net/Sites/stackoverflow/company/img/logos/so/so-icon.svg?v=6e4af45f4d66';
-
-        textCenter.style.display = "none";
-        recapCenter.style.display="block";
-
-    }
-    catch (err) {
-        console.log("err111", err);
-    }
 }
 
 var video = document.getElementById('camera');
@@ -162,40 +134,39 @@ function handleResetCenterPicture(){
     textCenter.style.display = "block";
 }
 
-function handleSubmitPicture(){
+async function handleSubmitPicture(){
     if ( !isCanvasBlank(photoRight) && !isCanvasBlank(photoLeft) && !isCanvasBlank(photoCenter)) {
-        alert('Ảnh của bạn đã được lưu');
-    }
+        try{
+            const formData = new FormData();
+            const dataCenter = photoCenter.toDataURL('image/jpeg');
+            const dataLeft = photoLeft.toDataURL('image/jpeg');
+            const dataRight = photoRight.toDataURL('image/jpeg');
 
-    try{
-        const formData = new FormData();
-        const dataCenter = photoCenter.toDataURL('image/jpeg');
-        const dataLeft = photoLeft.toDataURL('image/jpeg');
-        const dataRight = photoRight.toDataURL('image/jpeg');
+            var blobC = dataURItoBlob(dataCenter);
+            var blobL = dataURItoBlob(dataLeft);
+            var blobR = dataURItoBlob(dataRight);
+            formData.append("file", blobC);
+            formData.append("file", blobL);
+            formData.append("file", blobR);
+            formData.append("id", 3);
 
-        var blobC = dataURItoBlob(dataCenter);
-        var blobL = dataURItoBlob(dataLeft);
-        var blobR = dataURItoBlob(dataRight);
-        formData.append("file", blobC);
-        formData.append("file", blobL);
-        formData.append("file", blobR);
-
-        axios({
-            method: 'post',
-            url: "http://127.0.0.1:5000/api/users",
-            data: formData,
-            // headers: {
-            //     Accept: 'application/json',
-            //     'Content-Type': 'multipart/form-data',
-            // },
-            // headers: { 'Content-Type': 'multipart/form-data' }
-        })
-            .then(function (response) {
-                console.log('response1', response);
-            });
-    }
-    catch (e) {
-        console.log(e);
+            await axios({
+                method: 'post',
+                url: "http://4abc8cad03d1.ngrok.io/api/users",
+                data: formData,
+                // headers: {
+                //     Accept: 'application/json',
+                //     'Content-Type': 'multipart/form-data',
+                // },
+                // headers: { 'Content-Type': 'multipart/form-data' }
+            })
+                .then(function (response) {
+                    alert('Ảnh của bạn đã được lưu');
+                });
+        }
+        catch (e) {
+            alert('Lưu thất bại');
+        }
     }
 }
 
@@ -209,7 +180,6 @@ video.addEventListener("play", async () => {
     setInterval(async () =>{
         const res = await faceapi.detectSingleFace(video,new faceapi.TinyFaceDetectorOptions())
             .withFaceLandmarks()
-        const resizeDetections = faceapi.resizeResults(res,displaySize);
         if (res) {
             const eye_right = getMeanPosition(res.landmarks.getRightEye());
             const eye_left = getMeanPosition(res.landmarks.getLeftEye());
@@ -269,9 +239,6 @@ video.addEventListener("play", async () => {
 
         //faceapi.draw.drawDetections(canvas,resizeDetections);
         //faceapi.draw.drawFaceLandmarks(canvas,resizeDetections);
-        if (resizeDetections.length>0){
-           const detection = resizeDetections[0].detection._box;
-        }
     },100);
 });
 
