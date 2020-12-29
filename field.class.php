@@ -34,6 +34,7 @@ class profile_field_myprofilefield extends profile_field_base {
         // Create the form field.
         global $DB,$USER,$PAGE;
         $myvalue = $DB->get_records('user');
+        $PAGE->requires->css("/user/profile/field/myprofilefield/style.css");
         $text = $mform->addElement('html', ' 
  <link rel="stylesheet" href="/user/profile/field/myprofilefield/style.css">
  <div id="videoCanvas" style="margin-bottom: 1rem">
