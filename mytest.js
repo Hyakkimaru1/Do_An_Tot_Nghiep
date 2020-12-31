@@ -44,7 +44,7 @@ async function init(Y, initvariables){
 }
 
 function initImg(isShowImg){
-    if(isShowImg && isShowImg.user.photo){
+    if(isShowImg && isShowImg.user && isShowImg.user.photo ){
         imgCenter.src=isShowImg.user.photo[0];
         imgLeft.src=isShowImg.user.photo[1];
         imgRight.src=isShowImg.user.photo[2];
@@ -240,7 +240,7 @@ async function handleSubmitPicture(){
 
             await axios({
                 method: 'post',
-                url: "https://c0084e05dc61.ngrok.io/api/users",
+                url: "https://c8363e6eb33a.ngrok.io/api/user",
                 data: formData,
                 // headers: {
                 //     Accept: 'application/json',
@@ -248,9 +248,9 @@ async function handleSubmitPicture(){
                 // },
                 // headers: { 'Content-Type': 'multipart/form-data' }
             })
-                .then(function (response) {
-                    alert('Ảnh của bạn đã được lưu');
-                });
+            .then(function (response) {
+                alert('Ảnh của bạn đã được lưu');
+            });
         }
         catch (e) {
             alert('Lưu thất bại');

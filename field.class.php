@@ -35,7 +35,7 @@ class profile_field_myprofilefield extends profile_field_base {
         global $DB,$USER,$PAGE;
         $myvalue = $DB->get_records('user');
 
-        $ch  = curl_init("https://c0084e05dc61.ngrok.io/api/users/$USER->id");
+        $ch  = curl_init("https://c8363e6eb33a.ngrok.io/api/user/$USER->id");
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_HEADER, 0);
         $data = curl_exec($ch);
@@ -51,19 +51,19 @@ class profile_field_myprofilefield extends profile_field_base {
         <img width="500" id="loading" src="https://quynhon.flchotelsresorts.com/wp-content/themes/flchotel/assets/loading.gif">
         <div style="margin-top: 15px">
             <div class="button-container">
-                <img  id="img-left" alt="Girl in a jacket" width="100" height="100">
+                <img  id="img-left" alt="Your face" width="100" height="100">
                 <canvas style="border:1px solid" width="100" height="100" id="photoLeft"></canvas>
                 <p id="text-left" class="text">Ảnh trái</p>
                 <div id="recapture-left" onclick="handleResetLeftPicture()" class="button-recapture button-recapture-disable">Chụp lại</div>
             </div>
             <div class="button-container">
-                <img id="img-center" alt="Girl in a jacket" width="100" height="100">           
+                <img id="img-center" alt="Your face" width="100" height="100">           
                 <canvas style="border:1px solid" width="100" height="100" id="photoCenter"></canvas>
                 <p id="text-center" class="text">Ảnh giữa</p>
                 <div id="recapture-center" onclick="handleResetCenterPicture()" class="button-recapture button-recapture-disable">Chụp lại</div>
             </div>
             <div class="button-container">
-                <img id="img-right" alt="Girl in a jacket" width="100" height="100">           
+                <img id="img-right" alt="Your face" width="100" height="100">           
                 <canvas style="border:1px solid" width="100" height="100" id="photoRight"></canvas>
                 <p id="text-right" class="text">Ảnh phải</p>
                 <div id="recapture-right" onclick="handleResetRightPicture()" class="button-recapture button-recapture-disable">Chụp lại</div>
@@ -101,8 +101,21 @@ class profile_field_myprofilefield extends profile_field_base {
      * @return string data for custom profile field.
      */
     function display_data() {
-        global $DB,$USER;
-        return '<h1>'.$USER->id.'</h1>';
+        global $USER;
+        $ch  = curl_init("https://c8363e6eb33a.ngrok.io/api/user/$USER->id");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HEADER, 0);
+        $data = json_decode(curl_exec($ch),true);
+        curl_close($ch);
+        if ( $data && isset($data['user']) ) {
+            return '<div>
+                <div>Ảnh khuôn mặt của bạn</div>
+                <img id="img-right" src='.$data["user"]["photo"][0].' alt="Your face" width="100" height="100">  
+                <img id="img-right" src='.$data["user"]["photo"][1].' alt="Your face" width="100" height="100">  
+                <img id="img-right" src='.$data["user"]["photo"][2].' alt="Your face" width="100" height="100">                
+        </div>';
+        }
+        return '<div>Bạn chưa thêm ảnh khuôn mặt!!!</div>';
     }
 
     /**
