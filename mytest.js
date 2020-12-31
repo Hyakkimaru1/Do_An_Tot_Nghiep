@@ -16,6 +16,9 @@ const recapRight = document.getElementById('recapture-right');
 const recapLeft = document.getElementById('recapture-left');
 const buttonSubmit = document.getElementById('button-submit');
 
+const imgCenter = document.getElementById('img-center');
+const imgLeft = document.getElementById('img-left');
+const imgRight = document.getElementById('img-right');
 
 
 
@@ -25,10 +28,58 @@ const mediaStreamConstraints = {
 };
 
 var initvalues,user;
-function init(Y, initvariables){
-    initvalues = initvariables;
-    console.log(initvalues);
+async function init(Y, initvariables){
+    try{
+        initvalues = await JSON.parse(initvariables);
+        console.log("initvalues",initvalues);
+        console.log("initvalues",initvalues.user);
+    }
+    catch (e) {
+        console.log(e);
+        initvalues=null;
+    }
+    initImg(initvalues);
+
+
 }
+
+function initImg(isShowImg){
+    if(isShowImg && isShowImg.user.photo){
+        imgCenter.src=isShowImg.user.photo[0];
+        imgLeft.src=isShowImg.user.photo[1];
+        imgRight.src=isShowImg.user.photo[2];
+
+    }
+    else{
+
+    showImgOrCanvas(false);
+
+    }
+}
+
+function showImgOrCanvas(isShowImg){
+    let img = "none",canvas="none";
+    if(isShowImg){
+        img="block";
+    }
+    else {
+        canvas="block";
+    }
+    imgCenter.style.display=img;
+    imgLeft.style.display=img;
+    imgRight.style.display=img;
+    photoCenter.style.display=canvas;
+    photoLeft.style.display=canvas;
+    photoRight.style.display=canvas;
+
+    textCenter.style.display = canvas;
+    textLeft.style.display = canvas;
+    textRight.style.display = canvas;
+    recapCenter.style.display=img;
+    recapLeft.style.display=img;
+    recapRight.style.display=img;
+}
+
 function myuser(Y, initvariables){
     user = initvariables;
     console.log(user);
@@ -80,6 +131,32 @@ function handleClickOpenCam(){
         ctxRight.drawImage(imgRight,0,0,photoCenter.width,photoCenter.height); // Or at whatever offset you like
     };
 
+    // try {
+    //     axios({
+    //         method: 'get',
+    //         url: "http://127.0.0.1:5000/api/users/1",
+    //
+    //     })
+    //         .then(function (response) {
+    //             // console.log('response1', response);
+    //             if (response.data.user.photo) {
+    //                 imgCenter.src = response.data.user.photo[0];
+    //                 imgLeft.src = response.data.user.photo[1];
+    //                 imgRight.src = response.data.user.photo[2];
+    //             }
+    //         });
+    //
+    //     // img.setAttribute('crossOrigin', '');
+    //     // imgCenter.src = 'https://cdn.sstatic.net/Sites/stackoverflow/company/img/logos/so/so-icon.svg?v=6e4af45f4d66';
+    //
+    //     textCenter.style.display = "none";
+    //     recapCenter.style.display="block";
+    //
+    // }
+    // catch (err) {
+    //     console.log("err111", err);
+    // }
+
 }
 
 var video = document.getElementById('camera');
@@ -108,30 +185,41 @@ function snapPhoto(photoSnap,sourceCanvas) {
 }
 
 function handleResetPicture(){
+    showImgOrCanvas(false);
     photoCenter.getContext('2d').clearRect(0, 0, photoCenter.width, photoCenter.height);
     photoRight.getContext('2d').clearRect(0, 0, photoRight.width, photoRight.height);
     photoLeft.getContext('2d').clearRect(0, 0, photoLeft.width, photoLeft.height);
     textCenter.style.display = "block";
     textRight.style.display = "block";
     textLeft.style.display = "block";
+
 }
 
 function handleResetLeftPicture(){
+    imgLeft.style.display="none";
+    photoLeft.style.display="block";
     buttonSubmit.classList.add("button-disable");
     photoLeft.getContext('2d').clearRect(0, 0, photoLeft.width, photoLeft.height);
     textLeft.style.display = "block";
+
 }
 
 function handleResetRightPicture(){
+    imgRight.style.display="none";
+    photoRight.style.display="block";
     buttonSubmit.classList.add("button-disable");
     photoRight.getContext('2d').clearRect(0, 0, photoLeft.width, photoLeft.height);
     textRight.style.display = "block";
+
 }
 
 function handleResetCenterPicture(){
+    imgCenter.style.display="none";
+    photoCenter.style.display="block";
     buttonSubmit.classList.add("button-disable");
     photoCenter.getContext('2d').clearRect(0, 0, photoLeft.width, photoLeft.height);
     textCenter.style.display = "block";
+
 }
 
 async function handleSubmitPicture(){
@@ -148,11 +236,11 @@ async function handleSubmitPicture(){
             formData.append("file", blobC);
             formData.append("file", blobL);
             formData.append("file", blobR);
-            formData.append("id", 3);
+            formData.append("id", parseInt(user.id));
 
             await axios({
                 method: 'post',
-                url: "http://4abc8cad03d1.ngrok.io/api/users",
+                url: "https://c0084e05dc61.ngrok.io/api/users",
                 data: formData,
                 // headers: {
                 //     Accept: 'application/json',

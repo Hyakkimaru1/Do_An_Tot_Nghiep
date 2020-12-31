@@ -2,6 +2,10 @@
     border: 5px solid blue;
 }
 
+#img-center{
+
+}
+
 #videoCanvas {
     display: flex;
     align-items: center;
@@ -35,7 +39,14 @@
     display: inline-block;
 }
 
+.button-container>img{
+    display: block;
+}
+.button-container>canvas{
+    display: none;
+}
 .text{
+    display: none;
     position: absolute;
     top: 50%;
     left: 0;
@@ -45,6 +56,7 @@
 }
 
 .button-recapture{
+    display: block;
     position: absolute;
     top: 50%;
     left: 50%;
@@ -54,7 +66,6 @@
     background-color: #0a78d1;
     color: white;
     padding: 5px;
-    display: none;
     cursor: pointer;
 }
 
