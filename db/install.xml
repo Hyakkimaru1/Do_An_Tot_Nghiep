@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<XMLDB PATH = 'local/wsgetreports/db' VERSION = '2020073000'
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
+        COMMENT="This is the required database tables for this plugin">
+
+    <TABLES>
+        <TABLE NAME="attendance" COMMENT="attendance table">
+            <FIELDS>
+                <FIELD NAME="id" SEQUENCE="true" TYPE="int" LENGTH="10" NOTNULL="true"/>
+                <FIELD NAME="classid" SEQUENCE="false" TYPE="text" NOTNULL="true"/>
+                <FIELD NAME="room" SEQUENCE="false" TYPE="text" NOTNULL="true"/>
+                <FIELD NAME="period" SEQUENCE="false" TYPE="text" NOTNULL="true" />
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+            </KEYS>
+        </TABLE>
+        <TABLE NAME="schedule" COMMENT="schedule table">
+            <FIELDS>
+                <FIELD NAME="id" SEQUENCE="true" TYPE="int" LENGTH="10" NOTNULL="true"/>
+                <FIELD NAME="attendanceid" SEQUENCE="false" TYPE="int" LENGTH="10" NOTNULL="true" />
+                <FIELD NAME="time" SEQUENCE="false" TYPE="text" NOTNULL="true"/>
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id" />
+                <KEY NAME="foreign_schedule_attendance" TYPE="foreign" FIELDS="attendanceid"
+                     REFTABLE="attendance" REFFIELDS="id"/>
+            </KEYS>
+        </TABLE>
+        <TABLE NAME="report" COMMENT="report table">
+            <FIELDS>
+                <FIELD NAME="id" SEQUENCE="true" TYPE="int" LENGTH="10" NOTNULL="true" />
+                <FIELD NAME="studentid" SEQUENCE="false" TYPE="text" NOTNULL="true"/>
+                <FIELD NAME="classid" SEQUENCE="false" TYPE="text" NOTNULL="true"/>
+                <FIELD NAME="scheduleid" SEQUENCE="false" TYPE="int" LENGTH="10" NOTNULL="true"/>
+                <FIELD NAME="timein" SEQUENCE="false" TYPE="datetime" NOTNULL="false"/>
+                <FIELD NAME="timeout" SEQUENCE="false" TYPE="datetime" NOTNULL="false"/>
+                <FIELD NAME="method" SEQUENCE="false" TYPE="int" LENGTH="1" NOTNULL="true"/>
+
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+                <KEY NAME="foreign_report_schedule" TYPE="foreign" FIELDS="scheduleid"
+                     REFTABLE="schedule" REFFIELDS="id"/>
+            </KEYS>
+        </TABLE>
+    </TABLES>
+
+</XMLDB>
