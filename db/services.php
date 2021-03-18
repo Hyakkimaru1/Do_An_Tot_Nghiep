@@ -41,4 +41,20 @@ $functions = array(
         'type' => 'read',
         'capabilities' => '',
     ),
+    'local_wsgetreports_get_roles' => array(
+        'classname' => 'local_wsgetreports_external',
+        'methodname' => 'get_roles',
+        'classpath' => 'local/wsgetreports/externallib.php',
+        'description' => 'Get roles. If you give over empty lists, all roles will be returned.',
+        'type' => 'read',
+        'capabilities' => '',
+   ),
+   'local_wsgetreports_get_schedules' => array(
+           'classname' => 'local_wsgetreports_external',
+           'methodname' => 'get_schedules',
+           'classpath' => 'local/wsgetreports/externallib.php',
+           'description' => 'Get schedule.',
+           'type' => 'read',
+           'capabilities' => '',
+      ),
 );
