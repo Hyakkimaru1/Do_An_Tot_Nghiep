@@ -17,15 +17,15 @@
 /**
  * Web service definitions for local_wsgetroles
  *
- * @package    local_wsgetroles
- * @copyright  2020 corvus albus
+ * @package    local_wsgetreports
+ * @copyright  Copyleft
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
 $functions = array(
-    'get_a_report_by_ids' => array(
+    'local_wsgetreports_get_a_report_by_ids' => array(
         'classname' => 'local_wsgetreports_external',
         'methodname' => 'get_a_report',
         'classpath' => 'local/wsgetreports/externallib.php',
@@ -33,11 +33,35 @@ $functions = array(
         'type' => 'read',
         'capabilities' => '',
     ),
-    'get_reports_by_id' => array(
+    'local_wsgetreports_get_reports_by_id' => array(
         'classname' => 'local_wsgetreports_external',
         'methodname' => 'get_reports',
         'classpath' => 'local/wsgetreports/externallib.php',
         'description' => 'Get reports of students in a class base on the attendance ID',
+        'type' => 'read',
+        'capabilities' => '',
+    ),
+    'local_wsgetreports_update_status' => array(
+        'classname' => 'local_wsgetreports_external',
+        'methodname' => 'update_status',
+        'classpath' => 'local/wsgetreports/externallib.php',
+        'description' => 'Update checkin status of a student in the class and (optionally) timein, timeout',
+        'type' => 'write',
+        'capabilities' => '',
+    ),
+    'local_wsgetreports_get_roles' => array(
+        'classname' => 'local_wsgetreports_external',
+        'methodname' => 'get_roles',
+        'classpath' => 'local/wsgetreports/externallib.php',
+        'description' => 'Get roles. If you give over empty lists, all roles will be returned.',
+        'type' => 'read',
+        'capabilities' => '',
+    ),
+    'local_wsgetreports_get_schedules' => array(
+        'classname' => 'local_wsgetreports_external',
+        'methodname' => 'get_schedules',
+        'classpath' => 'local/wsgetreports/externallib.php',
+        'description' => 'Get schedules.',
         'type' => 'read',
         'capabilities' => '',
     ),

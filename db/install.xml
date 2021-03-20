@@ -21,7 +21,7 @@
             <FIELDS>
                 <FIELD NAME="id" SEQUENCE="true" TYPE="int" LENGTH="10" NOTNULL="true"/>
                 <FIELD NAME="attendanceid" SEQUENCE="false" TYPE="int" LENGTH="10" NOTNULL="true" />
-                <FIELD NAME="time" SEQUENCE="false" TYPE="text" NOTNULL="true"/>
+                <FIELD NAME="session" SEQUENCE="false" TYPE="int" LENGTH="10" NOTNULL="true"/>
             </FIELDS>
             <KEYS>
                 <KEY NAME="primary" TYPE="primary" FIELDS="id" />
@@ -33,11 +33,10 @@
             <FIELDS>
                 <FIELD NAME="id" SEQUENCE="true" TYPE="int" LENGTH="10" NOTNULL="true" />
                 <FIELD NAME="studentid" SEQUENCE="false" TYPE="text" NOTNULL="true"/>
-                <FIELD NAME="classid" SEQUENCE="false" TYPE="text" NOTNULL="true"/>
                 <FIELD NAME="scheduleid" SEQUENCE="false" TYPE="int" LENGTH="10" NOTNULL="true"/>
                 <FIELD NAME="timein" SEQUENCE="false" TYPE="datetime" NOTNULL="false"/>
                 <FIELD NAME="timeout" SEQUENCE="false" TYPE="datetime" NOTNULL="false"/>
-                <FIELD NAME="method" SEQUENCE="false" TYPE="int" LENGTH="1" NOTNULL="true"/>
+                <FIELD NAME="status" SEQUENCE="false" TYPE="int" LENGTH="1" NOTNULL="true"/>
 
             </FIELDS>
             <KEYS>
