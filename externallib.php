@@ -142,12 +142,12 @@ class local_wsgetreports_external extends external_api {
     }
 
     /**
-     * Parameter description for update_status().
+     * Parameter description for update_report().
      *
      * @return external_function_parameters.
      */
 
-    public static function update_status_parameters(): external_function_parameters
+    public static function update_report_parameters(): external_function_parameters
     {
         return new external_function_parameters(
             array(
@@ -155,13 +155,13 @@ class local_wsgetreports_external extends external_api {
                 'scheduleid'  => new external_value(PARAM_INT, 'Schedule ID parameter'),
                 'timein' => new external_value(PARAM_TEXT, 'Checkin datetime',VALUE_OPTIONAL),
                 'timeout' => new external_value(PARAM_TEXT, 'Datetime when the student out',VALUE_OPTIONAL),
-                'newstatus'  => new external_value(PARAM_INT, 'New status number'),
+                'status'  => new external_value(PARAM_INT, 'New status number',VALUE_OPTIONAL),
             )
         );
     }
 
     /**
-     * Return roleinformation.
+     *
      *
      * This function will update status and (optionally) timein and timeout. If this student's record
      * is not found, it will create a new record in the report table.
@@ -170,19 +170,19 @@ class local_wsgetreports_external extends external_api {
      * @param int $scheduleid Schedule ID (required).
      * @param string $timein Datetime when the student checkin (can be null if not need to update).
      * @param string $timeout Datetime when the student out (can be null if not need to update).
-     * @param int $newstatus New status number (required).
+     * @param int $status New status number (can be null if not need to update).
      * @return array
      * @throws invalid_parameter_exception|dml_exception
      */
 
-    public static function update_status(string $studentid, int $scheduleid, string $timein, string $timeout, int $newstatus): array
+    public static function update_report(string $studentid, int $scheduleid, string $timein, string $timeout, int $status): array
     {
-        $params = self::validate_parameters(self::update_status_parameters(), array(
+        $params = self::validate_parameters(self::update_report_parameters(), array(
                 'studentid' => $studentid,
                 'scheduleid' => $scheduleid,
                 'timein' => $timein,
                 'timeout' => $timeout,
-                'newstatus' => $newstatus
+                'status' => $status
             )
         );
 
@@ -199,7 +199,7 @@ class local_wsgetreports_external extends external_api {
         {
 
             $data = (object) array('studentid'=>$studentid,'scheduleid'=>$scheduleid,
-                'timein'=>null,'timeout'=>null, 'status'=>$newstatus);
+                'timein'=>null,'timeout'=>null, 'status'=>null);
             if ($timein)
             {
                 $data->timein = $timein;
@@ -207,6 +207,10 @@ class local_wsgetreports_external extends external_api {
             if ($timeout)
             {
                 $data->timeout = $timeout;
+            }
+            if ($status)
+            {
+                $data->status = $status;
             }
             if ($DB->insert_record('report',$data))
             {
@@ -217,7 +221,7 @@ class local_wsgetreports_external extends external_api {
             }
         }
         else {
-            $data = (object) array('id'=>$result->id,'status'=>$newstatus,'timein'=>$result->timein,
+            $data = (object) array('id'=>$result->id,'status'=>$result->status,'timein'=>$result->timein,
                 'timeout'=>$result->timeout);
             if ($timein)
             {
@@ -226,6 +230,10 @@ class local_wsgetreports_external extends external_api {
             if ($timeout)
             {
                 $data->timeout = $timeout;
+            }
+            if ($status)
+            {
+                $data->status = $status;
             }
             if ($DB->update_record('report',$data)) {
                 $return['message'] = "Updated the status successfully";
@@ -237,7 +245,7 @@ class local_wsgetreports_external extends external_api {
         return $return;
     }
 
-    public static function update_status_returns(): external_single_structure
+    public static function update_report_returns(): external_single_structure
     {
         return new external_single_structure(
             array(
