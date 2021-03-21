@@ -163,7 +163,7 @@ class local_wsgetreports_external extends external_api {
     /**
      *
      *
-     * This function will update status and (optionally) timein and timeout. If this student's record
+     * This function will update (optionally) status, timein and timeout. If this student's record
      * is not found, it will create a new record in the report table.
      *
      * @param string $studentid Student ID (required).
@@ -214,10 +214,10 @@ class local_wsgetreports_external extends external_api {
             }
             if ($DB->insert_record('report',$data))
             {
-                $return['message'] = "Inserted record into the database successfully";
+                $return['message'] = "Inserted new record into the database successfully";
             }
             else {
-                $return['message'] = "Couldn't insert record into the database";
+                $return['message'] = "Couldn't insert new record into the database";
             }
         }
         else {
@@ -236,10 +236,10 @@ class local_wsgetreports_external extends external_api {
                 $data->status = $status;
             }
             if ($DB->update_record('report',$data)) {
-                $return['message'] = "Updated the status successfully";
+                $return['message'] = "Updated the report successfully";
             }
             else {
-                $return['message'] = "Couldn't update the status";
+                $return['message'] = "Couldn't update the report";
             }
         }
         return $return;
