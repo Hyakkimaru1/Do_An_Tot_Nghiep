@@ -62,20 +62,60 @@ function attendance_get_statuses($attid, $onlyvisible=true, $statusset = -1) {
     global $DB;
 
     // Set selector.
-    $params = array('aid' => $attid);
-    $setsql = '';
-    if ($statusset >= 0) {
-        $params['statusset'] = $statusset;
-        $setsql = ' AND setnumber = :statusset ';
-    }
+//    $params = array('aid' => $attid);
+//    $setsql = '';
+//    if ($statusset >= 0) {
+//        $params['statusset'] = $statusset;
+//        $setsql = ' AND setnumber = :statusset ';
+//    }
+//
+//    if ($onlyvisible) {
+//        $statuses = $DB->get_records_select('attendance_statuses', "attendanceid = :aid AND visible = 1 AND deleted = 0 $setsql",
+//                                            $params, 'setnumber ASC, grade DESC');
+//    } else {
+//        $statuses = $DB->get_records_select('attendance_statuses', "attendanceid = :aid AND deleted = 0 $setsql",
+//                                            $params, 'setnumber ASC, grade DESC');
+//    }
 
-    if ($onlyvisible) {
-        $statuses = $DB->get_records_select('attendance_statuses', "attendanceid = :aid AND visible = 1 AND deleted = 0 $setsql",
-                                            $params, 'setnumber ASC, grade DESC');
-    } else {
-        $statuses = $DB->get_records_select('attendance_statuses', "attendanceid = :aid AND deleted = 0 $setsql",
-                                            $params, 'setnumber ASC, grade DESC');
-    }
+    $statuses = [
+        (object)[ "id"=> "1",
+        "acronym"=> "C",
+        "description"=> "Chu dong",
+        "grade"=> "2.00",
+        "studentavailability"=> "0",
+        "setunmarked"=> "0",
+        "visible"=> "1",
+        "deleted"=> "0",
+        "setnumber"=>"0" ],
+        (object)[ "id"=> "2",
+        "acronym"=> "B",
+        "description"=> "Bi dong",
+        "grade"=> "2.00",
+        "studentavailability"=> "0",
+        "setunmarked"=> "0",
+        "visible"=> "1",
+        "deleted"=> "0",
+        "setnumber"=>"0" ],
+        (object)[ "id"=> "3",
+        "acronym"=> "T",
+        "description"=> "Tre",
+        "grade"=> "1.00",
+        "studentavailability"=> "0",
+        "setunmarked"=> "0",
+        "visible"=> "1",
+        "deleted"=> "0",
+        "setnumber"=>"0" ],
+        (object)[ "id"=> "4",
+        "acronym"=> "V",
+        "description"=> "Vang",
+        "grade"=> "0.00",
+        "studentavailability"=> "0",
+        "setunmarked"=> "0",
+        "visible"=> "1",
+        "deleted"=> "0",
+        "setnumber"=>"0" ],
+    ];
+
 
     return $statuses;
 }
@@ -780,6 +820,8 @@ function attendance_construct_sessions_data_for_add($formdata, mod_attendance_st
                     $sess->includeqrcode = 0;
                     $sess->rotateqrcode = 0;
                     $sess->rotateqrcodesecret = '';
+                    //hd981
+                    $sess->roomid = $formdata->room;
 
                     if (!empty($formdata->usedefaultsubnet)) {
                         $sess->subnet = $att->subnet;
@@ -856,6 +898,8 @@ function attendance_construct_sessions_data_for_add($formdata, mod_attendance_st
         $sess->includeqrcode = 0;
         $sess->rotateqrcode = 0;
         $sess->rotateqrcodesecret = '';
+        //hd981
+        $sess->roomid = $formdata->room;
 
         if (!empty($formdata->usedefaultsubnet)) {
             $sess->subnet = $att->subnet;

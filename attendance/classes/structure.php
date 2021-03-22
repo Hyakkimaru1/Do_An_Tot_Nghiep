@@ -104,6 +104,11 @@ class mod_attendance_structure {
     /** @var float number [0..1], the threshold for student to be shown at low grade report */
     private $lowgradethreshold;
 
+    private $startime;
+    private $endtime;
+    private $room;
+
+
 
     /**
      * Initializes the attendance API instance using the data from DB
@@ -566,6 +571,9 @@ class mod_attendance_structure {
         $sess->descriptionformat = $formdata->sdescription['format'];
         $sess->calendarevent = empty($formdata->calendarevent) ? 0 : $formdata->calendarevent;
 
+        //hd981
+        $sess->room = $formdata->room;
+
         $sess->studentscanmark = 0;
         $sess->autoassignstatus = 0;
         $sess->studentpassword = '';
@@ -773,25 +781,6 @@ class mod_attendance_structure {
         $session->lasttakenby = $USER->id;
 
         $DB->update_record('attendance_sessions', $session);
-
-        //...
-//        $data = array("classID" => $this->course->id,
-//          "studentID" => $USER->id,
-//          "newStatus"=> false);
-//        $data_string = json_encode($data);
-//
-//        $curl = curl_init('http://example.api.com');
-//
-//        curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "POST");
-//        curl_setopt($curl, CURLOPT_POSTFIELDS, $data_string);
-//        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-//        curl_setopt($curl, CURLOPT_HTTPHEADER, array(
-//                'Content-Type: application/json',
-//                'Content-Length: ' . strlen($data_string))
-//        );
-//
-//        $result = curl_exec($curl);
-//        curl_close($curl);
 
         if ($this->grade != 0) {
             $this->update_users_grade(array_keys($sesslog));
@@ -1072,8 +1061,8 @@ class mod_attendance_structure {
      */
     public function get_session_log($sessionid) : array {
         global $DB;
-
-        return $DB->get_records('attendance_log', array('sessionid' => $sessionid), '', 'studentid,statusid,remarks,id,statusset');
+        return $DB->get_records('attendance_log', array('sessionid' => $sessionid), '', 'studentid,statusid,remarks,id');
+//        return $DB->get_records('attendance_log', array('sessionid' => $sessionid), '', 'studentid,statusid,remarks,id,statusset');
     }
 
     /**

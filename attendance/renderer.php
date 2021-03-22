@@ -757,10 +757,10 @@ class mod_attendance_renderer extends plugin_renderer_base {
 
         }
 
-        $table->head[] = get_string('remarks', 'attendance');
-        $table->align[] = 'center';
-        $table->size[] = '20px';
-        $table->attributes['class'] = 'generaltable takelist';
+//        $table->head[] = get_string('remarks', 'attendance');
+//        $table->align[] = 'center';
+//        $table->size[] = '20px';
+//        $table->attributes['class'] = 'generaltable takelist';
 
         // Show a 'select all' row of radio buttons.
         $row = new html_table_row();
@@ -983,6 +983,7 @@ class mod_attendance_renderer extends plugin_renderer_base {
             }
             $params = array(
                     'type'  => 'text',
+                'style' => 'display:none',
                     'name'  => 'remarks'.$user->id,
                     'maxlength' => 255);
             if (array_key_exists($user->id, $takedata->sessionlog)) {
@@ -1045,6 +1046,7 @@ class mod_attendance_renderer extends plugin_renderer_base {
             }
             $params = array(
                     'type'  => 'text',
+                    'style' => 'display:none',
                     'name'  => 'remarks'.$user->id.'sess'.$takedata->sessioninfo->id,
                     'maxlength' => 255);
             if (array_key_exists($user->id, $takedata->sessionlog)) {

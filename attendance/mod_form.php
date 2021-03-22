@@ -48,34 +48,33 @@ class mod_attendance_mod_form extends moodleform_mod {
         $mform->addElement('header', 'general', get_string('general', 'form'));
 
         $mform->addElement('text', 'name', get_string('name'), array('size' => '64'));
-        $mform->addElement('text', 'room', 'Room', array('size' => '64'));
-
-        $mform->addElement('date_selector', 'sessiondate', 'Date');
-
-        for ($i = 0; $i <= 23; $i++) {
-            $hours[$i] = sprintf("%02d", $i);
-        }
-        for ($i = 0; $i < 60; $i += 5) {
-            $minutes[$i] = sprintf("%02d", $i);
-        }
-
-        $sesendtime = array();
-        if (!right_to_left()) {
-            $sesendtime[] =& $mform->createElement('static', 'from', '', get_string('from', 'attendance'));
-            $sesendtime[] =& $mform->createElement('select', 'starthour', get_string('hour', 'form'), $hours, false, true);
-            $sesendtime[] =& $mform->createElement('select', 'startminute', get_string('minute', 'form'), $minutes, false, true);
-            $sesendtime[] =& $mform->createElement('static', 'to', '', get_string('to', 'attendance'));
-            $sesendtime[] =& $mform->createElement('select', 'endhour', get_string('hour', 'form'), $hours, false, true);
-            $sesendtime[] =& $mform->createElement('select', 'endminute', get_string('minute', 'form'), $minutes, false, true);
-        } else {
-            $sesendtime[] =& $mform->createElement('static', 'from', '', get_string('from', 'attendance'));
-            $sesendtime[] =& $mform->createElement('select', 'startminute', get_string('minute', 'form'), $minutes, false, true);
-            $sesendtime[] =& $mform->createElement('select', 'starthour', get_string('hour', 'form'), $hours, false, true);
-            $sesendtime[] =& $mform->createElement('static', 'to', '', get_string('to', 'attendance'));
-            $sesendtime[] =& $mform->createElement('select', 'endminute', get_string('minute', 'form'), $minutes, false, true);
-            $sesendtime[] =& $mform->createElement('select', 'endhour', get_string('hour', 'form'), $hours, false, true);
-        }
-        $mform->addGroup($sesendtime, 'sestime', 'Time', array(' '), true);
+//        $mform->addElement('text', 'room', 'Room', array('size' => '64'));
+//
+//
+//
+//        for ($i = 1; $i <= 12; $i++) {
+//            $hours[$i] = sprintf("%02d", $i);
+//        }
+//
+//        $mform->addElement('select', 'tiet', 'from', $hours);
+//
+//        $sesendtime = array();
+//        if (!right_to_left()) {
+//            $sesendtime[] =& $mform->createElement('static', 'from', '', get_string('from', 'attendance'));
+//            $sesendtime[] =& $mform->createElement('select', 'starthour', get_string('hour', 'form'), $hours, false, true);
+////            $sesendtime[] =& $mform->createElement('select', 'startminute', get_string('minute', 'form'), $minutes, false, true);
+//            $sesendtime[] =& $mform->createElement('static', 'to', '', get_string('to', 'attendance'));
+//            $sesendtime[] =& $mform->createElement('select', 'endhour', get_string('hour', 'form'), $hours, false, true);
+////            $sesendtime[] =& $mform->createElement('select', 'endminute', get_string('minute', 'form'), $minutes, false, true);
+//        } else {
+//            $sesendtime[] =& $mform->createElement('static', 'from', '', get_string('from', 'attendance'));
+////            $sesendtime[] =& $mform->createElement('select', 'startminute', get_string('minute', 'form'), $minutes, false, true);
+//            $sesendtime[] =& $mform->createElement('select', 'starthour', get_string('hour', 'form'), $hours, false, true);
+//            $sesendtime[] =& $mform->createElement('static', 'to', '', get_string('to', 'attendance'));
+////            $sesendtime[] =& $mform->createElement('select', 'endminute', get_string('minute', 'form'), $minutes, false, true);
+//            $sesendtime[] =& $mform->createElement('select', 'endhour', get_string('hour', 'form'), $hours, false, true);
+//        }
+//        $mform->addGroup($sesendtime, 'sestime', 'Tiết', array(' '), true);
 
 
         $mform->setType('name', PARAM_TEXT);

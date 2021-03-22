@@ -112,8 +112,9 @@ class attendance_tabs implements renderable {
         }
 
         if (has_capability('mod/attendance:changepreferences', $context)) {
-            $toprow[] = new tabobject(self::TAB_PREFERENCES, $this->att->url_preferences()->out(),
-                            get_string('statussetsettings', 'attendance'));
+            //hd981
+//            $toprow[] = new tabobject(self::TAB_PREFERENCES, $this->att->url_preferences()->out(),
+//                            get_string('statussetsettings', 'attendance'));
 
             if (get_config('attendance', 'enablewarnings')) {
                 $toprow[] = new tabobject(self::TAB_WARNINGS, $this->att->url_warnings()->out(),
@@ -121,8 +122,9 @@ class attendance_tabs implements renderable {
             }
         }
         if (has_capability('mod/attendance:managetemporaryusers', $context)) {
-            $toprow[] = new tabobject(self::TAB_TEMPORARYUSERS, $this->att->url_managetemp()->out(),
-                            get_string('tempusers', 'attendance'));
+            //hd981
+//            $toprow[] = new tabobject(self::TAB_TEMPORARYUSERS, $this->att->url_managetemp()->out(),
+//                            get_string('tempusers', 'attendance'));
         }
         if ($this->currenttab == self::TAB_UPDATE && has_capability('mod/attendance:manageattendances', $context)) {
             $toprow[] = new tabobject(self::TAB_UPDATE,
@@ -375,7 +377,45 @@ class attendance_take_data implements renderable {
         $this->groupmode = $att->get_group_mode();
         $this->cm = $att->cm;
 
-        $this->statuses = $att->get_statuses();
+//        $this->statuses = $att->get_statuses();
+        $this->statuses = [
+            (object)[ "id"=> "1",
+                "acronym"=> "C",
+                "description"=> "Chu dong",
+                "grade"=> "2.00",
+                "studentavailability"=> "0",
+                "setunmarked"=> "0",
+                "visible"=> "1",
+                "deleted"=> "0",
+                "setnumber"=>"0" ],
+            (object)[ "id"=> "2",
+                "acronym"=> "B",
+                "description"=> "Bi dong",
+                "grade"=> "2.00",
+                "studentavailability"=> "0",
+                "setunmarked"=> "0",
+                "visible"=> "1",
+                "deleted"=> "0",
+                "setnumber"=>"0" ],
+            (object)[ "id"=> "3",
+                "acronym"=> "T",
+                "description"=> "Tre",
+                "grade"=> "1.00",
+                "studentavailability"=> "0",
+                "setunmarked"=> "0",
+                "visible"=> "1",
+                "deleted"=> "0",
+                "setnumber"=>"0" ],
+            (object)[ "id"=> "4",
+                "acronym"=> "V",
+                "description"=> "Vang",
+                "grade"=> "0.00",
+                "studentavailability"=> "0",
+                "setunmarked"=> "0",
+                "visible"=> "1",
+                "deleted"=> "0",
+                "setnumber"=>"0" ],
+        ];
 
         $this->sessioninfo = $att->get_session_info($att->pageparams->sessionid);
         $this->updatemode = $this->sessioninfo->lasttaken > 0;

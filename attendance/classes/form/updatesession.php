@@ -80,6 +80,9 @@ class updatesession extends \moodleform {
             'preventsharediptime' => $sess->preventsharediptime,
             'includeqrcode' => $sess->includeqrcode,
             'rotateqrcode' => $sess->rotateqrcode,
+
+            //hd981
+            'room' => $sess->roomid,
         );
         if ($sess->subnet == $attendancesubnet) {
             $data['usedefaultsubnet'] = 1;
@@ -100,6 +103,7 @@ class updatesession extends \moodleform {
         $olddate = construct_session_full_date_time($sess->sessdate, $sess->duration);
         $mform->addElement('static', 'olddate', get_string('olddate', 'attendance'), $olddate);
 
+        $mform->addElement('text', 'room', 'Room', $data->room);
         attendance_form_sessiondate_selector($mform);
 
         // Show which status set is in use.

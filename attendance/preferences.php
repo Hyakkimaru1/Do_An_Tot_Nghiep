@@ -162,9 +162,9 @@ if (!empty($notification)) {
     echo $notification;
 }
 echo $output->heading(get_string('attendanceforthecourse', 'attendance').' :: '. format_string($course->fullname));
-echo $output->render($tabs);
-echo $OUTPUT->box(get_string('preferences_desc', 'attendance'), 'generalbox attendancedesc', 'notice');
-echo $output->render($setselector);
-echo $output->render($prefdata);
+//echo $output->render($tabs);
+//echo $OUTPUT->box(get_string('preferences_desc', 'attendance'), 'generalbox attendancedesc', 'notice');
+//echo $output->render($setselector);
+//echo $output->render($prefdata);
 
 echo $output->footer();

@@ -93,6 +93,10 @@ class mod_attendance_external extends external_api {
         $moduleinfo->intro = $params['intro'];
         $moduleinfo->introformat = FORMAT_HTML;
 
+        $moduleinfo->room = $params['room'];
+//        $moduleinfo->startime = (int)($params['tiet']);
+//        $moduleinfo->endtime = 3;
+
         $moduleinfo->section = 0;
         $moduleinfo->visible = 1;
         $moduleinfo->visibleoncoursepage = 1;
