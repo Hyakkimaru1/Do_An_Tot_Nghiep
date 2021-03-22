@@ -572,7 +572,7 @@ class mod_attendance_structure {
         $sess->calendarevent = empty($formdata->calendarevent) ? 0 : $formdata->calendarevent;
 
         //hd981
-        $sess->room = $formdata->room;
+        $sess->roomid = $formdata->room;
 
         $sess->studentscanmark = 0;
         $sess->autoassignstatus = 0;
