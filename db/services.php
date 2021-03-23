@@ -41,12 +41,12 @@ $functions = array(
         'type' => 'read',
         'capabilities' => '',
     ),
-    'local_wsgetreports_update_report' => array(
+    'local_wsgetreports_update_log' => array(
         'classname' => 'local_wsgetreports_external',
-        'methodname' => 'update_report',
+        'methodname' => 'update_log',
         'classpath' => 'local/wsgetreports/externallib.php',
         'description' => 'Update status, timein, timeout in the report table based on the student ID
-        and the schedule ID. If not need to update any field, leave this field null. If 
+        and the session ID. If not need to update any field, leave this field null. If 
         there is no record, it will create a new one',
         'type' => 'write',
         'capabilities' => '',

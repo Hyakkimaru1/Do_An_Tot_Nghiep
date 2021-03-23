@@ -142,19 +142,19 @@ class local_wsgetreports_external extends external_api {
     }
 
     /**
-     * Parameter description for update_report().
+     * Parameter description for update_log().
      *
      * @return external_function_parameters.
      */
 
-    public static function update_report_parameters(): external_function_parameters
+    public static function update_log_parameters(): external_function_parameters
     {
         return new external_function_parameters(
             array(
                 'studentid' => new external_value(PARAM_TEXT, 'Student ID parameter'),
-                'scheduleid'  => new external_value(PARAM_INT, 'Schedule ID parameter'),
-                'timein' => new external_value(PARAM_TEXT, 'Checkin datetime',VALUE_OPTIONAL,
-                'timeout' => new external_value(PARAM_TEXT, 'Datetime when the student out',VALUE_OPTIONAL),
+                'sessionid'  => new external_value(PARAM_INT, 'Schedule ID parameter'),
+                'timein' => new external_value(PARAM_INT, 'Checkin datetime',VALUE_OPTIONAL),
+                'timeout' => new external_value(PARAM_INT, 'Datetime when the student out',VALUE_OPTIONAL),
                 'status'  => new external_value(PARAM_INT, 'New status number',VALUE_OPTIONAL),
             )
         );
@@ -167,19 +167,19 @@ class local_wsgetreports_external extends external_api {
      * is not found, it will create a new record in the report table.
      *
      * @param string $studentid Student ID (required).
-     * @param int $scheduleid Schedule ID (required).
-     * @param string $timein Datetime when the student checkin (can be null if not need to update).
-     * @param string $timeout Datetime when the student out (can be null if not need to update).
+     * @param int $sessionid Session ID (required).
+     * @param int $timein Datetime when the student checkin (can be null if not need to update).
+     * @param int $timeout Datetime when the student out (can be null if not need to update).
      * @param int $status New status number (can be null if not need to update).
      * @return array
      * @throws invalid_parameter_exception|dml_exception
      */
 
-    public static function update_report(string $studentid, int $scheduleid, string $timein, string $timeout, int $status): array
+    public static function update_log(string $studentid, int $sessionid, int $timein, int $timeout, int $status): array
     {
-        $params = self::validate_parameters(self::update_report_parameters(), array(
+        $params = self::validate_parameters(self::update_log_parameters(), array(
                 'studentid' => $studentid,
-                'scheduleid' => $scheduleid,
+                'sessionid' => $sessionid,
                 'timein' => $timein,
                 'timeout' => $timeout,
                 'status' => $status
@@ -191,14 +191,14 @@ class local_wsgetreports_external extends external_api {
 
         $sql = "SELECT r.*
                 FROM {report} r 
-                WHERE r.studentid = :studentid AND r.scheduleid = :scheduleid";
-        $result = $DB->get_record_sql($sql,array('studentid'=>$studentid,'scheduleid'=>$scheduleid),IGNORE_MISSING);
+                WHERE r.studentid = :studentid AND r.sessionid = :sessionid";
+        $result = $DB->get_record_sql($sql,array('studentid'=>$studentid,'sessionid'=>$sessionid),IGNORE_MISSING);
 
         $return = array('message' => '');
         if ($result == false)
         {
 
-            $data = (object) array('studentid'=>$studentid,'scheduleid'=>$scheduleid,
+            $data = (object) array('studentid'=>$studentid,'sessionid'=>$sessionid,
                 'timein'=>null,'timeout'=>null, 'status'=>null);
             if ($timein)
             {
@@ -245,7 +245,7 @@ class local_wsgetreports_external extends external_api {
         return $return;
     }
 
-    public static function update_report_returns(): external_single_structure
+    public static function update_log_returns(): external_single_structure
     {
         return new external_single_structure(
             array(
