@@ -25,19 +25,19 @@
 defined('MOODLE_INTERNAL') || die();
 
 $functions = array(
-    'local_webservices_get_a_report_by_ids' => array(
+    'local_webservices_get_a_log_by_ids' => array(
         'classname' => 'local_webservices_external',
-        'methodname' => 'get_a_report',
+        'methodname' => 'get_a_log',
         'classpath' => 'local/webservices/externallib.php',
-        'description' => 'Get a report of a student in a class at a day',
+        'description' => 'Get a log of a student in a class at a day',
         'type' => 'read',
         'capabilities' => '',
     ),
-    'local_webservices_get_reports_by_id' => array(
+    'local_webservices_get_logs_by_id' => array(
         'classname' => 'local_webservices_external',
-        'methodname' => 'get_reports',
+        'methodname' => 'get_logs',
         'classpath' => 'local/webservices/externallib.php',
-        'description' => 'Get reports of students in a class base on the attendance ID',
+        'description' => 'Get attendance logs of students in a class base on the attendance ID',
         'type' => 'read',
         'capabilities' => '',
     ),

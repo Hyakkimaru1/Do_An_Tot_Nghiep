@@ -38,15 +38,15 @@ class local_webservices_external extends external_api {
     // Functionset for get_roles() ************************************************************************************************.
 
     /**
-     * Parameter description for get_roles().
+     * Parameter description for get_a_log().
      *
      * @return external_function_parameters.
      */
-    public static function get_a_report_parameters() {
+    public static function get_a_log_parameters() {
         return new external_function_parameters(
             array(
                 'studentid' => new external_value(PARAM_TEXT, 'student ID parameter'),
-                'scheduleid'  => new external_value(PARAM_INT, 'schedule ID parameter'),
+                'sessionid'  => new external_value(PARAM_INT, 'session ID parameter'),
             )
         );
     }
@@ -57,27 +57,27 @@ class local_webservices_external extends external_api {
      * This function returns roleid, rolename and roleshortname for all roles or for given roles.
      *
      * @param string $studentid Student ID.
-     * @param string $scheduleid Schedule ID.
-     * @return object The student's report.
+     * @param string $sessionid session ID.
+     * @return object The student's log.
      * @throws invalid_parameter_exception
      */
-    public static function get_a_report(string $studentid, string $scheduleid)
+    public static function get_a_log(string $studentid, string $sessionid)
     {
 
         // Validate parameters passed from web service.
-        $params = self::validate_parameters(self::get_a_report_parameters(), array(
+        $params = self::validate_parameters(self::get_a_log_parameters(), array(
             'studentid' => $studentid,
-            'scheduleid' => $scheduleid));
+            'sessionid' => $sessionid));
         global $DB;
 
-        $sql = "SELECT r.*, a.classid
-                  FROM {report} r
-            LEFT JOIN {schedule} s ON s.id = r.scheduleid
+        $sql = "SELECT l.*, a.course
+                  FROM {attendance_log} l
+            LEFT JOIN {attendance_session} s ON s.id = l.sessionid
             LEFT JOIN {attendance} a ON a.id = s.attendanceid
-             WHERE (r.studentid = :studentid AND r.scheduleid = :scheduleid)
-              ORDER BY r.id ASC";
+             WHERE (l.studentid = :studentid AND l.sessionid = :sessionid)
+              ORDER BY l.id ASC";
 
-        return $DB->get_records_sql($sql,array('studentid'=>$studentid,'scheduleid'=>$scheduleid));
+        return $DB->get_records_sql($sql,array('studentid'=>$studentid,'sessionid'=>$sessionid));
     }
 
     /**
@@ -85,14 +85,14 @@ class local_webservices_external extends external_api {
      *
      * @return external_description
      */
-    public static function get_a_report_returns() {
+    public static function get_a_log_returns() {
         return new external_multiple_structure(
             new external_single_structure(
                 array(
-                    'id' => new external_value(PARAM_INT, 'report ID', VALUE_DEFAULT, null),
+                    'id' => new external_value(PARAM_INT, 'log ID', VALUE_DEFAULT, null),
                     'studentid' => new external_value(PARAM_TEXT, 'student ID', VALUE_DEFAULT, null),
-                    'classid' => new external_value(PARAM_TEXT, 'class ID', VALUE_DEFAULT, null),
-                    'scheduleid' => new external_value(PARAM_INT, 'schedule ID', VALUE_DEFAULT, null),
+                    'course' => new external_value(PARAM_TEXT, 'course ID', VALUE_DEFAULT, null),
+                    'sessionid' => new external_value(PARAM_INT, 'session ID', VALUE_DEFAULT, null),
                     'timein' => new external_value(PARAM_TEXT, 'time when the student checkin', VALUE_DEFAULT, null),
                     'timeout' => new external_value(PARAM_TEXT, 'time when the student go out', VALUE_DEFAULT, null),
                     'status' => new external_value(PARAM_INT, 'status of the student', VALUE_DEFAULT, null),
@@ -101,38 +101,38 @@ class local_webservices_external extends external_api {
         );
     }
 
-    public static function get_reports_parameters() {
+    public static function get_logs_parameters() {
         return new external_function_parameters(
             array(
                 'attendanceid' => new external_value(PARAM_INT, 'Attendance ID'),
             )
         );
     }
-    public static function get_reports($attendanceid) {
-        $params = self::validate_parameters(self::get_reports_parameters(), array(
+    public static function get_logs($attendanceid) {
+        $params = self::validate_parameters(self::get_logs_parameters(), array(
             'attendanceid' => $attendanceid
             )
         );
         global $DB;
-        $sql = "SELECT r.*, a.classid
-                FROM {report} r
-                LEFT JOIN {schedule} s ON r.scheduleid = s.id 
+        $sql = "SELECT l.*, a.course
+                FROM {attendance_log} l
+                LEFT JOIN {attendance_session} s ON l.sessionid = s.id 
                 LEFT JOIN {attendance} a 
                 ON s.attendanceid = a.id 
                 WHERE a.id = :attendanceid
-                ORDER BY r.id ASC";
+                ORDER BY l.id ASC";
 
         return $DB->get_records_sql($sql,array('attendanceid' => $attendanceid));
     }
 
-    public static function get_reports_returns() {
+    public static function get_logs_returns() {
         return new external_multiple_structure(
             new external_single_structure(
                 array(
-                    'id' => new external_value(PARAM_INT, 'report ID', VALUE_DEFAULT, null),
+                    'id' => new external_value(PARAM_INT, 'log ID', VALUE_DEFAULT, null),
                     'studentid' => new external_value(PARAM_TEXT, 'student ID', VALUE_DEFAULT, null),
-                    'classid' => new external_value(PARAM_TEXT, 'class ID', VALUE_DEFAULT, null),
-                    'scheduleid' => new external_value(PARAM_INT, 'schedule ID', VALUE_DEFAULT, null),
+                    'course' => new external_value(PARAM_TEXT, 'class ID', VALUE_DEFAULT, null),
+                    'sessionid' => new external_value(PARAM_INT, 'session ID', VALUE_DEFAULT, null),
                     'timein' => new external_value(PARAM_TEXT, 'time when the student checkin', VALUE_DEFAULT, null),
                     'timeout' => new external_value(PARAM_TEXT, 'time when the student go out', VALUE_DEFAULT, null),
                     'status' => new external_value(PARAM_INT, 'status of the student', VALUE_DEFAULT, null),
@@ -164,7 +164,7 @@ class local_webservices_external extends external_api {
      *
      *
      * This function will update (optionally) status, timein and timeout. If this student's record
-     * is not found, it will create a new record in the report table.
+     * is not found, it will create a new record in the log table.
      *
      * @param string $studentid Student ID (required).
      * @param int $sessionid Session ID (required).
@@ -236,10 +236,10 @@ class local_webservices_external extends external_api {
                 $data->status = $status;
             }
             if ($DB->update_record('attendance_log',$data)) {
-                $return['message'] = "Updated the report successfully";
+                $return['message'] = "Updated the log successfully";
             }
             else {
-                $return['message'] = "Couldn't update the report";
+                $return['message'] = "Couldn't update the log";
             }
         }
         return $return;
@@ -382,25 +382,25 @@ class local_webservices_external extends external_api {
      *
      * This function returns roleid, rolename and roleshortname for all roles or for given roles.
      *
-     * @param string $studentid Student ID.
-     * @param string $classid Class ID.
-     * @param string $scheduleid Schedule ID.
-     * @return object The student's report.
+     * @param string $roomid room ID.
+     * @param $session
+     * @return array
+     * @throws dml_exception
      * @throws invalid_parameter_exception
      */
-    public static function get_schedules($roomid,$session)
+    public static function get_schedules($roomid,$lesson)
     {
 
         // Validate parameters passed from web service.
-        $params = self::validate_parameters(self::get_schedules_parameters(), array(
+        $params = self::validate_parameters(self::get_sessions_parameters(), array(
             'roomid' => $roomid,
-            'session' => $session,
+            'lesson' => $lesson,
         ));
         global $DB;
 
         $sql = "SELECT *
                       FROM {attendance} a
-                    LEFT JOIN {schedule} s ON a.id = s.attendanceid
+                    LEFT JOIN {attendance_session} s ON a.id = s.attendanceid
                  WHERE (a.room = :roomid AND s.session = :session)
                   ORDER BY s.id ASC";
 
@@ -416,11 +416,11 @@ class local_webservices_external extends external_api {
         return new external_multiple_structure(
             new external_single_structure(
                 array(
-                    'id' => new external_value(PARAM_INT, 'report ID', VALUE_DEFAULT, null),
-                    'attendanceid' => new external_value(PARAM_INT, 'report ID', VALUE_DEFAULT, null),
+                    'id' => new external_value(PARAM_INT, 'ID', VALUE_DEFAULT, null),
+                    'attendanceid' => new external_value(PARAM_INT, 'attendance ID', VALUE_DEFAULT, null),
                     'room' => new external_value(PARAM_TEXT, 'room ID', VALUE_DEFAULT, null),
-                    'classid' => new external_value(PARAM_TEXT, 'class ID', VALUE_DEFAULT, null),
-                    'session' => new external_value(PARAM_INT, 'session of class', VALUE_DEFAULT, null),
+                    'course' => new external_value(PARAM_TEXT, 'course ID', VALUE_DEFAULT, null),
+                    'lesson' => new external_value(PARAM_INT, 'lesson number of class', VALUE_DEFAULT, null),
 
                 )
             )
