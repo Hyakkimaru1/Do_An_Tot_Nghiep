@@ -152,9 +152,9 @@ class local_wsgetreports_external extends external_api {
         return new external_function_parameters(
             array(
                 'studentid' => new external_value(PARAM_TEXT, 'Student ID parameter'),
-                'sessionid'  => new external_value(PARAM_INT, 'Schedule ID parameter'),
-                'timein' => new external_value(PARAM_INT, 'Checkin datetime',VALUE_OPTIONAL),
-                'timeout' => new external_value(PARAM_INT, 'Datetime when the student out',VALUE_OPTIONAL),
+                'sessionid'  => new external_value(PARAM_INT, 'Session ID parameter'),
+                'timein' => new external_value(PARAM_INT, 'Checkin timestamp',VALUE_OPTIONAL),
+                'timeout' => new external_value(PARAM_INT, 'Checkout timestamp',VALUE_OPTIONAL),
                 'status'  => new external_value(PARAM_INT, 'New status number',VALUE_OPTIONAL),
             )
         );
