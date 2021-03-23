@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 
-<XMLDB PATH = 'local/wsgetreports/db' VERSION = '2020073000'
+<XMLDB PATH = 'local/webservices/db' VERSION = '2020073000'
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
         COMMENT="This is the required database tables for this plugin">
@@ -23,8 +23,8 @@
                 <FIELD NAME="id" SEQUENCE="true" TYPE="int" LENGTH="10" NOTNULL="true"/>
                 <FIELD NAME="attendanceid" SEQUENCE="false" TYPE="int" LENGTH="10" NOTNULL="true" />
                 <FIELD NAME="roomid" SEQUENCE="false" TYPE="text" NOTNULL="true"/>
-                <FIELD NAME="sessdate" SEQUENCE="false" TYPE="number" NOTNULL="true"/>
-                <FIELD NAME="lastdate" SEQUENCE="false" TYPE="number" NOTNULL="true"/>
+                <FIELD NAME="sessdate" SEQUENCE="false" TYPE="int" LENGTH="20" NOTNULL="true"/>
+                <FIELD NAME="lastdate" SEQUENCE="false" TYPE="int" LENGTH="20" NOTNULL="true"/>
                 <FIELD NAME="lesson" SEQUENCE="false" TYPE="int" LENGTH="4" NOTNULL="true" />
             </FIELDS>
             <KEYS>
@@ -36,10 +36,10 @@
         <TABLE NAME="attendance_log" COMMENT="log table">
             <FIELDS>
                 <FIELD NAME="id" SEQUENCE="true" TYPE="int" LENGTH="10" NOTNULL="true" />
-                <FIELD NAME="studentid" SEQUENCE="false" TYPE="text" NOTNULL="true"/>
+                <FIELD NAME="studentid" SEQUENCE="false" TYPE="int" LENGTH="10" NOTNULL="true"/>
                 <FIELD NAME="sessionid" SEQUENCE="false" TYPE="int" LENGTH="10" NOTNULL="true"/>
-                <FIELD NAME="timein" SEQUENCE="false" TYPE="number" NOTNULL="false"/>
-                <FIELD NAME="timeout" SEQUENCE="false" TYPE="number" NOTNULL="false"/>
+                <FIELD NAME="timein" SEQUENCE="false" TYPE="int" LENGTH="20" NOTNULL="false"/>
+                <FIELD NAME="timeout" SEQUENCE="false" TYPE="int" LENGTH="20" NOTNULL="false"/>
                 <FIELD NAME="status" SEQUENCE="false" TYPE="int" LENGTH="1" NOTNULL="true"/>
 
             </FIELDS>

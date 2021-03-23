@@ -1,4 +1,4 @@
-#Local plugin: Get reports
+#Local plugin: Webservices
 
 ##Functionality
 - Get report based on the class ID, 

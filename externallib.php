@@ -17,8 +17,8 @@
 /**
  * Web service library functions
  *
- * @package    local_wsgetroles
- * @copyright  2020 corvus albus
+ * @package    local_webservices
+ * @copyright  Copyleft
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -29,11 +29,11 @@ require_once($CFG->dirroot . '/lib/externallib.php');
 /**
  * Web service API definition.
  *
- * @package local_wsgetroles
- * @copyright 2020 corvus albus
+ * @package local_webservices
+ * @copyright Copyleft
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class local_wsgetreports_external extends external_api {
+class local_webservices_external extends external_api {
 
     // Functionset for get_roles() ************************************************************************************************.
 
@@ -151,11 +151,11 @@ class local_wsgetreports_external extends external_api {
     {
         return new external_function_parameters(
             array(
-                'studentid' => new external_value(PARAM_TEXT, 'Student ID parameter'),
+                'studentid' => new external_value(PARAM_INT, 'Student ID parameter'),
                 'sessionid'  => new external_value(PARAM_INT, 'Session ID parameter'),
-                'timein' => new external_value(PARAM_INT, 'Checkin timestamp',VALUE_OPTIONAL),
-                'timeout' => new external_value(PARAM_INT, 'Checkout timestamp',VALUE_OPTIONAL),
-                'status'  => new external_value(PARAM_INT, 'New status number',VALUE_OPTIONAL),
+                'timein' => new external_value(PARAM_INT, 'Checkin timestamp',VALUE_DEFAULT,0),
+                'timeout' => new external_value(PARAM_INT, 'Checkout timestamp',VALUE_DEFAULT,0),
+                'status'  => new external_value(PARAM_INT, 'New status number',VALUE_DEFAULT,-1),
             )
         );
     }
@@ -190,7 +190,7 @@ class local_wsgetreports_external extends external_api {
 
 
         $sql = "SELECT r.*
-                FROM {report} r 
+                FROM {attendance_log} r 
                 WHERE r.studentid = :studentid AND r.sessionid = :sessionid";
         $result = $DB->get_record_sql($sql,array('studentid'=>$studentid,'sessionid'=>$sessionid),IGNORE_MISSING);
 
@@ -208,11 +208,11 @@ class local_wsgetreports_external extends external_api {
             {
                 $data->timeout = $timeout;
             }
-            if ($status)
+            if ($status!=-1)
             {
                 $data->status = $status;
             }
-            if ($DB->insert_record('report',$data))
+            if ($DB->insert_record('attendance_log',$data))
             {
                 $return['message'] = "Inserted new record into the database successfully";
             }
@@ -231,11 +231,11 @@ class local_wsgetreports_external extends external_api {
             {
                 $data->timeout = $timeout;
             }
-            if ($status)
+            if ($status!=-1)
             {
                 $data->status = $status;
             }
-            if ($DB->update_record('report',$data)) {
+            if ($DB->update_record('attendance_log',$data)) {
                 $return['message'] = "Updated the report successfully";
             }
             else {
