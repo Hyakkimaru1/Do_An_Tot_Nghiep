@@ -121,7 +121,6 @@ class mod_attendance_structure {
     public function __construct(stdClass $dbrecord, stdClass $cm, stdClass $course, stdClass $context=null, $pageparams=null) {
         global $DB;
 
-        //hd981
 
         foreach ($dbrecord as $field => $value) {
             if (property_exists('mod_attendance_structure', $field)) {
@@ -1059,7 +1058,7 @@ class mod_attendance_structure {
      */
     public function get_session_log($sessionid) : array {
         global $DB;
-        return $DB->get_records('attendance_log', array('sessionid' => $sessionid), '', 'studentid,statusid,id,timein,timeout');
+        return $DB->get_records('attendance_log', array('sessionid' => $sessionid), '', 'studentid,statusid,id,remarks,timein,timeout');
 //        return $DB->get_records('attendance_log', array('sessionid' => $sessionid), '', 'studentid,statusid,remarks,id,statusset');
     }
 
