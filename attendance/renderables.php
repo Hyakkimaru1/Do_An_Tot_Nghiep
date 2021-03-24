@@ -666,7 +666,7 @@ class attendance_user_data implements renderable {
         $updateatts = array();
         foreach ($sesslog as $stid => $userlog) {
             $dbstudlog = $DB->get_records('attendance_log', array('studentid' => $stid), '',
-                'sessionid,statusid,remarks,id,statusset');
+                'sessionid,statusid,remarks,id,timein,timeout');
             foreach ($userlog as $log) {
                 if (array_key_exists($log->sessionid, $dbstudlog)) {
                     $attid = $sessionatt[$log->sessionid];

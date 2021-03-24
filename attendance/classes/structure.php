@@ -104,10 +104,6 @@ class mod_attendance_structure {
     /** @var float number [0..1], the threshold for student to be shown at low grade report */
     private $lowgradethreshold;
 
-    private $startime;
-    private $endtime;
-    private $room;
-
 
 
     /**
@@ -124,6 +120,8 @@ class mod_attendance_structure {
      */
     public function __construct(stdClass $dbrecord, stdClass $cm, stdClass $course, stdClass $context=null, $pageparams=null) {
         global $DB;
+
+        //hd981
 
         foreach ($dbrecord as $field => $value) {
             if (property_exists('mod_attendance_structure', $field)) {
@@ -946,10 +944,10 @@ class mod_attendance_structure {
         $user = $DB->get_record('user', array('id' => $userid), '*', MUST_EXIST);
 
         // Look for 'temporary' users and return their details from the attendance_tempusers table.
-        if ($user->idnumber == 'tempghost') {
-            $tempuser = $DB->get_record('attendance_tempusers', array('studentid' => $userid), '*', MUST_EXIST);
-            return self::tempuser_to_user($tempuser);
-        }
+//        if ($user->idnumber == 'tempghost') {
+//            $tempuser = $DB->get_record('attendance_tempusers', array('studentid' => $userid), '*', MUST_EXIST);
+//            return self::tempuser_to_user($tempuser);
+//        }
 
         $user->type = 'standard';
 
@@ -1061,7 +1059,7 @@ class mod_attendance_structure {
      */
     public function get_session_log($sessionid) : array {
         global $DB;
-        return $DB->get_records('attendance_log', array('sessionid' => $sessionid), '', 'studentid,statusid,remarks,id');
+        return $DB->get_records('attendance_log', array('sessionid' => $sessionid), '', 'studentid,statusid,id,timein,timeout');
 //        return $DB->get_records('attendance_log', array('sessionid' => $sessionid), '', 'studentid,statusid,remarks,id,statusset');
     }
 
@@ -1088,8 +1086,9 @@ class mod_attendance_structure {
             $where = "ats.attendanceid = :aid AND ats.sessdate >= :csdate";
         }
         if ($this->get_group_mode()) {
+            //hd981
             $sql = "SELECT ats.id, ats.sessdate, ats.groupid, al.statusid, al.remarks,
-                           ats.preventsharediptime, ats.preventsharedip
+                           ats.preventsharediptime, ats.preventsharedip, al.timein, al.timeout
                   FROM {attendance_sessions} ats
                   JOIN {attendance_log} al ON ats.id = al.sessionid AND al.studentid = :uid
                   LEFT JOIN {groups_members} gm ON gm.userid = al.studentid AND gm.groupid = ats.groupid
@@ -1104,8 +1103,9 @@ class mod_attendance_structure {
                 'edate'     => $this->pageparams->enddate);
 
         } else {
+            //hd981
             $sql = "SELECT ats.id, ats.sessdate, ats.groupid, al.statusid, al.remarks,
-                           ats.preventsharediptime, ats.preventsharedip
+                           ats.preventsharediptime, ats.preventsharedip,al.timein,al.timeout
                   FROM {attendance_sessions} ats
                   JOIN {attendance_log} al
                     ON ats.id = al.sessionid AND al.studentid = :uid
@@ -1146,9 +1146,10 @@ class mod_attendance_structure {
         // DISTINCT on a the description field.
         $id = $DB->sql_concat(':value', 'ats.id');
         if ($this->get_group_mode()) {
+            //hd981
             $sql = "SELECT $id, ats.id, ats.groupid, ats.sessdate, ats.duration, ats.description,
                            al.statusid, al.remarks, ats.studentscanmark, ats.autoassignstatus,
-                           ats.preventsharedip, ats.preventsharediptime, ats.rotateqrcode
+                           ats.preventsharedip, ats.preventsharediptime, ats.rotateqrcode,al.timein,al.timeout
                       FROM {attendance_sessions} ats
                 RIGHT JOIN {attendance_log} al
                         ON ats.id = al.sessionid AND al.studentid = :uid
@@ -1156,9 +1157,10 @@ class mod_attendance_structure {
                      WHERE $where AND (ats.groupid = 0 or gm.id is NOT NULL)
                   ORDER BY ats.sessdate ASC";
         } else {
+            //hd981
             $sql = "SELECT $id, ats.id, ats.groupid, ats.sessdate, ats.duration, ats.description, ats.statusset,
                            al.statusid, al.remarks, ats.studentscanmark, ats.autoassignstatus,
-                           ats.preventsharedip, ats.preventsharediptime, ats.rotateqrcode
+                           ats.preventsharedip, ats.preventsharediptime, ats.rotateqrcode,al.timein,al.timeout
                       FROM {attendance_sessions} ats
                 RIGHT JOIN {attendance_log} al
                         ON ats.id = al.sessionid AND al.studentid = :uid
@@ -1187,9 +1189,10 @@ class mod_attendance_structure {
         } else {
             $where = "ats.attendanceid = :aid AND ats.sessdate >= :csdate AND ats.groupid $gsql";
         }
+        //hd981
         $sql = "SELECT $id, ats.id, ats.groupid, ats.sessdate, ats.duration, ats.description, ats.statusset,
                        al.statusid, al.remarks, ats.studentscanmark, ats.autoassignstatus,
-                       ats.preventsharedip, ats.preventsharediptime, ats.rotateqrcode
+                       ats.preventsharedip, ats.preventsharediptime, ats.rotateqrcode,al.timein,al.timeout
                   FROM {attendance_sessions} ats
              LEFT JOIN {attendance_log} al
                     ON ats.id = al.sessionid AND al.studentid = :uid

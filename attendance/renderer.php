@@ -1296,9 +1296,12 @@ class mod_attendance_renderer extends plugin_renderer_base {
         $table->head[] = get_string('description', 'attendance');
         $table->head[] = get_string('status', 'attendance');
         $table->head[] = get_string('points', 'attendance');
-        $table->head[] = get_string('remarks', 'attendance');
+        //$table->head[] = get_string('remarks', 'attendance');
+        //hd981
+        $table->head[] = 'Timein';
+        $table->head[] = 'Timeout';
 
-        $table->align = array_merge($table->align, array('', 'left', 'center', 'center', 'center'));
+        $table->align = array_merge($table->align, array('', 'left', 'center', 'center', 'center','center'));
         $table->colclasses = array_merge($table->colclasses, array('datecol', 'desccol', 'statuscol', 'pointscol', 'remarkscol'));
         $table->size = array_merge($table->size, array('1px', '*', '*', '1px', '*'));
 
@@ -1332,16 +1335,20 @@ class mod_attendance_renderer extends plugin_renderer_base {
                 $row->cells[] = $status->description;
                 $row->cells[] = format_float($status->grade, 1, true, true) . ' / ' .
                                     format_float($statussetmaxpoints[$status->setnumber], 1, true, true);
-                $row->cells[] = $sess->remarks;
+                //$row->cells[] = $sess->remarks;
+                //hd981
+
+                $row->cells[] = date("H:i:s",$sess->timein);
+                $row->cells[] = date("H:i:s",$sess->timeout);
             } else if (($sess->sessdate + $sess->duration) < $userdata->user->enrolmentstart) {
                 $cell = new html_table_cell(get_string('enrolmentstart', 'attendance',
                                             userdate($userdata->user->enrolmentstart, '%d.%m.%Y')));
-                $cell->colspan = 3;
+                $cell->colspan = 4;
                 $row->cells[] = $cell;
             } else if ($userdata->user->enrolmentend and $sess->sessdate > $userdata->user->enrolmentend) {
                 $cell = new html_table_cell(get_string('enrolmentend', 'attendance',
                                             userdate($userdata->user->enrolmentend, '%d.%m.%Y')));
-                $cell->colspan = 3;
+                $cell->colspan = 4;
                 $row->cells[] = $cell;
             } else {
                 list($canmark, $reason) = attendance_can_student_mark($sess, false);
@@ -1369,7 +1376,9 @@ class mod_attendance_renderer extends plugin_renderer_base {
                 } else { // Student cannot mark their own attendace.
                     $row->cells[] = '?';
                     $row->cells[] = '? / ' . format_float($statussetmaxpoints[$sess->statusset], 1, true, true);
-                    $row->cells[] = '';
+                    $row->cells[] = '?';
+                    $row->cells[] = '?';
+                    //$row->cells[] = '';
                 }
             }
 
