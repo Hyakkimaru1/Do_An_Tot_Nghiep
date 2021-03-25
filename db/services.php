@@ -61,9 +61,9 @@ $functions = array(
     ),
     'local_webservices_get_schedules' => array(
         'classname' => 'local_webservices_external',
-        'methodname' => 'get_schedules',
+        'methodname' => 'get_room_schedules',
         'classpath' => 'local/webservices/externallib.php',
-        'description' => 'Get schedules.',
+        'description' => 'Get all schedules of room in date',
         'type' => 'read',
         'capabilities' => '',
     ),

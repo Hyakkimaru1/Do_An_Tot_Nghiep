@@ -257,29 +257,10 @@ class local_webservices_external extends external_api {
 
     // Functionset for get_roles() ************************************************************************************************.
 
-    /**
-     * Parameter description for get_roles().
-     *
-     * @return external_function_parameters.
-     */
     public static function get_roles_parameters() {
         return new external_function_parameters(
             array(
-                'ids' => new external_multiple_structure(
-                    new external_value(PARAM_INT, 'roleid')
-                    , 'List of roleids. Wrong ids will return an array with "null" for the other role settings.
-                                If all three lists (ids, shortnames, names) are empty, return all roles.',
-                    VALUE_DEFAULT, array()),
-                'shortnames' => new external_multiple_structure(
-                    new external_value(PARAM_TEXT, 'shortname')
-                    , 'List of role shortnames. Wrong strings will return an array with "null" for the other role settings.
-                                If all three lists (ids, shortnames, names) are empty, return all roles.',
-                    VALUE_DEFAULT, array()),
-                'names' => new external_multiple_structure(
-                    new external_value(PARAM_TEXT, 'name')
-                    , 'List of role names. Wrong strings will return an array with "null" for the other role settings.
-                                If all three lists (ids, shortnames, names) are empty, return all roles.',
-                    VALUE_DEFAULT, array()),
+                'username' => new external_value(PARAM_TEXT, 'Username'),
             )
         );
     }
@@ -294,54 +275,21 @@ class local_webservices_external extends external_api {
      * @param array $names List of role names.
      * @return array Array of arrays with role informations.
      */
-    public static function get_roles($ids = [], $shortnames = [], $names = []) {
+    public static function get_roles($username) {
 
         // Validate parameters passed from web service.
         $params = self::validate_parameters(self::get_roles_parameters(), array(
-            'ids' => $ids,
-            'shortnames' => $shortnames,
-            'names' => $names));
+            'username' => $username));
 
-        $allroles = get_all_roles();
-        $idsfound = array();
-        $entriesnotfound = array();
+            global $DB;
 
-        // Search for appropriate roles. If role found put id to idsfound. If not remember entry in entriesnotfound.
-        $allentries = array('id' => $ids, 'name' => $names, 'shortname' => $shortnames);
-        foreach ($allentries as $key => $entries) {
-            if (!empty($entries)) {
-                foreach ($entries as $entry) {
-                    $entriesnotfound[] = array('name' => $key, 'value' => $entry);
-                    foreach ($allroles as $r) {
-                        if ($r->$key == $entry) {
-                            $idsfound[] = $r->id;
-                            // Entry found. Remove it from $entriesnotfound.
-                            array_pop($entriesnotfound);
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-
-        // If all input arrays are empty, return all roles. Collect all role ids in $idsfound.
-        if (empty(array_merge($ids, $names, $shortnames))) {
-            $idsfound = array_column($allroles, 'id');
-        }
-
-        // Collect information of all found roles.
-        foreach ($allroles as $r) {
-            if (in_array($r->id, $idsfound)) {
-                $roles[] = get_object_vars($r);
-            }
-        }
-
-        // Add entries not found. All array elements despite of the given will be null.
-        foreach ($entriesnotfound as $entry) {
-            $roles[] = array($entry['name'] => $entry['value']);
-        }
-
-        return $roles;
+            $sql = "SELECT u.id AS id, username, firstname, lastname, roleid, r.name AS role, shortname
+            FROM {user} u
+            JOIN {role_assignments} ra on ra.userid = u.id
+            JOIN {role} r on r.id = ra.roleid
+            WHERE u.username = :username";
+    
+            return $DB->get_records_sql($sql,array('username'=>$username));
     }
 
     /**
@@ -354,11 +302,12 @@ class local_webservices_external extends external_api {
             new external_single_structure(
                 array(
                     'id' => new external_value(PARAM_INT, 'role id', VALUE_DEFAULT, null),
-                    'name' => new external_value(PARAM_TEXT, 'role name', VALUE_DEFAULT, null),
-                    'shortname' => new external_value(PARAM_TEXT, 'role shortname', VALUE_DEFAULT, null),
-                    'description' => new external_value(PARAM_TEXT, 'role description', VALUE_DEFAULT, null),
-                    'sortorder' => new external_value(PARAM_INT, 'role sort order', VALUE_DEFAULT, null),
-                    'archetype' => new external_value(PARAM_TEXT, 'role archetype', VALUE_DEFAULT, null),
+                    'username' => new external_value(PARAM_TEXT, 'username', VALUE_DEFAULT, null),
+                    'firstname' => new external_value(PARAM_TEXT, 'firstname', VALUE_DEFAULT, null),
+                    'lastname' => new external_value(PARAM_TEXT, 'lastname', VALUE_DEFAULT, null),
+                    'roleid' => new external_value(PARAM_INT, 'id of role', VALUE_DEFAULT, null),
+                    'role' => new external_value(PARAM_TEXT, 'name of role', VALUE_DEFAULT, null),
+                    'shortname' => new external_value(PARAM_TEXT, 'shortname of role', VALUE_DEFAULT, null),
                 )
             )
         );
@@ -368,64 +317,65 @@ class local_webservices_external extends external_api {
 
 
 ////////////
-    public static function get_schedules_parameters() {
-        return new external_function_parameters(
-            array(
-                'roomid' => new external_value(PARAM_TEXT, 'student ID parameter'),
-                'session'  => new external_value(PARAM_INT, 'class ID parameter'),
-            )
-        );
-    }
+public static function get_room_schedules_parameters() {
+    return new external_function_parameters(
+        array(
+            'roomid' => new external_value(PARAM_TEXT, 'room ID parameter',VALUE_OPTIONAL),
+            'date'  => new external_value(PARAM_INT, 'Date of room schedules',VALUE_OPTIONAL)
+        )
+    );
+}
 
-    /**
-     * Return roleinformation.
-     *
-     * This function returns roleid, rolename and roleshortname for all roles or for given roles.
-     *
-     * @param string $roomid room ID.
-     * @param $session
-     * @return array
-     * @throws dml_exception
-     * @throws invalid_parameter_exception
-     */
-    public static function get_schedules($roomid,$lesson)
-    {
+/**
+ * Return roleinformation.
+ *
+ * This function returns roleid, rolename and roleshortname for all roles or for given roles.
+ *
+ * @param string $studentid Student ID.
+ * @param string $classid Class ID.
+ * @param string $scheduleid Schedule ID.
+ * @return object The student's report.
+ * @throws invalid_parameter_exception
+ */
+public static function get_room_schedules(string $roomid,int $date)
+{
+    // Validate parameters passed from web service.
+    $params = self::validate_parameters(self::get_room_schedules_parameters(), array(
+        'roomid' => $roomid,
+        'date' => $date,
+    ));
+    global $DB;
 
-        // Validate parameters passed from web service.
-        $params = self::validate_parameters(self::get_sessions_parameters(), array(
-            'roomid' => $roomid,
-            'lesson' => $lesson,
-        ));
-        global $DB;
-
-        $sql = "SELECT *
-                      FROM {attendance} a
-                    LEFT JOIN {attendance_session} s ON a.id = s.attendanceid
-                 WHERE (a.room = :roomid AND s.session = :session)
-                  ORDER BY s.id ASC";
-
-        return $DB->get_records_sql($sql,array('roomid'=>$roomid,'session'=>$session));
-    }
+    $sql = "SELECT attendanceid, s.id as sessionid,course as courseid, roomid, sessdate, lastdate, fullname, shortname,startdate
+            FROM {attendance} a
+            LEFT JOIN {attendance_session} s ON a.id = s.attendanceid
+            LEFT JOIN {course} c ON course = c.id
+            WHERE (s.roomid = :roomid AND s.sessdate > ( :date div 86400000)*86400000 AND s.lastdate < (( :date2 div 86400000) + 1 )*86400000)
+            ORDER BY s.id ASC";
+    return $DB->get_records_sql($sql,array('roomid'=>$roomid,'date'=>$date,'date2'=>$date));
+}
 
     /**
      * Parameter description for create_sections().
      *
      * @return external_description
      */
-    public static function get_schedules_returns() {
+    public static function get_room_schedules_returns() {
         return new external_multiple_structure(
             new external_single_structure(
                 array(
-                    'id' => new external_value(PARAM_INT, 'ID', VALUE_DEFAULT, null),
+                    'sessionid' => new external_value(PARAM_INT, 'session ID', VALUE_DEFAULT, null),
                     'attendanceid' => new external_value(PARAM_INT, 'attendance ID', VALUE_DEFAULT, null),
-                    'room' => new external_value(PARAM_TEXT, 'room ID', VALUE_DEFAULT, null),
-                    'course' => new external_value(PARAM_TEXT, 'course ID', VALUE_DEFAULT, null),
-                    'lesson' => new external_value(PARAM_INT, 'lesson number of class', VALUE_DEFAULT, null),
-
+                    'roomid' => new external_value(PARAM_TEXT, 'room ID', VALUE_DEFAULT, null),
+                    'courseid' => new external_value(PARAM_TEXT, 'course ID', VALUE_DEFAULT, null),
+                    'sessdate' => new external_value(PARAM_INT, 'start time of session', VALUE_DEFAULT, null),
+                    'lastdate' => new external_value(PARAM_INT, 'end time of session', VALUE_DEFAULT, null),
+                    'startdate' => new external_value(PARAM_INT, 'startdate of course', VALUE_DEFAULT, null),
+                    'fullname' => new external_value(PARAM_TEXT, 'fullname of course', VALUE_DEFAULT, null),
+                    'shortname' => new external_value(PARAM_TEXT, 'shortname of course', VALUE_DEFAULT, null),
                 )
             )
         );
     }
-
 
 }
