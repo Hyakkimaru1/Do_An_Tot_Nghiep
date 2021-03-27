@@ -22,7 +22,7 @@
             <FIELDS>
                 <FIELD NAME="id" SEQUENCE="true" TYPE="int" LENGTH="10" NOTNULL="true"/>
                 <FIELD NAME="attendanceid" SEQUENCE="false" TYPE="int" LENGTH="10" NOTNULL="true" />
-                <FIELD NAME="roomid" SEQUENCE="false" TYPE="text" NOTNULL="true"/>
+                <FIELD NAME="roomid" SEQUENCE="false" TYPE="int" LENGTH="10" NOTNULL="true"/>
                 <FIELD NAME="sessdate" SEQUENCE="false" TYPE="int" LENGTH="20" NOTNULL="true"/>
                 <FIELD NAME="lastdate" SEQUENCE="false" TYPE="int" LENGTH="20" NOTNULL="true"/>
                 <FIELD NAME="lesson" SEQUENCE="false" TYPE="int" LENGTH="4" NOTNULL="true" />
@@ -31,6 +31,8 @@
                 <KEY NAME="primary" TYPE="primary" FIELDS="id" />
                 <KEY NAME="foreign_session_attendance" TYPE="foreign" FIELDS="attendanceid"
                      REFTABLE="attendance" REFFIELDS="id"/>
+                <KEY NAME="foreign_session_room" TYPE="foreign" FIELDS="roomid"
+                     REFTABLE="room" REFFIELDS="id"/>
             </KEYS>
         </TABLE>
         <TABLE NAME="attendance_log" COMMENT="log table">
@@ -47,6 +49,16 @@
                 <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
                 <KEY NAME="foreign_log_session" TYPE="foreign" FIELDS="sessionid"
                      REFTABLE="attendance_session" REFFIELDS="id"/>
+            </KEYS>
+        </TABLE>
+        <TABLE NAME="room" COMMENT="room table">
+            <FIELDS>
+                <FIELD NAME="id" SEQUENCE="true" TYPE="int" LENGTH="10" NOTNULL="true"/>
+                <FIELD NAME="name" SEQUENCE="false" TYPE="text" NOTNULL="true"/>
+                <FIELD NAME="campus" SEQUENCE="false" TYPE="text" NOTNULL="true"/>
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
             </KEYS>
         </TABLE>
     </TABLES>

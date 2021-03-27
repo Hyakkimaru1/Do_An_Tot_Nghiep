@@ -49,13 +49,20 @@ $functions = array(
         'type' => 'read',
         'capabilities' => '',
     ),
+    'local_webservices_create_attendance' => array(
+        'classname' => 'local_webservices_external',
+        'methodname' => 'create_attendance',
+        'classpath' => 'local/webservices/externallib.php',
+        'description' => 'Create attendance record based on course ID',
+        'type' => 'write',
+        'capabilities' => '',
+    ),
     'local_webservices_update_log' => array(
         'classname' => 'local_webservices_external',
         'methodname' => 'update_log',
         'classpath' => 'local/webservices/externallib.php',
-        'description' => 'Update status, timein, timeout in the report table based on the student ID
-        and the session ID. If not need to update any field, leave this field null. If 
-        there is no record, it will create a new one',
+        'description' => "Update status, timein, timeout in the report table based on the student ID
+        and the session ID. If not need to update any field, don't pass that field",
         'type' => 'write',
         'capabilities' => '',
     ),

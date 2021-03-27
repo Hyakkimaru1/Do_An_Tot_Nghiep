@@ -79,9 +79,10 @@ class local_webservices_external extends external_api {
             'sessionid' => $sessionid));
         global $DB;
 
-        $sql = "SELECT l.*, a.course
+        $sql = "SELECT l.*, a.course,r.name as room,r.campus
                   FROM {attendance_log} l
             LEFT JOIN {attendance_session} s ON s.id = l.sessionid
+            LEFT JOIN {room} r ON r.id = s.roomid
             LEFT JOIN {attendance} a ON a.id = s.attendanceid
              WHERE (l.studentid = :studentid AND l.sessionid = :sessionid)
               ORDER BY l.id ASC";
@@ -102,8 +103,10 @@ class local_webservices_external extends external_api {
                     'studentid' => new external_value(PARAM_TEXT, 'student ID', VALUE_DEFAULT, null),
                     'course' => new external_value(PARAM_TEXT, 'course ID', VALUE_DEFAULT, null),
                     'sessionid' => new external_value(PARAM_INT, 'session ID', VALUE_DEFAULT, null),
-                    'timein' => new external_value(PARAM_TEXT, 'time when the student checkin', VALUE_DEFAULT, null),
-                    'timeout' => new external_value(PARAM_TEXT, 'time when the student go out', VALUE_DEFAULT, null),
+                    'room' => new external_value(PARAM_TEXT, 'room name', VALUE_DEFAULT, null),
+                    'campus' => new external_value(PARAM_TEXT, 'campus location', VALUE_DEFAULT, null),
+                    'timein' => new external_value(PARAM_INT, 'timestamp when the student checkin', VALUE_DEFAULT, null),
+                    'timeout' => new external_value(PARAM_INT, 'timestamp when the student go out', VALUE_DEFAULT, null),
                     'status' => new external_value(PARAM_INT, 'status of the student', VALUE_DEFAULT, null),
                 )
             )
@@ -163,9 +166,10 @@ class local_webservices_external extends external_api {
             )
         );
         global $DB;
-        $sql1 = "SELECT s.*, course.id as courseid, course.fullname
+        $sql1 = "SELECT s.*, course.id as courseid, course.fullname, r.name, r.campus
                 FROM {attendance_session} s
                 LEFT JOIN {attendance} a ON s.attendanceid = a.id
+                LEFT JOIN {room} r ON r.id = s.roomid
                 LEFT JOIN {course} course ON a.course = course.id
                 WHERE s.id = :sessionid";
         $data = $DB->get_record_sql($sql1,array('sessionid' => $sessionid));
@@ -192,7 +196,7 @@ class local_webservices_external extends external_api {
         }
         return array('id'=>(int) $data->courseid,'name'=>$data->fullname,'sessdate'=>
             $data->sessdate,'lastdate'=>$data->lastdate,'class'=>$data->lesson,
-            'room'=>$data->roomid,'students'=>$students_array);
+            'room'=>$data->name, 'campus'=>$data->campus, 'students'=>$students_array);
     }
     public static function get_session_detail_returns() {
            return new external_single_structure(
@@ -202,7 +206,8 @@ class local_webservices_external extends external_api {
                     'sessdate' => new external_value(PARAM_INT, 'session start time', VALUE_DEFAULT, null),
                     'lastdate' => new external_value(PARAM_INT, 'session end time', VALUE_DEFAULT, null),
                     'class' => new external_value(PARAM_INT, 'lesson number', VALUE_DEFAULT, null),
-                    'room' => new external_value(PARAM_TEXT, 'room ID', VALUE_DEFAULT, null),
+                    'room' => new external_value(PARAM_TEXT, 'room name', VALUE_DEFAULT, null),
+                    'campus' => new external_value(PARAM_TEXT, 'campus location', VALUE_DEFAULT, null),
                     'students' => new external_multiple_structure(
                         new external_single_structure(
                             array(
@@ -217,6 +222,60 @@ class local_webservices_external extends external_api {
                 )
             );
     }
+
+
+    public static function create_attendance_parameters(): external_function_parameters
+    {
+        return new external_function_parameters(
+            array(
+                'courseid'  => new external_value(PARAM_INT, 'Course ID'),
+            )
+        );
+    }
+
+    public static function create_attendance(int $courseid): array
+    {
+        $params = self::validate_parameters(self::create_attendance_parameters(), array(
+                'courseid' => $courseid,
+            )
+        );
+
+        global $DB;
+
+        // Check if this course was created or not
+
+        $sql = "SELECT 
+                FROM {course} course 
+                WHERE course.id = :courseid";
+        $data = $DB->get_record_sql($sql,array('courseid'=>$courseid),IGNORE_MISSING);
+
+        $return = array('message' => '');
+        if ($data == false)
+        {
+            $return['message'] = "There isn't any course with this ID";
+        }
+        else {
+            $data = (object) array('courseid'=>$courseid);
+
+            if ($DB->insert_record('attendance',$data)) {
+                $return['message'] = "Created attendance successfully";
+            }
+            else {
+                $return['message'] = "Couldn't create attedance";
+            }
+        }
+        return $return;
+    }
+
+    public static function create_attendance_returns(): external_single_structure
+    {
+        return new external_single_structure(
+            array(
+                'message' => new external_value(PARAM_TEXT, 'Message to the back-end'),
+            )
+        );
+    }
+
 
 
     /**
@@ -239,22 +298,23 @@ class local_webservices_external extends external_api {
         );
     }
 
+
+
     /**
      *
      *
-     * This function will update (optionally) status, timein and timeout. If this student's record
-     * is not found, it will create a new record in the log table.
+     * This function will update (optionally) status, timein and timeout.
      *
-     * @param string $studentid Student ID (required).
+     * @param int $studentid Student ID (required).
      * @param int $sessionid Session ID (required).
-     * @param int $timein Datetime when the student checkin (can be null if not need to update).
-     * @param int $timeout Datetime when the student out (can be null if not need to update).
+     * @param int $timein Timestamp in millisecond when the student checkin (can be null if not need to update).
+     * @param int $timeout Timestamp in millisecond when the student out (can be null if not need to update).
      * @param int $status New status number (can be null if not need to update).
      * @return array
      * @throws invalid_parameter_exception|dml_exception
      */
 
-    public static function update_log(string $studentid, int $sessionid, int $timein, int $timeout, int $status): array
+    public static function update_log(int $studentid, int $sessionid, int $timein, int $timeout, int $status): array
     {
         $params = self::validate_parameters(self::update_log_parameters(), array(
                 'studentid' => $studentid,
@@ -268,36 +328,15 @@ class local_webservices_external extends external_api {
         global $DB;
 
 
-        $sql = "SELECT r.*
-                FROM {attendance_log} r 
-                WHERE r.studentid = :studentid AND r.sessionid = :sessionid";
+        $sql = "SELECT l.*
+                FROM {attendance_log} l 
+                WHERE l.studentid = :studentid AND l.sessionid = :sessionid";
         $result = $DB->get_record_sql($sql,array('studentid'=>$studentid,'sessionid'=>$sessionid),IGNORE_MISSING);
 
         $return = array('message' => '');
         if ($result == false)
         {
-
-            $data = (object) array('studentid'=>$studentid,'sessionid'=>$sessionid,
-                'timein'=>null,'timeout'=>null, 'status'=>null);
-            if ($timein)
-            {
-                $data->timein = $timein;
-            }
-            if ($timeout)
-            {
-                $data->timeout = $timeout;
-            }
-            if ($status!=-1)
-            {
-                $data->status = $status;
-            }
-            if ($DB->insert_record('attendance_log',$data))
-            {
-                $return['message'] = "Inserted new record into the database successfully";
-            }
-            else {
-                $return['message'] = "Couldn't insert new record into the database";
-            }
+            $return['message'] = "There isn't any log with suitable conditions";
         }
         else {
             $data = (object) array('id'=>$result->id,'status'=>$result->status,'timein'=>$result->timein,
@@ -396,44 +435,44 @@ class local_webservices_external extends external_api {
 
 
 ////////////
-public static function get_room_schedules_parameters() {
-    return new external_function_parameters(
-        array(
-            'roomid' => new external_value(PARAM_TEXT, 'room ID parameter',VALUE_OPTIONAL),
-            'date'  => new external_value(PARAM_INT, 'Date of room schedules',VALUE_OPTIONAL)
-        )
-    );
-}
-
-/**
- * Return roleinformation.
- *
- * This function returns roleid, rolename and roleshortname for all roles or for given roles.
- *
- * @param string $studentid Student ID.
- * @param string $classid Class ID.
- * @param string $scheduleid Schedule ID.
- * @return object The student's report.
- * @throws invalid_parameter_exception
- */
-public static function get_room_schedules(string $roomid,int $date)
-{
-    // Validate parameters passed from web service.
-    $params = self::validate_parameters(self::get_room_schedules_parameters(), array(
-        'roomid' => $roomid,
-        'date' => $date,
-    ));
-    global $DB;
-
-    $sql = "SELECT  s.id as id, attendanceid,course as courseid, roomid, sessdate, lastdate, fullname, shortname,startdate
-            FROM {attendance_session} s
-            LEFT JOIN {attendance} a ON s.attendanceid = a.id 
-            LEFT JOIN {course} c ON course = c.id
-            WHERE (s.roomid = :roomid AND s.sessdate > ( :date div 86400000)*86400000 AND s.lastdate < (( :date2 div 86400000) + 1 )*86400000)
-    ";
-    $res=$DB->get_records_sql($sql,array('roomid'=>$roomid,'date'=>$date,'date2'=>$date));
-    return $res;
+    public static function get_room_schedules_parameters() {
+        return new external_function_parameters(
+            array(
+                'roomid' => new external_value(PARAM_TEXT, 'room ID parameter',VALUE_OPTIONAL),
+                'date'  => new external_value(PARAM_INT, 'Date of room schedules',VALUE_OPTIONAL)
+            )
+        );
     }
+
+    /**
+     * Return roleinformation.
+     *
+     * This function returns roleid, rolename and roleshortname for all roles or for given roles.
+     *
+     * @param string $studentid Student ID.
+     * @param string $classid Class ID.
+     * @param string $scheduleid Schedule ID.
+     * @return object The student's report.
+     * @throws invalid_parameter_exception
+     */
+    public static function get_room_schedules(string $roomid,int $date)
+    {
+        // Validate parameters passed from web service.
+        $params = self::validate_parameters(self::get_room_schedules_parameters(), array(
+            'roomid' => $roomid,
+            'date' => $date,
+        ));
+        global $DB;
+
+        $sql = "SELECT  s.id as id, attendanceid,course as courseid, roomid, sessdate, lastdate, fullname, shortname,startdate
+                FROM {attendance_session} s
+                LEFT JOIN {attendance} a ON s.attendanceid = a.id 
+                LEFT JOIN {course} c ON course = c.id
+                WHERE (s.roomid = :roomid AND s.sessdate > ( :date div 86400000)*86400000 AND s.lastdate < (( :date2 div 86400000) + 1 )*86400000)
+        ";
+        $res=$DB->get_records_sql($sql,array('roomid'=>$roomid,'date'=>$date,'date2'=>$date));
+        return $res;
+        }
 
     /**
      * Parameter description for create_sections().
