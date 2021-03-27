@@ -425,14 +425,15 @@ public static function get_room_schedules(string $roomid,int $date)
     ));
     global $DB;
 
-    $sql = "SELECT attendanceid, s.id as sessionid,course as courseid, roomid, sessdate, lastdate, fullname, shortname,startdate
-            FROM {attendance} a
-            LEFT JOIN {attendance_session} s ON a.id = s.attendanceid
+    $sql = "SELECT  s.id as id, attendanceid,course as courseid, roomid, sessdate, lastdate, fullname, shortname,startdate
+            FROM {attendance_session} s
+            LEFT JOIN {attendance} a ON s.attendanceid = a.id 
             LEFT JOIN {course} c ON course = c.id
             WHERE (s.roomid = :roomid AND s.sessdate > ( :date div 86400000)*86400000 AND s.lastdate < (( :date2 div 86400000) + 1 )*86400000)
-            ORDER BY s.id ASC";
-    return $DB->get_records_sql($sql,array('roomid'=>$roomid,'date'=>$date,'date2'=>$date));
-}
+    ";
+    $res=$DB->get_records_sql($sql,array('roomid'=>$roomid,'date'=>$date,'date2'=>$date));
+    return $res;
+    }
 
     /**
      * Parameter description for create_sections().
@@ -443,7 +444,7 @@ public static function get_room_schedules(string $roomid,int $date)
         return new external_multiple_structure(
             new external_single_structure(
                 array(
-                    'sessionid' => new external_value(PARAM_INT, 'session ID', VALUE_DEFAULT, null),
+                    'id' => new external_value(PARAM_INT, 'session ID', VALUE_DEFAULT, null),
                     'attendanceid' => new external_value(PARAM_INT, 'attendance ID', VALUE_DEFAULT, null),
                     'roomid' => new external_value(PARAM_TEXT, 'room ID', VALUE_DEFAULT, null),
                     'courseid' => new external_value(PARAM_TEXT, 'course ID', VALUE_DEFAULT, null),
