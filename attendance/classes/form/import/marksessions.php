@@ -50,7 +50,8 @@ class marksessions extends moodleform {
         $mform = $this->_form;
         $params = $this->_customdata;
 
-        $mform->addElement('header', 'uploadattendance', get_string('uploadattendance', 'attendance'));
+        //hd981
+//        $mform->addElement('header', 'uploadattendance', get_string('uploadattendance', 'attendance'));
 
         $fileoptions = array('subdirs' => 0,
                                 'maxbytes' => $COURSE->maxbytes,
@@ -82,7 +83,7 @@ class marksessions extends moodleform {
         $mform->setType('grouptype', PARAM_INT);
         $mform->addElement('hidden', 'confirm', 0);
         $mform->setType('confirm', PARAM_BOOL);
-        $this->add_action_buttons(true, get_string('uploadattendance', 'attendance'));
+        //$this->add_action_buttons(true, get_string('uploadattendance', 'attendance'));
     }
     /**
      * Display an error on the import form.

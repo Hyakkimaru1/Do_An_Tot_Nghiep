@@ -102,7 +102,34 @@ $sesstable = new attendance_take_data($att);
 
 echo $output->header();
 echo $output->heading(get_string('attendanceforthecourse', 'attendance').' :: ' .format_string($course->fullname));
+
 echo $output->render($tabs);
+echo '<div style="width:100%; height:50px; padding-right:72px;"><input type="text" id="myInput" style="padding: 5px 15px; padding-right: 25px;" onkeyup="myFunction()" placeholder="Search for name or email..."></div>';
 echo $output->render($sesstable);
+echo '<script>
+function myFunction() {
+  // Declare variables
+  var input, filter, table, tr, td, i, txtValue;
+  input = document.getElementById("myInput");
+  filter = input.value.toUpperCase();
+  table = document.getElementsByClassName("generaltable")[0];
+  tr = table.getElementsByTagName("tr");
+
+  // Loop through all table rows, and hide those who don\'t match the search query
+  for (i = 0; i < tr.length; i++) {
+    td = tr[i].getElementsByTagName("td")[1];
+    td1 = tr[i].getElementsByTagName("td")[2];
+    if (td) {
+      txtValue = td.textContent || td.innerText;
+      txtValue1 = td1.textContent || td1.innerText;
+      if (txtValue.toUpperCase().indexOf(filter) > -1 || txtValue1.toUpperCase().indexOf(filter) > -1) {
+        tr[i].style.display = "";
+      } else {
+        tr[i].style.display = "none";
+      }
+    }
+  }
+}
+</script>';
 
 echo $output->footer();

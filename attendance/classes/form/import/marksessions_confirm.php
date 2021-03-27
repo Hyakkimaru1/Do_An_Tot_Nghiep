@@ -127,6 +127,6 @@ class marksessions_confirm extends moodleform {
         $mform->setType('importid', PARAM_INT);
         $mform->setConstant('importid', $importer->get_importid());
 
-        $this->add_action_buttons(true, get_string('uploadattendance', 'attendance'));
+        //$this->add_action_buttons(true, get_string('uploadattendance', 'attendance'));
     }
 }

@@ -239,6 +239,7 @@ class mod_attendance_summary {
             $where .= ' AND ats.groupid = 0';
         }
 
+        //hd981
         $sql = " SELECT atl.studentid AS userid, COUNT(DISTINCT ats.id) AS numtakensessions,
                         SUM(stg.grade) AS points, SUM(stm.maxgrade) AS maxpoints
                    FROM {attendance_sessions} ats
@@ -246,14 +247,12 @@ class mod_attendance_summary {
                    JOIN {attendance_statuses} stg ON (stg.id = atl.statusid AND stg.deleted = 0 AND stg.visible = 1)
                    JOIN (SELECT setnumber, MAX(grade) AS maxgrade
                            FROM {attendance_statuses}
-                          WHERE attendanceid = :attid2
-                            AND deleted = 0
+                          WHERE deleted = 0
                             AND visible = 1
                          GROUP BY setnumber) stm
                      ON (stm.setnumber = ats.statusset)
                    {$joingroup}
-                  WHERE ats.attendanceid = :attid
-                    AND ats.sessdate >= :cstartdate
+                  WHERE ats.sessdate >= :cstartdate
                     AND ats.lasttaken != 0
                     {$where}
                 GROUP BY atl.studentid";
@@ -302,16 +301,30 @@ class mod_attendance_summary {
             $where .= ' AND ats.groupid = 0';
         }
 
+        //hd981
+//        $sql = "SELECT atl.studentid AS userid, sts.setnumber, sts.acronym, COUNT(*) AS numtakensessions
+//                  FROM {attendance_sessions} ats
+//                  JOIN {attendance_log} atl ON (atl.sessionid = ats.id)
+//                  JOIN {attendance_statuses} sts
+//                    ON (sts.attendanceid = ats.attendanceid AND
+//                        sts.id = atl.statusid AND
+//                        sts.deleted = 0 AND sts.visible = 1)
+//                  {$joingroup}
+//                 WHERE ats.attendanceid = :attid
+//                   AND ats.sessdate >= :cstartdate
+//                   AND ats.lasttaken != 0
+//                   {$where}
+//              GROUP BY atl.studentid, sts.setnumber, sts.acronym";
         $sql = "SELECT atl.studentid AS userid, sts.setnumber, sts.acronym, COUNT(*) AS numtakensessions
                   FROM {attendance_sessions} ats
                   JOIN {attendance_log} atl ON (atl.sessionid = ats.id)
                   JOIN {attendance_statuses} sts
-                    ON (sts.attendanceid = ats.attendanceid AND
+                    ON (
                         sts.id = atl.statusid AND
                         sts.deleted = 0 AND sts.visible = 1)
                   {$joingroup}
-                 WHERE ats.attendanceid = :attid
-                   AND ats.sessdate >= :cstartdate
+                 WHERE 
+                   ats.sessdate >= :cstartdate
                    AND ats.lasttaken != 0
                    {$where}
               GROUP BY atl.studentid, sts.setnumber, sts.acronym";
@@ -342,12 +355,25 @@ class mod_attendance_summary {
             $where = 'AND sess.groupid = 0';
         }
 
+//        $sql = "SELECT sess.groupid, COUNT(*) AS numsessions, SUM(stamax.maxgrade) AS maxpoints
+//                  FROM {attendance_sessions} sess
+//                  JOIN (SELECT setnumber, MAX(grade) AS maxgrade
+//                                             FROM {attendance_statuses}
+//                                            WHERE attendanceid = :attid2
+//                                              AND deleted = 0
+//                                              AND visible = 1
+//                                           GROUP BY setnumber) stamax
+//                    ON (stamax.setnumber = sess.statusset)
+//                 WHERE sess.attendanceid = :attid
+//                   AND sess.sessdate >= :cstartdate
+//                   {$where}
+//              GROUP BY sess.groupid";
+        //hd981
         $sql = "SELECT sess.groupid, COUNT(*) AS numsessions, SUM(stamax.maxgrade) AS maxpoints
                   FROM {attendance_sessions} sess
                   JOIN (SELECT setnumber, MAX(grade) AS maxgrade
                                              FROM {attendance_statuses}
-                                            WHERE attendanceid = :attid2
-                                              AND deleted = 0
+                                            WHERE deleted = 0
                                               AND visible = 1
                                            GROUP BY setnumber) stamax
                     ON (stamax.setnumber = sess.statusset)

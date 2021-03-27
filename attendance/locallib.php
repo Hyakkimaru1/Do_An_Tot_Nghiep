@@ -62,59 +62,59 @@ function attendance_get_statuses($attid, $onlyvisible=true, $statusset = -1) {
     global $DB;
 
     // Set selector.
-//    $params = array('aid' => $attid);
-//    $setsql = '';
-//    if ($statusset >= 0) {
-//        $params['statusset'] = $statusset;
-//        $setsql = ' AND setnumber = :statusset ';
-//    }
-//
-//    if ($onlyvisible) {
-//        $statuses = $DB->get_records_select('attendance_statuses', "attendanceid = :aid AND visible = 1 AND deleted = 0 $setsql",
-//                                            $params, 'setnumber ASC, grade DESC');
-//    } else {
-//        $statuses = $DB->get_records_select('attendance_statuses', "attendanceid = :aid AND deleted = 0 $setsql",
-//                                            $params, 'setnumber ASC, grade DESC');
-//    }
+    $params = array('aid' => $attid);
+    $setsql = '';
+    if ($statusset >= 0) {
+        $params['statusset'] = $statusset;
+        $setsql = ' AND setnumber = :statusset ';
+    }
 
-    $statuses = [
-        (object)[ "id"=> "1",
-        "acronym"=> "C",
-        "description"=> "Chu dong",
-        "grade"=> "2.00",
-        "studentavailability"=> "0",
-        "setunmarked"=> "0",
-        "visible"=> "1",
-        "deleted"=> "0",
-        "setnumber"=>"0" ],
-        (object)[ "id"=> "2",
-        "acronym"=> "B",
-        "description"=> "Bi dong",
-        "grade"=> "2.00",
-        "studentavailability"=> "0",
-        "setunmarked"=> "0",
-        "visible"=> "1",
-        "deleted"=> "0",
-        "setnumber"=>"0" ],
-        (object)[ "id"=> "3",
-        "acronym"=> "T",
-        "description"=> "Tre",
-        "grade"=> "1.00",
-        "studentavailability"=> "0",
-        "setunmarked"=> "0",
-        "visible"=> "1",
-        "deleted"=> "0",
-        "setnumber"=>"0" ],
-        (object)[ "id"=> "4",
-        "acronym"=> "V",
-        "description"=> "Vang",
-        "grade"=> "0.00",
-        "studentavailability"=> "0",
-        "setunmarked"=> "0",
-        "visible"=> "1",
-        "deleted"=> "0",
-        "setnumber"=>"0" ],
-    ];
+    if ($onlyvisible) {
+        $statuses = $DB->get_records_select('attendance_statuses', "visible = 1 AND deleted = 0 $setsql",
+                                            $params, 'setnumber ASC, grade DESC');
+    } else {
+        $statuses = $DB->get_records_select('attendance_statuses', "deleted = 0 $setsql",
+                                            $params, 'setnumber ASC, grade DESC');
+    }
+
+//    $statuses = [
+//        (object)[ "id"=> "1",
+//        "acronym"=> "C",
+//        "description"=> "Chu dong",
+//        "grade"=> "2.00",
+//        "studentavailability"=> "0",
+//        "setunmarked"=> "0",
+//        "visible"=> "1",
+//        "deleted"=> "0",
+//        "setnumber"=>"0" ],
+//        (object)[ "id"=> "2",
+//        "acronym"=> "B",
+//        "description"=> "Bi dong",
+//        "grade"=> "2.00",
+//        "studentavailability"=> "0",
+//        "setunmarked"=> "0",
+//        "visible"=> "1",
+//        "deleted"=> "0",
+//        "setnumber"=>"0" ],
+//        (object)[ "id"=> "3",
+//        "acronym"=> "T",
+//        "description"=> "Tre",
+//        "grade"=> "1.00",
+//        "studentavailability"=> "0",
+//        "setunmarked"=> "0",
+//        "visible"=> "1",
+//        "deleted"=> "0",
+//        "setnumber"=>"0" ],
+//        (object)[ "id"=> "4",
+//        "acronym"=> "V",
+//        "description"=> "Vang",
+//        "grade"=> "0.00",
+//        "studentavailability"=> "0",
+//        "setunmarked"=> "0",
+//        "visible"=> "1",
+//        "deleted"=> "0",
+//        "setnumber"=>"0" ],
+//    ];
 
 
     return $statuses;
@@ -331,8 +331,10 @@ function attendance_form_sessiondate_selector (MoodleQuickForm $mform) {
 function attendance_get_max_statusset($attendanceid) {
     global $DB;
 
-    $max = $DB->get_field_sql('SELECT MAX(setnumber) FROM {attendance_statuses} WHERE attendanceid = ? AND deleted = 0',
-        array($attendanceid));
+//    $max = $DB->get_field_sql('SELECT MAX(setnumber) FROM {attendance_statuses} WHERE attendanceid = ? AND deleted = 0',
+//        array($attendanceid));
+    //hd981
+    $max = $DB->get_field_sql('SELECT MAX(setnumber) FROM {attendance_statuses} WHERE deleted = 0');
     if ($max) {
         return $max;
     }
@@ -805,6 +807,7 @@ function attendance_construct_sessions_data_for_add($formdata, mod_attendance_st
         while ($sdate < $enddate) {
             if ($sdate < $startweek + WEEKSECS) {
                 $dinfo = usergetdate($sdate);
+                //var_dump($dinfo);die();
                 if (isset($formdata->sdays) && array_key_exists($wdaydesc[$dinfo['wday']], $formdata->sdays)) {
                     $sess = new stdClass();
                     $sess->sessdate = make_timestamp($dinfo['year'], $dinfo['mon'], $dinfo['mday'],
