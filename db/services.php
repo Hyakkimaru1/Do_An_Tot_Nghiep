@@ -41,6 +41,14 @@ $functions = array(
         'type' => 'read',
         'capabilities' => '',
     ),
+    'local_webservices_get_session_detail' => array(
+        'classname' => 'local_webservices_external',
+        'methodname' => 'get_session_detail',
+        'classpath' => 'local/webservices/externallib.php',
+        'description' => 'Get session detail based on session ID',
+        'type' => 'read',
+        'capabilities' => '',
+    ),
     'local_webservices_update_log' => array(
         'classname' => 'local_webservices_external',
         'methodname' => 'update_log',

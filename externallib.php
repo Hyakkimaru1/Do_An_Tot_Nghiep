@@ -33,6 +33,15 @@ require_once($CFG->dirroot . '/lib/externallib.php');
  * @copyright Copyleft
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
+class student_object {
+    public $id;
+    public $name;
+    public $timein;
+    public $timeout;
+    public $status;
+}
+
 class local_webservices_external extends external_api {
 
     // Functionset for get_roles() ************************************************************************************************.
@@ -141,11 +150,81 @@ class local_webservices_external extends external_api {
         );
     }
 
+    public static function get_session_detail_parameters() {
+        return new external_function_parameters(
+            array(
+                'sessionid' => new external_value(PARAM_INT, 'Session ID'),
+            )
+        );
+    }
+    public static function get_session_detail(int $sessionid) {
+        $params = self::validate_parameters(self::get_session_detail_parameters(), array(
+                'sessionid' => $sessionid
+            )
+        );
+        global $DB;
+        $sql1 = "SELECT s.*, course.id as courseid, course.fullname
+                FROM {attendance_session} s
+                LEFT JOIN {attendance} a ON s.attendanceid = a.id
+                LEFT JOIN {course} course ON a.course = course.id
+                WHERE s.id = :sessionid";
+        $data = $DB->get_record_sql($sql1,array('sessionid' => $sessionid));
+
+
+        $sql2 = "SELECT l.*, u.lastname, u.firstname
+                FROM {attendance_log} l
+                LEFT JOIN {user} u ON l.studentid = u.id
+                LEFT JOIN {attendance_session} s ON l.sessionid = s.id
+                WHERE s.id = :sessionid";
+
+        $students = $DB->get_records_sql($sql2,array('sessionid' => $sessionid));
+        $students_array = array();
+        foreach ($students as $student) {
+            if (!empty($student)) {
+                $student_object = new student_object();
+                $student_object->id = $student->studentid;
+                $student_object->name = $student->lastname. ' ' .$student->firstname;
+                $student_object->timein = $student->timein;
+                $student_object->timeout = $student->timeout;
+                $student_object->status = $student->status;
+                $students_array[] = $student_object;
+            }
+        }
+        return array('id'=>(int) $data->courseid,'name'=>$data->fullname,'sessdate'=>
+            $data->sessdate,'lastdate'=>$data->lastdate,'class'=>$data->lesson,
+            'room'=>$data->roomid,'students'=>$students_array);
+    }
+    public static function get_session_detail_returns() {
+           return new external_single_structure(
+                array(
+                    'id' => new external_value(PARAM_INT, 'course ID', VALUE_DEFAULT, null),
+                    'name' => new external_value(PARAM_TEXT, 'course name', VALUE_DEFAULT, null),
+                    'sessdate' => new external_value(PARAM_INT, 'session start time', VALUE_DEFAULT, null),
+                    'lastdate' => new external_value(PARAM_INT, 'session end time', VALUE_DEFAULT, null),
+                    'class' => new external_value(PARAM_INT, 'lesson number', VALUE_DEFAULT, null),
+                    'room' => new external_value(PARAM_TEXT, 'room ID', VALUE_DEFAULT, null),
+                    'students' => new external_multiple_structure(
+                        new external_single_structure(
+                            array(
+                                'id' => new external_value(PARAM_INT, 'student ID', VALUE_DEFAULT, null),
+                                'name' => new external_value(PARAM_TEXT, 'student name', VALUE_DEFAULT, null),
+                                'timein' => new external_value(PARAM_INT, 'checkin time', VALUE_DEFAULT, null),
+                                'timeout' => new external_value(PARAM_INT, 'checkout time', VALUE_DEFAULT, null),
+                                'status' => new external_value(PARAM_INT, 'status number', VALUE_DEFAULT, null),
+                            )
+                        )
+                    ),
+                )
+            );
+    }
+
+
     /**
      * Parameter description for update_log().
      *
      * @return external_function_parameters.
      */
+
 
     public static function update_log_parameters(): external_function_parameters
     {
