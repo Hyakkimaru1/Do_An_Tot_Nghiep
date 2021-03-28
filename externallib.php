@@ -244,7 +244,7 @@ class local_webservices_external extends external_api {
 
         // Check if this course was created or not
 
-        $sql = "SELECT 
+        $sql = "SELECT course.*
                 FROM {course} course 
                 WHERE course.id = :courseid";
         $data = $DB->get_record_sql($sql,array('courseid'=>$courseid),IGNORE_MISSING);
@@ -255,7 +255,7 @@ class local_webservices_external extends external_api {
             $return['message'] = "There isn't any course with this ID";
         }
         else {
-            $data = (object) array('courseid'=>$courseid);
+            $data = (object) array('course'=>$courseid);
 
             if ($DB->insert_record('attendance',$data)) {
                 $return['message'] = "Created attendance successfully";
