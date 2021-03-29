@@ -72,7 +72,7 @@ switch ($att->pageparams->action) {
         }
 
         if ($formdata = $mform->get_data()) {
-            //var_dump($formdata->sdays);die();
+            //var_dump($att);die();
             $sessions = attendance_construct_sessions_data_for_add($formdata, $att);
             $att->add_sessions($sessions);
             if (count($sessions) == 1) {

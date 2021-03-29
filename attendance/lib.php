@@ -109,7 +109,7 @@ function attendance_add_instance($attendance) {
 
     $attendance->id = $DB->insert_record('attendance', $attendance);
 
-    att_add_default_statuses($attendance->id);
+    //att_add_default_statuses($attendance->id);
 
     attendance_add_default_warnings($attendance->id);
 

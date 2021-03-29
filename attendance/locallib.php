@@ -963,6 +963,210 @@ function attendance_construct_sessions_data_for_add($formdata, mod_attendance_st
     return $sessions;
 }
 
+function add_multiply_attedance_session($formdata) {
+    global $CFG;
+
+    $sesstarttime = $formdata->sestime['starthour'] * HOURSECS + $formdata->sestime['startminute'] * MINSECS;
+    $sesendtime = $formdata->sestime['endhour'] * HOURSECS + $formdata->sestime['endminute'] * MINSECS;
+    $sessiondate = $formdata->sessiondate + $sesstarttime;
+    $duration = $sesendtime - $sesstarttime;
+    if (empty(get_config('attendance', 'enablewarnings'))) {
+        $absenteereport = get_config('attendance', 'absenteereport_default');
+    } else {
+        $absenteereport = empty($formdata->absenteereport) ? 0 : 1;
+    }
+
+    $now = time();
+
+    if (empty(get_config('attendance', 'studentscanmark'))) {
+        $formdata->studentscanmark = 0;
+    }
+
+    $calendarevent = 0;
+    if (isset($formdata->calendarevent)) { // Calendar event should be created.
+        $calendarevent = 1;
+    }
+
+    $sessions = array();
+    if (isset($formdata->addmultiply)) {
+        $startdate = $sessiondate;
+        $enddate = $formdata->sessionenddate + DAYSECS; // Because enddate in 0:0am.
+
+        if ($enddate < $startdate) {
+            return null;
+        }
+
+        // Getting first day of week.
+        $sdate = $startdate;
+        $dinfo = usergetdate($sdate);
+        if ($CFG->calendar_startwday === '0') { // Week start from sunday.
+            $startweek = $startdate - $dinfo['wday'] * DAYSECS; // Call new variable.
+        } else {
+            $wday = $dinfo['wday'] === 0 ? 7 : $dinfo['wday'];
+            $startweek = $startdate - ($wday - 1) * DAYSECS;
+        }
+
+        $wdaydesc = array(0 => 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat');
+
+        while ($sdate < $enddate) {
+            if ($sdate < $startweek + WEEKSECS) {
+                $dinfo = usergetdate($sdate);
+                //var_dump($dinfo);die();
+                if (isset($formdata->sdays) && array_key_exists($wdaydesc[$dinfo['wday']], $formdata->sdays)) {
+                    $sess = new stdClass();
+                    $sess->sessdate = make_timestamp($dinfo['year'], $dinfo['mon'], $dinfo['mday'],
+                        $formdata->sestime['starthour'], $formdata->sestime['startminute']);
+                    $sess->duration = $duration;
+                    $sess->descriptionitemid = $formdata->sdescription['itemid'];
+                    $sess->description = $formdata->sdescription['text'];
+                    $sess->descriptionformat = $formdata->sdescription['format'];
+                    $sess->calendarevent = $calendarevent;
+                    $sess->timemodified = $now;
+                    $sess->absenteereport = $absenteereport;
+                    $sess->studentpassword = '';
+                    $sess->includeqrcode = 0;
+                    $sess->rotateqrcode = 0;
+                    $sess->rotateqrcodesecret = '';
+                    //hd981
+                    $sess->roomid = $formdata->room;
+
+                    if (!empty($formdata->usedefaultsubnet)) {
+                        $sess->subnet = '';
+                    } else {
+                        $sess->subnet = $formdata->subnet;
+                    }
+                    $sess->automark = $formdata->automark;
+                    $sess->automarkcompleted = 0;
+                    if (!empty($formdata->preventsharedip)) {
+                        $sess->preventsharedip = $formdata->preventsharedip;
+                    }
+                    if (!empty($formdata->preventsharediptime)) {
+                        $sess->preventsharediptime = $formdata->preventsharediptime;
+                    }
+
+                    if (isset($formdata->studentscanmark)) { // Students will be able to mark their own attendance.
+                        $sess->studentscanmark = 1;
+                        if (isset($formdata->autoassignstatus)) {
+                            $sess->autoassignstatus = 1;
+                        }
+
+                        if (!empty($formdata->randompassword)) {
+                            $sess->studentpassword = attendance_random_string();
+                        } else if (!empty($formdata->studentpassword)) {
+                            $sess->studentpassword = $formdata->studentpassword;
+                        }
+                        if (!empty($formdata->includeqrcode)) {
+                            $sess->includeqrcode = $formdata->includeqrcode;
+                        }
+                        if (!empty($formdata->rotateqrcode)) {
+                            $sess->rotateqrcode = $formdata->rotateqrcode;
+                            $sess->studentpassword = attendance_random_string();
+                            $sess->rotateqrcodesecret = attendance_random_string();
+                        }
+                        if (!empty($formdata->preventsharedip)) {
+                            $sess->preventsharedip = $formdata->preventsharedip;
+                        }
+                        if (!empty($formdata->preventsharediptime)) {
+                            $sess->preventsharediptime = $formdata->preventsharediptime;
+                        }
+                    } else {
+                        $sess->subnet = '';
+                        $sess->automark = 0;
+                        $sess->automarkcompleted = 0;
+                        $sess->preventsharedip = 0;
+                        $sess->preventsharediptime = '';
+                    }
+                    $sess->statusset = $formdata->statusset;
+
+                    attendance_fill_groupid($formdata, $sessions, $sess);
+                }
+                $sdate += DAYSECS;
+            } else {
+                $startweek += WEEKSECS * $formdata->period;
+                $sdate = $startweek;
+            }
+        }
+    } else {
+        $sess = new stdClass();
+        $sess->sessdate = $sessiondate;
+        $sess->duration = $duration;
+        $sess->descriptionitemid = $formdata->sdescription['itemid'];
+        $sess->description = $formdata->sdescription['text'];
+        $sess->descriptionformat = $formdata->sdescription['format'];
+        $sess->calendarevent = $calendarevent;
+        $sess->timemodified = $now;
+        $sess->studentscanmark = 0;
+        $sess->autoassignstatus = 0;
+        $sess->subnet = '';
+        $sess->studentpassword = '';
+        $sess->automark = 0;
+        $sess->automarkcompleted = 0;
+        $sess->absenteereport = $absenteereport;
+        $sess->includeqrcode = 0;
+        $sess->rotateqrcode = 0;
+        $sess->rotateqrcodesecret = '';
+        //hd981
+        $sess->roomid = $formdata->room;
+
+        if (!empty($formdata->usedefaultsubnet)) {
+            $sess->subnet = '';
+        } else {
+            $sess->subnet = $formdata->subnet;
+        }
+
+        if (!empty($formdata->automark)) {
+            $sess->automark = $formdata->automark;
+        }
+        if (!empty($formdata->preventsharedip)) {
+            $sess->preventsharedip = $formdata->preventsharedip;
+        }
+        if (!empty($formdata->preventsharediptime)) {
+            $sess->preventsharediptime = $formdata->preventsharediptime;
+        }
+
+        if (isset($formdata->studentscanmark) && !empty($formdata->studentscanmark)) {
+            // Students will be able to mark their own attendance.
+            $sess->studentscanmark = 1;
+            if (isset($formdata->autoassignstatus) && !empty($formdata->autoassignstatus)) {
+                $sess->autoassignstatus = 1;
+            }
+            if (!empty($formdata->randompassword)) {
+                $sess->studentpassword = attendance_random_string();
+            } else if (!empty($formdata->studentpassword)) {
+                $sess->studentpassword = $formdata->studentpassword;
+            }
+            if (!empty($formdata->includeqrcode)) {
+                $sess->includeqrcode = $formdata->includeqrcode;
+            }
+            if (!empty($formdata->rotateqrcode)) {
+                $sess->rotateqrcode = $formdata->rotateqrcode;
+                $sess->studentpassword = attendance_random_string();
+                $sess->rotateqrcodesecret = attendance_random_string();
+            }
+            if (!empty($formdata->usedefaultsubnet)) {
+                $sess->subnet = '';
+            } else {
+                $sess->subnet = $formdata->subnet;
+            }
+
+            if (!empty($formdata->automark)) {
+                $sess->automark = $formdata->automark;
+            }
+            if (!empty($formdata->preventsharedip)) {
+                $sess->preventsharedip = $formdata->preventsharedip;
+            }
+            if (!empty($formdata->preventsharediptime)) {
+                $sess->preventsharediptime = $formdata->preventsharediptime;
+            }
+        }
+        $sess->statusset = $formdata->statusset;
+
+        attendance_fill_groupid($formdata, $sessions, $sess);
+    }
+
+    return $sessions;
+}
+
 /**
  * Helper function for attendance_construct_sessions_data_for_add().
  *

@@ -31,22 +31,28 @@ function xmldb_attendance_install() {
     global $DB;
 
     $result = true;
-    $arr = array('C' => 2, 'B' => 2, 'T' => 1, 'V' => 0);
+    $arr = array('Chu dong' => 2, 'Bi dong' => 2, 'Tre' => 1, 'Vang' => 0);
+//    $dessciption = array('Chu dong','Bi dong', 'Tre', 'Vang');
+    $i = 0;
     foreach ($arr as $k => $v) {
         $rec = new stdClass;
-        $rec->attendanceid = 0;
+//        $rec->attendanceid = 0;
         $rec->acronym = get_string($k.'acronym', 'attendance');
         // Sanity check - if language translation uses more than the allowed 2 chars.
         if (mb_strlen($rec->acronym) > 2) {
-            $rec->acronym = $k;
+            $rec->acronym = $k[0];
         }
-        $rec->description = get_string($k.'full', 'attendance');
+//        $rec->description = get_string($k.'full', 'attendance');
+        $rec->description = $k;
+        $i = $i + 1;
         $rec->grade = $v;
         $rec->visible = 1;
         $rec->deleted = 0;
-        if (!$DB->record_exists('attendance_statuses', array('attendanceid' => 0, 'acronym' => $rec->acronym))) {
-            $result = $result && $DB->insert_record('attendance_statuses', $rec);
-        }
+
+        $result = $result && $DB->insert_record('attendance_statuses', $rec);
+//        if (!$DB->record_exists('attendance_statuses', array('attendanceid' => 0, 'acronym' => $rec->acronym))) {
+//
+//        }
     }
 
     return $result;
