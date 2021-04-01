@@ -1402,6 +1402,21 @@ function attendance_get_automarkoptions() {
     return $options;
 }
 
+
+//hd981
+function attendance_get_roomptions() {
+    global $DB;
+    $sql = "SELECT r.* FROM {room} r";
+
+    $rooms = $DB->get_records_sql($sql);
+    $op = array();
+    foreach ($rooms as $room){
+        $op[$room->id] = 'cs'.$room->campus.':'.$room->name;
+    }
+
+    return $op;
+}
+
 /**
  * Get available sharedip options.
  *

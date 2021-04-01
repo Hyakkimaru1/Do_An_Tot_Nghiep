@@ -111,7 +111,9 @@ class addsession extends moodleform {
             }
         }
 
-        $mform->addElement('text', 'room', 'Room', array('size' => '64'));
+//        $mform->addElement('text', 'room', 'Room', array('size' => '64'));
+        $op = attendance_get_roomptions();
+        $mform->addElement('select', 'room', 'Room', $op);
         attendance_form_sessiondate_selector($mform);
 
         // Select which status set to use.

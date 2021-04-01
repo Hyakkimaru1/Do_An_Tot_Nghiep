@@ -661,6 +661,9 @@ class mod_attendance_structure {
         $record->remarks = get_string('set_by_student', 'mod_attendance');
         $record->sessionid = $mformdata->sessid;
         $record->timetaken = $now;
+        //hd981
+        $record->timein = $now;
+        $record->timeout = $now;
         $record->takenby = $USER->id;
         $record->ipaddress = getremoteaddr(null);
 
@@ -737,6 +740,9 @@ class mod_attendance_structure {
                 $sesslog[$sid]->sessionid = $this->pageparams->sessionid;
                 $sesslog[$sid]->timetaken = $now;
                 $sesslog[$sid]->takenby = $USER->id;
+                //
+                $sesslog[$sid]->timein = $now;
+                $sesslog[$sid]->timeout = $now;
             }
         }
 
