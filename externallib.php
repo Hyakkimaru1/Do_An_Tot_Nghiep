@@ -65,17 +65,37 @@ class local_webservices_external extends external_api {
         $sql = "SELECT course.*
                 FROM {attendance} a
                 LEFT JOIN {course} course ON course.id = a.course";
-        return $DB->get_records_sql($sql, array(),($page - 1) * $pagesize, $pagesize);
+        $result = $DB->get_records_sql($sql, array());
+        $courses = array();
+        $index = 0;
+        foreach ($result as $item => $value) {
+            if (($page-1)*$pagesize<=$index & $page*$pagesize>$index) {
+                $courses[] = $value;
+                $index++;
+            }
+            else if ($index<($page-1)*$pagesize) {
+                $index++;
+            }
+            else break;
+
+        }
+        return array('totalpage' => floor(count($result)/$pagesize) + (count($result)%$pagesize!=0),
+            'courses' => $courses);
     }
 
-    public static function get_courses_pagination_returns(): external_multiple_structure
+    public static function get_courses_pagination_returns(): external_single_structure
     {
-        return new external_multiple_structure(
-            new external_single_structure(
-                array(
-                    'id' => new external_value(PARAM_INT, 'course ID', VALUE_DEFAULT, null),
-                    'fullname' => new external_value(PARAM_TEXT, "course's full name", VALUE_DEFAULT, null),
-                    'shortname' => new external_value(PARAM_TEXT, "course's short name", VALUE_DEFAULT, null),
+        return new external_single_structure(
+            array(
+                'totalpage' => new external_value(PARAM_INT,'total pages',VALUE_DEFAULT,null),
+                'courses' => new external_multiple_structure(
+                    new external_single_structure(
+                        array(
+                            'id' => new external_value(PARAM_INT, 'course ID', VALUE_DEFAULT, null),
+                            'fullname' => new external_value(PARAM_TEXT, "course's full name", VALUE_DEFAULT, null),
+                            'shortname' => new external_value(PARAM_TEXT, "course's short name", VALUE_DEFAULT, null),
+                        )
+                    )
                 )
             )
         );
