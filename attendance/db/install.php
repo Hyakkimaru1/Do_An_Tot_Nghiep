@@ -37,7 +37,7 @@ function xmldb_attendance_install() {
     foreach ($arr as $k => $v) {
         $rec = new stdClass;
 //        $rec->attendanceid = 0;
-        $rec->acronym = get_string($k.'acronym', 'attendance');
+        $rec->acronym = $k;
         // Sanity check - if language translation uses more than the allowed 2 chars.
         if (mb_strlen($rec->acronym) > 2) {
             $rec->acronym = $k[0];
