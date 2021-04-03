@@ -503,7 +503,7 @@ class local_webservices_external extends external_api {
                     'roomid' => new external_value(PARAM_INT, 'room ID', VALUE_DEFAULT, null),
                     'courseid' => new external_value(PARAM_INT, 'course ID', VALUE_DEFAULT, null),
                     'sessdate' => new external_value(PARAM_INT, 'start time of session', VALUE_DEFAULT, null),
-                    'lastdate' => new external_value(PARAM_INT, 'end time of session', VALUE_DEFAULT, null),
+                    'duration' => new external_value(PARAM_INT, 'duration of session', VALUE_DEFAULT, null),
                     'startdate' => new external_value(PARAM_INT, 'startdate of course', VALUE_DEFAULT, null),
                     'fullname' => new external_value(PARAM_TEXT, 'fullname of course', VALUE_DEFAULT, null),
                     'shortname' => new external_value(PARAM_TEXT, 'shortname of course', VALUE_DEFAULT, null),
@@ -531,7 +531,7 @@ class local_webservices_external extends external_api {
         ));
         global $DB;
 
-        $sql = "SELECT  s.id as id, attendanceid,course as courseid, roomid, sessdate, lastdate, fullname, shortname,startdate
+        $sql = "SELECT  s.id as id, attendanceid,course as courseid, roomid, sessdate, duration, fullname, shortname,startdate
                 FROM {attendance_sessions} s
                 LEFT JOIN {attendance} a ON s.attendanceid = a.id 
                 LEFT JOIN {course} c ON course = c.id
@@ -550,7 +550,7 @@ class local_webservices_external extends external_api {
                     'roomid' => new external_value(PARAM_TEXT, 'room ID', VALUE_DEFAULT, null),
                     'courseid' => new external_value(PARAM_TEXT, 'course ID', VALUE_DEFAULT, null),
                     'sessdate' => new external_value(PARAM_INT, 'start time of session', VALUE_DEFAULT, null),
-                    'duration' => new external_value(PARAM_INT, 'end time of session', VALUE_DEFAULT, null),
+                    'duration' => new external_value(PARAM_INT, 'Duration of session', VALUE_DEFAULT, null),
                     'startdate' => new external_value(PARAM_INT, 'startdate of course', VALUE_DEFAULT, null),
                     'fullname' => new external_value(PARAM_TEXT, 'fullname of course', VALUE_DEFAULT, null),
                     'shortname' => new external_value(PARAM_TEXT, 'shortname of course', VALUE_DEFAULT, null),
