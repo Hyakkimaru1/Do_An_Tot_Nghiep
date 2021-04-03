@@ -18,19 +18,21 @@
                      REFTABLE="course" REFFIELDS="id"/>
             </KEYS>
         </TABLE>
-        <TABLE NAME="attendance_session" COMMENT="session table">
+        <TABLE NAME="attendance_sessions" COMMENT="sessions table">
             <FIELDS>
                 <FIELD NAME="id" SEQUENCE="true" TYPE="int" LENGTH="10" NOTNULL="true"/>
                 <FIELD NAME="attendanceid" SEQUENCE="false" TYPE="int" LENGTH="10" NOTNULL="true" />
-                <FIELD NAME="roomid" SEQUENCE="false" TYPE="text" NOTNULL="true"/>
-                <FIELD NAME="sessdate" SEQUENCE="false" TYPE="int" LENGTH="20" NOTNULL="true"/>
-                <FIELD NAME="lastdate" SEQUENCE="false" TYPE="int" LENGTH="20" NOTNULL="true"/>
+                <FIELD NAME="roomid" SEQUENCE="false" TYPE="int" LENGTH="10" NOTNULL="true"/>
+                <FIELD NAME="sessdate" SEQUENCE="false" TYPE="int" LENGTH="20" NOTNULL="false"/>
+                <FIELD NAME="duration" SEQUENCE="false" TYPE="int" LENGTH="20" NOTNULL="false"/>
                 <FIELD NAME="lesson" SEQUENCE="false" TYPE="int" LENGTH="4" NOTNULL="true" />
             </FIELDS>
             <KEYS>
                 <KEY NAME="primary" TYPE="primary" FIELDS="id" />
-                <KEY NAME="foreign_session_attendance" TYPE="foreign" FIELDS="attendanceid"
+                <KEY NAME="foreign_sessions_attendance" TYPE="foreign" FIELDS="attendanceid"
                      REFTABLE="attendance" REFFIELDS="id"/>
+                <KEY NAME="foreign_sessions_room" TYPE="foreign" FIELDS="roomid"
+                     REFTABLE="room" REFFIELDS="id"/>
             </KEYS>
         </TABLE>
         <TABLE NAME="attendance_log" COMMENT="log table">
@@ -45,8 +47,18 @@
             </FIELDS>
             <KEYS>
                 <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-                <KEY NAME="foreign_log_session" TYPE="foreign" FIELDS="sessionid"
-                     REFTABLE="attendance_session" REFFIELDS="id"/>
+                <KEY NAME="foreign_log_sessions" TYPE="foreign" FIELDS="sessionid"
+                     REFTABLE="attendance_sessions" REFFIELDS="id"/>
+            </KEYS>
+        </TABLE>
+        <TABLE NAME="room" COMMENT="room table">
+            <FIELDS>
+                <FIELD NAME="id" SEQUENCE="true" TYPE="int" LENGTH="10" NOTNULL="true"/>
+                <FIELD NAME="name" SEQUENCE="false" TYPE="text" NOTNULL="true"/>
+                <FIELD NAME="campus" SEQUENCE="false" TYPE="text" NOTNULL="true"/>
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
             </KEYS>
         </TABLE>
     </TABLES>

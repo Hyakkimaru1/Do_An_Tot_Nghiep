@@ -25,11 +25,19 @@
 defined('MOODLE_INTERNAL') || die();
 
 $functions = array(
+    'local_webservices_get_courses_pagination' => array(
+        'classname' => 'local_webservices_external',
+        'methodname' => 'get_courses_pagination',
+        'classpath' => 'local/webservices/externallib.php',
+        'description' => 'Get all checkin-courses with pagination',
+        'type' => 'read',
+        'capabilities' => '',
+    ),
     'local_webservices_get_a_log_by_ids' => array(
         'classname' => 'local_webservices_external',
         'methodname' => 'get_a_log',
         'classpath' => 'local/webservices/externallib.php',
-        'description' => 'Get a log of a student in a class at a day',
+        'description' => 'Get a log of a student in a class at a day based on student ID and session ID',
         'type' => 'read',
         'capabilities' => '',
     ),
@@ -37,17 +45,73 @@ $functions = array(
         'classname' => 'local_webservices_external',
         'methodname' => 'get_logs',
         'classpath' => 'local/webservices/externallib.php',
-        'description' => 'Get attendance logs of students in a class base on the attendance ID',
+        'description' => 'Get attendance logs of students in a class based on the attendance ID',
         'type' => 'read',
         'capabilities' => '',
     ),
-    'local_webservices_update_log' => array(
+    'local_webservices_get_student_logs_by_course_id' => array(
         'classname' => 'local_webservices_external',
-        'methodname' => 'update_log',
+        'methodname' => 'get_student_logs_by_course_id',
         'classpath' => 'local/webservices/externallib.php',
-        'description' => 'Update status, timein, timeout in the report table based on the student ID
-        and the session ID. If not need to update any field, leave this field null. If 
-        there is no record, it will create a new one',
+        'description' => 'Get all attendance logs of a student in a course based on student ID and course ID',
+        'type' => 'read',
+        'capabilities' => '',
+    ),
+    'local_webservices_get_logs_by_course_id' => array(
+        'classname' => 'local_webservices_external',
+        'methodname' => 'get_logs_by_course_id',
+        'classpath' => 'local/webservices/externallib.php',
+        'description' => 'Get attendance logs of students in a class based on the course ID',
+        'type' => 'read',
+        'capabilities' => '',
+    ),
+    'local_webservices_get_session_detail' => array(
+        'classname' => 'local_webservices_external',
+        'methodname' => 'get_session_detail',
+        'classpath' => 'local/webservices/externallib.php',
+        'description' => 'Get session detail based on session ID',
+        'type' => 'read',
+        'capabilities' => '',
+    ),
+    'local_webservices_create_attendance' => array(
+        'classname' => 'local_webservices_external_write',
+        'methodname' => 'create_attendance',
+        'classpath' => 'local/webservices/externallib_write.php',
+        'description' => 'Create attendance record based on course ID',
+        'type' => 'write',
+        'capabilities' => '',
+    ),
+    'local_webservices_create_sessions' => array(
+        'classname' => 'local_webservices_external_write',
+        'methodname' => 'create_sessions',
+        'classpath' => 'local/webservices/externallib_write.php',
+        'description' => 'Create session records based on course ID, room ID and lessons number',
+        'type' => 'write',
+        'capabilities' => '',
+    ),
+    'local_webservices_create_logs' => array(
+        'classname' => 'local_webservices_external_write',
+        'methodname' => 'create_logs',
+        'classpath' => 'local/webservices/externallib_write.php',
+        'description' => 'Create log records based on student ID and course ID',
+        'type' => 'write',
+        'capabilities' => '',
+    ),
+    'local_webservices_update_session' => array(
+        'classname' => 'local_webservices_external_write',
+        'methodname' => 'update_session',
+        'classpath' => 'local/webservices/externallib_write.php',
+        'description' => "Update session date, last date and room ID based on the session ID. 
+        If not need to update any field, don't pass that field",
+        'type' => 'write',
+        'capabilities' => '',
+    ),
+    'local_webservices_update_log' => array(
+        'classname' => 'local_webservices_external_write',
+        'methodname' => 'update_log',
+        'classpath' => 'local/webservices/externallib_write.php',
+        'description' => "Update status, timein, timeout in the log table based on the student ID
+        and the session ID. If not need to update any field, don't pass that field",
         'type' => 'write',
         'capabilities' => '',
     ),
