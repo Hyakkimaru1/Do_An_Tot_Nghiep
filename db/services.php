@@ -67,4 +67,20 @@ $functions = array(
         'type' => 'read',
         'capabilities' => '',
     ),
+    'local_webservices_get_teacher_courses' => array(
+        'classname' => 'local_webservices_external',
+        'methodname' => 'get_teacher_courses',
+        'classpath' => 'local/webservices/externallib.php',
+        'description' => 'Get all courses of teacher',
+        'type' => 'read',
+        'capabilities' => '',
+    ),
+    'local_webservices_get_rooms' => array(
+        'classname' => 'local_webservices_external',
+        'methodname' => 'get_rooms',
+        'classpath' => 'local/webservices/externallib.php',
+        'description' => 'Get all rooms',
+        'type' => 'read',
+        'capabilities' => '',
+    ),
 );
