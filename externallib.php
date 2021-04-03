@@ -42,6 +42,12 @@ class student_object {
     public $status;
 }
 
+class student_log {
+    public $studentid;
+    public $name;
+    public $reports;
+}
+
 class local_webservices_external extends external_api {
 
     public static function get_courses_pagination_parameters(): external_function_parameters
@@ -79,7 +85,7 @@ class local_webservices_external extends external_api {
             else break;
 
         }
-        return array('totalpage' => floor(count($result)/$pagesize) + (count($result)%$pagesize!=0),
+        return array('totalrecords' => count($result), 'displayrecords'=> count($courses),
             'courses' => $courses);
     }
 
@@ -87,7 +93,8 @@ class local_webservices_external extends external_api {
     {
         return new external_single_structure(
             array(
-                'totalpage' => new external_value(PARAM_INT,'total pages',VALUE_DEFAULT,null),
+                'totalrecords' => new external_value(PARAM_INT,'total records',VALUE_DEFAULT,null),
+                'displayrecords' => new external_value(PARAM_INT,'display records',VALUE_DEFAULT,null),
                 'courses' => new external_multiple_structure(
                     new external_single_structure(
                         array(
@@ -294,19 +301,38 @@ class local_webservices_external extends external_api {
             )
         );
         global $DB;
-        $sql = "SELECT l.*, r.name as room, r.campus, s.lesson
-                FROM {attendance_log} l
-                LEFT JOIN {attendance_sessions} s ON l.sessionid = s.id 
-                LEFT JOIN {room} r ON r.id = s.roomid
-                LEFT JOIN {attendance} a 
-                ON s.attendanceid = a.id 
-                WHERE a.course = :courseid
-                ORDER BY l.id ASC";
 
-        try {
-            return $DB->get_records_sql($sql, array('courseid' => $courseid));
-        } catch (dml_exception $e) {
+        $sql1 = "SELECT u.*
+                FROM {user_enrolments} ue
+                LEFT JOIN {enrol} e ON ue.enrolid = e.id
+                LEFT JOIN {user} u ON u.id = ue.userid
+                WHERE e.courseid = :courseid";
+
+        $students =  $DB->get_records_sql($sql1,array('courseid'=>$courseid));
+        $return = array();
+        foreach ($students as $student) {
+            if (!empty($student)) {
+                //var_dump($student);
+                $student_log = new student_log();
+                $student_log->studentid = $student->id;
+
+                $student_log->name = $student->lastname . ' ' . $student->firstname;
+                $sql2 = "SELECT l.*, r.name as room, r.campus, s.lesson
+                    FROM {attendance_log} l
+                    LEFT JOIN {attendance_sessions} s ON l.sessionid = s.id
+                    LEFT JOIN {room} r ON r.id = s.roomid
+                    LEFT JOIN {attendance} a ON s.attendanceid = a.id
+                    WHERE a.course = :courseid AND l.studentid = :studentid";
+                $datas = $DB->get_records_sql($sql2, array('courseid' => $courseid,
+                    'studentid' => $student_log->studentid));
+
+                $student_log->reports = $datas;
+                //var_dump($datas);
+                $return[] = $student_log;
+            }
         }
+        //var_dump($return);
+        return $return;
     }
 
     public static function get_logs_by_course_id_returns(): external_multiple_structure
@@ -314,15 +340,21 @@ class local_webservices_external extends external_api {
         return new external_multiple_structure(
             new external_single_structure(
                 array(
-                    'id' => new external_value(PARAM_INT, 'log ID', VALUE_DEFAULT, null),
                     'studentid' => new external_value(PARAM_INT, 'student ID', VALUE_DEFAULT, null),
-                    'sessionid' => new external_value(PARAM_INT, 'session ID', VALUE_DEFAULT, null),
-                    'lesson' => new external_value(PARAM_INT, 'lesson number', VALUE_DEFAULT, null),
-                    'room' => new external_value(PARAM_TEXT, 'room name', VALUE_DEFAULT, null),
-                    'campus' => new external_value(PARAM_TEXT, 'campus location', VALUE_DEFAULT, null),
-                    'timein' => new external_value(PARAM_INT, 'timestamp when the student checkin', VALUE_DEFAULT, null),
-                    'timeout' => new external_value(PARAM_INT, 'timestamp when the student checkout', VALUE_DEFAULT, null),
-                    'status' => new external_value(PARAM_INT, 'status of the student', VALUE_DEFAULT, null),
+                    'name' => new external_value(PARAM_TEXT,"student's name", VALUE_DEFAULT,null),
+                    'reports' => new external_multiple_structure(
+                        new external_single_structure(
+                            array(
+                                'sessionid' => new external_value(PARAM_INT, 'session ID', VALUE_DEFAULT, null),
+                                'lesson' => new external_value(PARAM_INT, 'lesson number', VALUE_DEFAULT, null),
+                                'room' => new external_value(PARAM_TEXT, 'room name', VALUE_DEFAULT, null),
+                                'campus' => new external_value(PARAM_TEXT, 'campus location', VALUE_DEFAULT, null),
+                                'timein' => new external_value(PARAM_INT, 'timestamp when the student checkin', VALUE_DEFAULT, null),
+                                'timeout' => new external_value(PARAM_INT, 'timestamp when the student checkout', VALUE_DEFAULT, null),
+                                'status' => new external_value(PARAM_INT, 'status of the student', VALUE_DEFAULT, null),
+                            )
+                        ),'checkin infomation of a student in a course'
+                    )
                 )
             )
         );
@@ -589,7 +621,7 @@ class local_webservices_external extends external_api {
                     'id' => new external_value(PARAM_INT, 'session ID', VALUE_DEFAULT, null),
                     'name' => new external_value(PARAM_TEXT, 'name of room', VALUE_DEFAULT, null),
                     'campus' => new external_value(PARAM_TEXT, 'campus', VALUE_DEFAULT, null),
-                    
+
                 )
             )
         );
