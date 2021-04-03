@@ -464,8 +464,8 @@ class local_webservices_external extends external_api {
     public static function get_room_schedules_parameters() {
         return new external_function_parameters(
             array(
-                'roomid' => new external_value(PARAM_TEXT, 'room ID parameter',VALUE_OPTIONAL),
-                'date'  => new external_value(PARAM_INT, 'Date of room schedules',VALUE_OPTIONAL)
+                'roomid' => new external_value(PARAM_TEXT, 'room ID parameter',VALUE_DEFAULT, null),
+                'date'  => new external_value(PARAM_INT, 'Date of room schedules',VALUE_DEFAULT, null),
             )
         );
     }
@@ -479,44 +479,15 @@ class local_webservices_external extends external_api {
         ));
         global $DB;
 
-        $sql = "SELECT  s.id as id, attendanceid,course as courseid, roomid, sessdate, lastdate, fullname, shortname,startdate
-                FROM {attendance_session} s
-                LEFT JOIN {attendance} a ON s.attendanceid = a.id 
-                LEFT JOIN {course} c ON course = c.id
-                WHERE (s.roomid = :roomid AND s.sessdate > ( :date div 86400000)*86400000 AND s.lastdate < (( :date2 div 86400000) + 1 )*86400000)
-        ";
+        $sql = "SELECT  s.id as id, attendanceid,course as courseid, roomid, sessdate, duration, fullname, shortname,startdate
+        FROM {attendance_sessions} s
+        LEFT JOIN {attendance} a ON s.attendanceid = a.id 
+        LEFT JOIN {course} c ON course = c.id
+        WHERE (s.roomid = :roomid AND s.sessdate > ( :date div 86400)*86400 AND s.sessdate < (( :date2 div 86400) + 1 )*86400)
+";
         $res=$DB->get_records_sql($sql,array('roomid'=>$roomid,'date'=>$date,'date2'=>$date));
         return $res;
     }
-    /**
-     * Return roleinformation.
-     *
-     * This function returns roleid, rolename and roleshortname for all roles or for given roles.
-     *
-     * @param string $studentid Student ID.
-     * @param string $classid Class ID.
-     * @param string $scheduleid Schedule ID.
-     * @return object The student's report.
-     * @throws invalid_parameter_exception
-     */
-    public static function get_room_schedules(string $roomid,int $date)
-    {
-        // Validate parameters passed from web service.
-        $params = self::validate_parameters(self::get_room_schedules_parameters(), array(
-            'roomid' => $roomid,
-            'date' => $date,
-        ));
-        global $DB;
-
-        $sql = "SELECT  s.id as id, attendanceid,course as courseid, roomid, sessdate, lastdate, fullname, shortname,startdate
-                FROM {attendance_sessions} s
-                LEFT JOIN {attendance} a ON s.attendanceid = a.id 
-                LEFT JOIN {course} c ON course = c.id
-                WHERE (s.roomid = :roomid AND s.sessdate > ( :date div 86400000)*86400000 AND s.lastdate < (( :date2 div 86400000) + 1 )*86400000)
-        ";
-        $res=$DB->get_records_sql($sql,array('roomid'=>$roomid,'date'=>$date,'date2'=>$date));
-        return $res;
-        }
 
     /**
      * Parameter description for create_sections().
@@ -529,8 +500,8 @@ class local_webservices_external extends external_api {
                 array(
                     'id' => new external_value(PARAM_INT, 'session ID', VALUE_DEFAULT, null),
                     'attendanceid' => new external_value(PARAM_INT, 'attendance ID', VALUE_DEFAULT, null),
-                    'roomid' => new external_value(PARAM_TEXT, 'room ID', VALUE_DEFAULT, null),
-                    'courseid' => new external_value(PARAM_TEXT, 'course ID', VALUE_DEFAULT, null),
+                    'roomid' => new external_value(PARAM_INT, 'room ID', VALUE_DEFAULT, null),
+                    'courseid' => new external_value(PARAM_INT, 'course ID', VALUE_DEFAULT, null),
                     'sessdate' => new external_value(PARAM_INT, 'start time of session', VALUE_DEFAULT, null),
                     'lastdate' => new external_value(PARAM_INT, 'end time of session', VALUE_DEFAULT, null),
                     'startdate' => new external_value(PARAM_INT, 'startdate of course', VALUE_DEFAULT, null),
@@ -546,8 +517,8 @@ class local_webservices_external extends external_api {
     public static function get_teacher_courses_parameters() {
         return new external_function_parameters(
             array(
-                'roomid' => new external_value(PARAM_TEXT, 'room ID parameter',VALUE_OPTIONAL),
-                'date'  => new external_value(PARAM_INT, 'Date of room schedules',VALUE_OPTIONAL)
+                'roomid' => new external_value(PARAM_INT, 'room ID parameter',VALUE_DEFAULT, null),
+                'date'  => new external_value(PARAM_INT, 'Date of room schedules',VALUE_DEFAULT, null),
             )
         );
     }
@@ -561,10 +532,10 @@ class local_webservices_external extends external_api {
         global $DB;
 
         $sql = "SELECT  s.id as id, attendanceid,course as courseid, roomid, sessdate, lastdate, fullname, shortname,startdate
-                FROM {attendance_session} s
+                FROM {attendance_sessions} s
                 LEFT JOIN {attendance} a ON s.attendanceid = a.id 
                 LEFT JOIN {course} c ON course = c.id
-                WHERE (s.roomid = :roomid AND s.sessdate > ( :date div 86400000)*86400000 AND s.lastdate < (( :date2 div 86400000) + 1 )*86400000)
+                WHERE (s.roomid = :roomid AND s.sessdate > ( :date div 86400)*86400 AND s.sessdate < (( :date2 div 86400) + 1 )*86400)
         ";
         $res=$DB->get_records_sql($sql,array('roomid'=>$roomid,'date'=>$date,'date2'=>$date));
         return $res;
@@ -592,27 +563,22 @@ class local_webservices_external extends external_api {
     public static function get_rooms_parameters() {
         return new external_function_parameters(
             array(
-                'roomid' => new external_value(PARAM_TEXT, 'room ID parameter',VALUE_OPTIONAL),
-                'date'  => new external_value(PARAM_INT, 'Date of room schedules',VALUE_OPTIONAL)
+                'campus' => new external_value(PARAM_TEXT, 'Which campus',VALUE_DEFAULT, null),
             )
         );
     }
 
-    public static function get_rooms(string $roomid,int $date){
-        // Validate parameters passed from web service.
-        $params = self::validate_parameters(self::get_room_schedules_parameters(), array(
-            'roomid' => $roomid,
-            'date' => $date,
+    public static function get_rooms(string $campus){
+        $params = self::validate_parameters(self::get_rooms_parameters(), array(
+            'campus' => $campus,
         ));
         global $DB;
 
-        $sql = "SELECT  s.id as id, attendanceid,course as courseid, roomid, sessdate, lastdate, fullname, shortname,startdate
-                FROM {attendance_session} s
-                LEFT JOIN {attendance} a ON s.attendanceid = a.id 
-                LEFT JOIN {course} c ON course = c.id
-                WHERE (s.roomid = :roomid AND s.sessdate > ( :date div 86400000)*86400000 AND s.lastdate < (( :date2 div 86400000) + 1 )*86400000)
-        ";
-        $res=$DB->get_records_sql($sql,array('roomid'=>$roomid,'date'=>$date,'date2'=>$date));
+        $sql = "SELECT *
+                FROM {room}
+                WHERE campus = :campus
+                ";
+        $res=$DB->get_records_sql($sql,array('campus'=>$campus));
         return $res;
     }
 
@@ -621,14 +587,9 @@ class local_webservices_external extends external_api {
             new external_single_structure(
                 array(
                     'id' => new external_value(PARAM_INT, 'session ID', VALUE_DEFAULT, null),
-                    'attendanceid' => new external_value(PARAM_INT, 'attendance ID', VALUE_DEFAULT, null),
-                    'roomid' => new external_value(PARAM_TEXT, 'room ID', VALUE_DEFAULT, null),
-                    'courseid' => new external_value(PARAM_TEXT, 'course ID', VALUE_DEFAULT, null),
-                    'sessdate' => new external_value(PARAM_INT, 'start time of session', VALUE_DEFAULT, null),
-                    'lastdate' => new external_value(PARAM_INT, 'end time of session', VALUE_DEFAULT, null),
-                    'startdate' => new external_value(PARAM_INT, 'startdate of course', VALUE_DEFAULT, null),
-                    'fullname' => new external_value(PARAM_TEXT, 'fullname of course', VALUE_DEFAULT, null),
-                    'shortname' => new external_value(PARAM_TEXT, 'shortname of course', VALUE_DEFAULT, null),
+                    'name' => new external_value(PARAM_TEXT, 'name of room', VALUE_DEFAULT, null),
+                    'campus' => new external_value(PARAM_TEXT, 'campus', VALUE_DEFAULT, null),
+                    
                 )
             )
         );
