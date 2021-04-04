@@ -50,59 +50,6 @@ class student_log {
 
 class local_webservices_external extends external_api {
 
-
-    public static function search_courses_parameters(): external_function_parameters
-    {
-        return new external_function_parameters(
-            array(
-
-            )
-        );
-    }
-
-    public static function search_courses(): array
-    {
-        $params = self::validate_parameters(self::search_courses_parameters(), array(
-
-        ));
-        global $DB;
-        if ($value != null) {
-            $param = null;
-            if (filter!=null) {
-                $param = `c` . $filter;
-            }
-            else {
-                $param = `c.id`;
-            }
-            if ($order == null) {
-                $order = `ASC`;
-            }
-            $sql = "SELECT c.* 
-            FROM {course} c 
-            WHERE c.fullname LIKE :string1 OR c.shortname LIKE :string2
-            ORDER BY $param $order
-            ";
-            return $DB->get_records_sql($sql, array('string1' => '%' . $value . '%',
-                'string2' => '%' . $value . '%'));
-        }
-        else {
-            return [];
-        }
-    }
-
-    public static function search_courses_returns(): external_multiple_structure
-    {
-        return new external_multiple_structure(
-            new external_single_structure(
-                array(
-                    'id' => new external_value(PARAM_INT, 'course ID', VALUE_DEFAULT, null),
-                    'fullname' => new external_value(PARAM_TEXT, "course's fullname", VALUE_DEFAULT, null),
-                    'shortname' => new external_value(PARAM_TEXT, "course's shortname", VALUE_DEFAULT, null),
-                )
-            )
-        );
-    }
-
     public static function get_courses_pagination_parameters(): external_function_parameters
     {
         return new external_function_parameters(
