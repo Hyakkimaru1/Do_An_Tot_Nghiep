@@ -54,28 +54,32 @@ $formparams = array('course' => $course, 'cm' => $cm, 'modcontext' => $context);
 $mform = new mod_attendance\form\export($att->url_export(), $formparams);
 
 if ($formdata = $mform->get_data()) {
-
     $pageparams = new mod_attendance_page_with_filter_controls();
     $pageparams->init($cm);
     $pageparams->page = 0;
     $pageparams->group = $formdata->group;
     $pageparams->set_current_sesstype($formdata->group ? $formdata->group : mod_attendance_page_with_filter_controls::SESSTYPE_ALL);
     if (isset($formdata->includeallsessions)) {
-        if (isset($formdata->includenottaken)) {
-            $pageparams->view = ATT_VIEW_ALL;
-        } else {
-            $pageparams->view = ATT_VIEW_ALLPAST;
-            $pageparams->curdate = time();
-        }
-        $pageparams->init_start_end_date();
+//        if (isset($formdata->includenottaken)) {
+//            $pageparams->view = ATT_VIEW_ALL;
+//        } else {
+//            $pageparams->view = ATT_VIEW_ALLPAST;
+//            $pageparams->curdate = time();
+//        }
+//        $pageparams->init_start_end_date();
+        //hd981
+        $pageparams->startdate = $course->startdate;
+        $pageparams->enddate = $course->enddate;
     } else {
+        //hd981
         $pageparams->startdate = $formdata->sessionstartdate;
-        $pageparams->enddate = $formdata->sessionenddate;
+        $pageparams->enddate = $formdata->sessionenddate + (int)86400;
     }
     if ($formdata->selectedusers) {
         $pageparams->userids = $formdata->users;
     }
     $att->pageparams = $pageparams;
+//    var_dump($att->pageparams->startdate,$att->pageparams->enddate);die();
 
     $reportdata = new attendance_report_data($att);
     if ($reportdata->users) {

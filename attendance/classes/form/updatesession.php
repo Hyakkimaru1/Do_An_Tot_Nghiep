@@ -63,6 +63,10 @@ class updatesession extends \moodleform {
         $endhour = floor($endtime / HOURSECS);
         $endminute = floor(($endtime - $endhour * HOURSECS) / MINSECS);
 
+        //hd981
+        $sql = "SELECT r.* FROM {room} r WHERE r.id = $sess->roomid";
+        $room = $DB->get_records_sql($sql);
+
         $data = array(
             'sessiondate' => $sess->sessdate,
             'sestime' => array('starthour' => $starthour, 'startminute' => $startminute,
@@ -82,7 +86,7 @@ class updatesession extends \moodleform {
             'rotateqrcode' => $sess->rotateqrcode,
 
             //hd981
-            'room' => $sess->roomid,
+            'room' => $room[0]->campus.'_'.$room[0]->name,
         );
         if ($sess->subnet == $attendancesubnet) {
             $data['usedefaultsubnet'] = 1;
@@ -103,7 +107,9 @@ class updatesession extends \moodleform {
         $olddate = construct_session_full_date_time($sess->sessdate, $sess->duration);
         $mform->addElement('static', 'olddate', get_string('olddate', 'attendance'), $olddate);
 
-        $mform->addElement('text', 'room', 'Room', $data->room);
+        $mform->addElement('static', 'oldroom', 'Old room', $room[0]->campus.'_'.$room[0]->name);
+        $op = attendance_get_roomptions();
+        $mform->addElement('select', 'room', 'Room', $op);
         attendance_form_sessiondate_selector($mform);
 
         // Show which status set is in use.

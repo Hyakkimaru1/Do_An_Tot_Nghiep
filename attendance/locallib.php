@@ -1411,7 +1411,7 @@ function attendance_get_roomptions() {
     $rooms = $DB->get_records_sql($sql);
     $op = array();
     foreach ($rooms as $room){
-        $op[$room->id] = 'cs'.$room->campus.':'.$room->name;
+        $op[$room->id] = $room->campus.'_'.$room->name;
     }
 
     return $op;

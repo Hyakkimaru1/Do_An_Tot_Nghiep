@@ -139,14 +139,14 @@ class export extends \moodleform {
 
         $mform->addElement('checkbox', 'includeallsessions', get_string('includeall', 'attendance'), get_string('yes'));
         $mform->setDefault('includeallsessions', true);
-        $mform->addElement('checkbox', 'includenottaken', get_string('includenottaken', 'attendance'), get_string('yes'));
-        $mform->addElement('checkbox', 'includeremarks', get_string('includeremarks', 'attendance'), get_string('yes'));
-        $mform->addElement('checkbox', 'includedescription', get_string('includedescription', 'attendance'), get_string('yes'));
-        $mform->addElement('date_selector', 'sessionstartdate', get_string('startofperiod', 'attendance'));
-        $mform->setDefault('sessionstartdate', $course->startdate);
-        $mform->disabledIf('sessionstartdate', 'includeallsessions', 'checked');
+ //       $mform->addElement('checkbox', 'includenottaken', get_string('includenottaken', 'attendance'), get_string('yes'));
+ //       $mform->addElement('checkbox', 'includeremarks', get_string('includeremarks', 'attendance'), get_string('yes'));
+//        $mform->addElement('checkbox', 'includedescription', get_string('includedescription', 'attendance'), get_string('yes'));
+       $mform->addElement('date_selector', 'sessionstartdate', get_string('startofperiod', 'attendance'));
+  //      $mform->setDefault('sessionstartdate', $course->startdate);
+//        $mform->disabledIf('sessionstartdate', 'includeallsessions', 'checked');
         $mform->addElement('date_selector', 'sessionenddate', get_string('endofperiod', 'attendance'));
-        $mform->disabledIf('sessionenddate', 'includeallsessions', 'checked');
+//        $mform->disabledIf('sessionenddate', 'includeallsessions', 'checked');
 
         $formatoptions = array('excel' => get_string('downloadexcel', 'attendance'),
                                'ooo' => get_string('downloadooo', 'attendance'),

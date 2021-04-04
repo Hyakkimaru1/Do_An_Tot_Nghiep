@@ -761,6 +761,8 @@ class attendance_report_data implements renderable {
 
         $this->groups = groups_get_all_groups($att->course->id);
 
+//            var_dump($att>$this->pageparams->startdate,$att>$this->pageparams->enddate);die();
+
         $this->sessions = $att->get_filtered_sessions();
 
         $this->statuses = $att->get_statuses(true, true);
