@@ -50,6 +50,63 @@ class student_log {
 
 class local_webservices_external extends external_api {
 
+
+    public static function search_courses_parameters(): external_function_parameters
+    {
+        return new external_function_parameters(
+            array(
+                'value' => new external_value(PARAM_TEXT,'search value',VALUE_DEFAULT,null),
+                'filter' => new external_value(PARAM_TEXT, 'filter criteria',VALUE_DEFAULT,null),
+                'order'  => new external_value(PARAM_TEXT, 'order criteria',VALUE_DEFAULT,null),
+            )
+        );
+    }
+
+    public static function search_courses(string $value, string $filter, string $order): array
+    {
+        $params = self::validate_parameters(self::search_courses_parameters(), array(
+            'value' => $value,
+            'filter' => $filter,
+            'order' => $order,
+        ));
+        global $DB;
+        if ($value != null) {
+            $param = null;
+            if (filter!=null) {
+                $param = `c` . $filter;
+            }
+            else {
+                $param = `c.id`;
+            }
+            if ($order == null) {
+                $order = `ASC`;
+            }
+            $sql = "SELECT c.* 
+            FROM {course} c 
+            WHERE c.fullname LIKE :string1 OR c.shortname LIKE :string2
+            ORDER BY $param $order
+            ";
+            return $DB->get_records_sql($sql, array('string1' => '%' . $value . '%',
+                'string2' => '%' . $value . '%'));
+        }
+        else {
+            return [];
+        }
+    }
+
+    public static function search_courses_returns(): external_multiple_structure
+    {
+        return new external_multiple_structure(
+            new external_single_structure(
+                array(
+                    'id' => new external_value(PARAM_INT, 'course ID', VALUE_DEFAULT, null),
+                    'fullname' => new external_value(PARAM_TEXT, "course's fullname", VALUE_DEFAULT, null),
+                    'shortname' => new external_value(PARAM_TEXT, "course's shortname", VALUE_DEFAULT, null),
+                )
+            )
+        );
+    }
+
     public static function get_courses_pagination_parameters(): external_function_parameters
     {
         return new external_function_parameters(
@@ -75,7 +132,7 @@ class local_webservices_external extends external_api {
         $courses = array();
         $index = 0;
         foreach ($result as $item => $value) {
-            if (($page-1)*$pagesize<=$index & $page*$pagesize>$index) {
+            if (($page-1)*$pagesize<=$index && $page*$pagesize>$index) {
                 $courses[] = $value;
                 $index++;
             }
@@ -402,7 +459,7 @@ class local_webservices_external extends external_api {
             }
         }
         return array('courseid'=>$data->courseid,'name'=>$data->fullname,'sessdate'=>
-            $data->sessdate,'duration'=>$data->duration,'class'=>$data->lesson,
+            $data->sessdate,'duration'=>$data->duration,'lesson'=>$data->lesson,
             'room'=>$data->name, 'campus'=>$data->campus, 'students'=>$students_array);
     }
     public static function get_session_detail_returns() {
@@ -412,7 +469,7 @@ class local_webservices_external extends external_api {
                     'name' => new external_value(PARAM_TEXT, 'course name', VALUE_DEFAULT, null),
                     'sessdate' => new external_value(PARAM_INT, 'session start timestamp', VALUE_DEFAULT, null),
                     'duration' => new external_value(PARAM_INT, 'session duration', VALUE_DEFAULT, null),
-                    'class' => new external_value(PARAM_INT, 'lesson number', VALUE_DEFAULT, null),
+                    'lesson' => new external_value(PARAM_INT, 'lesson number', VALUE_DEFAULT, null),
                     'room' => new external_value(PARAM_TEXT, 'room name', VALUE_DEFAULT, null),
                     'campus' => new external_value(PARAM_TEXT, 'campus location', VALUE_DEFAULT, null),
                     'students' => new external_multiple_structure(
