@@ -55,19 +55,15 @@ class local_webservices_external extends external_api {
     {
         return new external_function_parameters(
             array(
-                'value' => new external_value(PARAM_TEXT,'search value',VALUE_DEFAULT,null),
-                'filter' => new external_value(PARAM_TEXT, 'filter criteria',VALUE_DEFAULT,null),
-                'order'  => new external_value(PARAM_TEXT, 'order criteria',VALUE_DEFAULT,null),
+
             )
         );
     }
 
-    public static function search_courses(string $value, string $filter, string $order): array
+    public static function search_courses(): array
     {
         $params = self::validate_parameters(self::search_courses_parameters(), array(
-            'value' => $value,
-            'filter' => $filter,
-            'order' => $order,
+
         ));
         global $DB;
         if ($value != null) {
@@ -113,22 +109,45 @@ class local_webservices_external extends external_api {
             array(
                 'page' => new external_value(PARAM_INT, 'page number'),
                 'pagesize'  => new external_value(PARAM_INT, 'page size'),
+                'value' => new external_value(PARAM_TEXT,'search value',VALUE_DEFAULT,''),
+                'filter' => new external_value(PARAM_TEXT, 'filter criteria',VALUE_DEFAULT,''),
+                'order'  => new external_value(PARAM_TEXT, 'order criteria',VALUE_DEFAULT,''),
             )
         );
     }
 
-    public static function get_courses_pagination(int $page, int $pagesize): array
+    public static function get_courses_pagination(int $page, int $pagesize,
+                                                  string $value, string $filter, string $order): array
     {
         $params = self::validate_parameters(self::get_courses_pagination_parameters(), array(
             'page' => $page,
-            'pagesize' => $pagesize));
+            'pagesize' => $pagesize,
+            'value' => $value,
+            'filter' => $filter,
+            'order' => $order
+        ));
 
         global $DB;
-
-        $sql = "SELECT course.*
+        $result = null;
+        if ($value != '') {
+            $filter = `course` . $filter;
+            $sql = "SELECT course.*
                 FROM {attendance} a
-                LEFT JOIN {course} course ON course.id = a.course";
-        $result = $DB->get_records_sql($sql, array());
+                LEFT JOIN {course} course ON course.id = a.course
+                WHERE course.fullname LIKE :string1 OR course.shortname LIKE :string2
+                ORDER BY $filter $order";
+            $result = $DB->get_records_sql($sql, array('string1' => '%' . $value . '%',
+                'string2' => '%' . $value . '%'));
+        }
+        else {
+            $sql = "SELECT course.*
+                FROM {attendance} a
+                LEFT JOIN {course} course ON course.id = a.course
+                 ";
+            $result = $DB->get_records_sql($sql, array());
+
+        }
+
         $courses = array();
         $index = 0;
         foreach ($result as $item => $value) {
@@ -142,8 +161,7 @@ class local_webservices_external extends external_api {
             else break;
 
         }
-        return array('totalrecords' => count($result), 'displayrecords'=> count($courses),
-            'courses' => $courses);
+        return array('totalrecords' => count($result), 'courses' => $courses);
     }
 
     public static function get_courses_pagination_returns(): external_single_structure
@@ -151,7 +169,6 @@ class local_webservices_external extends external_api {
         return new external_single_structure(
             array(
                 'totalrecords' => new external_value(PARAM_INT,'total records',VALUE_DEFAULT,null),
-                'displayrecords' => new external_value(PARAM_INT,'display records',VALUE_DEFAULT,null),
                 'courses' => new external_multiple_structure(
                     new external_single_structure(
                         array(

@@ -25,14 +25,6 @@
 defined('MOODLE_INTERNAL') || die();
 
 $functions = array(
-    'local_webservices_search_courses' => array(
-        'classname' => 'local_webservices_external',
-        'methodname' => 'search_courses',
-        'classpath' => 'local/webservices/externallib.php',
-        'description' => 'Search for the courses with the value entered',
-        'type' => 'read',
-        'capabilities' => '',
-    ),
     'local_webservices_get_courses_pagination' => array(
         'classname' => 'local_webservices_external',
         'methodname' => 'get_courses_pagination',
