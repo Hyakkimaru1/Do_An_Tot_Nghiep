@@ -395,7 +395,52 @@ class local_webservices_external_write extends external_api {
         $return = array('message' => '');
         if ($result == false)
         {
-            $return['message'] = "There isn't any log with suitable conditions";
+            $sql1= "SELECT s.*
+                FROM {attendance_sessions} s 
+                WHERE s.id = :sessionid";
+            $result1 = $DB->get_record_sql($sql1,array('sessionid'=>$sessionid),
+                IGNORE_MISSING);
+            if ($result1 == false) {
+                $return['message'] = "This session doesn't exist";
+                return $return;
+            }
+            else {
+                $sql2 = "SELECT u.*
+                FROM {user_enrolments} ue
+                LEFT JOIN {enrol} e ON ue.enrolid = e.id
+                LEFT JOIN {user} u ON u.id = ue.userid
+                LEFT JOIN {attendance} a ON a.course = e.courseid
+                LEFT JOIN {attendance_sessions} s ON s.attendanceid = a.id
+                WHERE ue.userid = :studentid AND s.id = :sessionid";
+                $result2 = $DB->get_record_sql($sql2,array('sessionid'=>$sessionid,'studentid'=>$studentid),
+                    IGNORE_MISSING);
+                if ($result2 == false) {
+                    $return['message'] = "This student isn't in this course";
+                    return $return;
+                }
+            }
+
+
+            $data = (object) array('studentid'=>$studentid,'sessionid'=>$sessionid,
+                'statusid'=>0,'timein'=>null, 'timeout'=>null);
+            if ($timein)
+            {
+                $data->timein = $timein;
+            }
+            if ($timeout)
+            {
+                $data->timeout = $timeout;
+            }
+            if ($statusid!=-1)
+            {
+                $data->statusid = $statusid;
+            }
+            if ($DB->insert_record('attendance_log',$data)) {
+                $return['message'] = "Created the log successfully";
+            }
+            else {
+                $return['message'] = "Couldn't create the log";
+            }
         }
         else {
             $data = (object) array('id'=>$result->id,'statusid'=>$result->statusid,'timein'=>$result->timein,
