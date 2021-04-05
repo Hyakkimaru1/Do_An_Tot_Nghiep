@@ -152,18 +152,18 @@ class local_webservices_external_write extends external_api {
             array(
                 'studentid'  => new external_value(PARAM_INT, 'Student ID'),
                 'courseid' => new external_value(PARAM_INT,'Course ID'),
-                'status' => new external_value(PARAM_INT,'Status number',VALUE_DEFAULT,0),
+                'statusid' => new external_value(PARAM_INT,'statusid number',VALUE_DEFAULT,0),
             )
 
         );
     }
 
-    public static function create_logs(int $studentid, int $courseid, int $status): array
+    public static function create_logs(int $studentid, int $courseid, int $statusid): array
     {
         $params = self::validate_parameters(self::create_logs_parameters(), array(
                 'studentid' => $studentid,
                 'courseid' => $courseid,
-                'status' => $status
+                'statusid' => $statusid
             )
         );
 
@@ -204,7 +204,7 @@ class local_webservices_external_write extends external_api {
                     $data = array();
                     foreach ($result2 as $session) {
                         $data[] = (object)array('studentid' => $studentid, 'sessionid' => $session->id,
-                            'status' => $status);
+                            'statusid' => $statusid);
                     }
                     try {
                         $DB->insert_records('attendance_log', $data);
@@ -248,7 +248,7 @@ class local_webservices_external_write extends external_api {
                 'sessionid'  => new external_value(PARAM_INT, 'Session ID parameter'),
                 'sessdate' => new external_value(PARAM_INT, 'Class start timestamp',VALUE_DEFAULT,0),
                 'duration' => new external_value(PARAM_INT, 'Class duration',VALUE_DEFAULT,0),
-                'roomid'  => new external_value(PARAM_INT, 'New status number',VALUE_DEFAULT,0),
+                'roomid'  => new external_value(PARAM_INT, 'New statusid number',VALUE_DEFAULT,0),
             )
         );
     }
@@ -352,7 +352,7 @@ class local_webservices_external_write extends external_api {
                 'sessionid'  => new external_value(PARAM_INT, 'Session ID parameter'),
                 'timein' => new external_value(PARAM_INT, 'Checkin timestamp',VALUE_DEFAULT,0),
                 'timeout' => new external_value(PARAM_INT, 'Checkout timestamp',VALUE_DEFAULT,0),
-                'status'  => new external_value(PARAM_INT, 'New status number',VALUE_DEFAULT,-1),
+                'statusid'  => new external_value(PARAM_INT, 'New statusid number',VALUE_DEFAULT,-1),
             )
         );
     }
@@ -362,25 +362,25 @@ class local_webservices_external_write extends external_api {
     /**
      *
      *
-     * This function will update (optionally) status, timein and timeout.
+     * This function will update (optionally) statusid, timein and timeout.
      *
      * @param int $studentid Student ID (required).
      * @param int $sessionid Session ID (required).
      * @param int $timein Timestamp in millisecond when the student checkin (can be null if not need to update).
      * @param int $timeout Timestamp in millisecond when the student out (can be null if not need to update).
-     * @param int $status New status number (can be null if not need to update).
+     * @param int $statusid New statusid number (can be null if not need to update).
      * @return array
      * @throws invalid_parameter_exception|dml_exception
      */
 
-    public static function update_log(int $studentid, int $sessionid, int $timein, int $timeout, int $status): array
+    public static function update_log(int $studentid, int $sessionid, int $timein, int $timeout, int $statusid): array
     {
         $params = self::validate_parameters(self::update_log_parameters(), array(
                 'studentid' => $studentid,
                 'sessionid' => $sessionid,
                 'timein' => $timein,
                 'timeout' => $timeout,
-                'status' => $status
+                'statusid' => $statusid
             )
         );
 
@@ -398,7 +398,7 @@ class local_webservices_external_write extends external_api {
             $return['message'] = "There isn't any log with suitable conditions";
         }
         else {
-            $data = (object) array('id'=>$result->id,'status'=>$result->status,'timein'=>$result->timein,
+            $data = (object) array('id'=>$result->id,'statusid'=>$result->statusid,'timein'=>$result->timein,
                 'timeout'=>$result->timeout);
             if ($timein)
             {
@@ -408,9 +408,9 @@ class local_webservices_external_write extends external_api {
             {
                 $data->timeout = $timeout;
             }
-            if ($status!=-1)
+            if ($statusid!=-1)
             {
-                $data->status = $status;
+                $data->statusid = $statusid;
             }
             if ($DB->update_record('attendance_log',$data)) {
                 $return['message'] = "Updated the log successfully";

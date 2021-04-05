@@ -39,7 +39,7 @@ class student_object {
     public $name;
     public $timein;
     public $timeout;
-    public $status;
+    public $statusid;
 }
 
 class student_log {
@@ -192,7 +192,7 @@ class local_webservices_external extends external_api {
                     'campus' => new external_value(PARAM_TEXT, 'campus location', VALUE_DEFAULT, null),
                     'timein' => new external_value(PARAM_INT, 'timestamp when the student checkin', VALUE_DEFAULT, null),
                     'timeout' => new external_value(PARAM_INT, 'timestamp when the student go out', VALUE_DEFAULT, null),
-                    'status' => new external_value(PARAM_INT, 'status of the student', VALUE_DEFAULT, null),
+                    'statusid' => new external_value(PARAM_INT, 'statusid of the student', VALUE_DEFAULT, null),
                 )
             )
         );
@@ -236,7 +236,7 @@ class local_webservices_external extends external_api {
                     'campus' => new external_value(PARAM_TEXT, 'campus location', VALUE_DEFAULT, null),
                     'timein' => new external_value(PARAM_INT, 'time when the student checkin', VALUE_DEFAULT, null),
                     'timeout' => new external_value(PARAM_INT, 'time when the student go out', VALUE_DEFAULT, null),
-                    'status' => new external_value(PARAM_INT, 'status of the student', VALUE_DEFAULT, null),
+                    'statusid' => new external_value(PARAM_INT, 'statusid of the student', VALUE_DEFAULT, null),
                 )
             )
         );
@@ -299,7 +299,7 @@ class local_webservices_external extends external_api {
                     'campus' => new external_value(PARAM_TEXT, 'campus location', VALUE_DEFAULT, null),
                     'timein' => new external_value(PARAM_INT, 'timestamp when the student checkin', VALUE_DEFAULT, null),
                     'timeout' => new external_value(PARAM_INT, 'timestamp when the student go out', VALUE_DEFAULT, null),
-                    'status' => new external_value(PARAM_INT, 'status of the student', VALUE_DEFAULT, null),
+                    'statusid' => new external_value(PARAM_INT, 'statusid of the student', VALUE_DEFAULT, null),
                 )
             )
         );
@@ -372,7 +372,7 @@ class local_webservices_external extends external_api {
                                 'campus' => new external_value(PARAM_TEXT, 'campus location', VALUE_DEFAULT, null),
                                 'timein' => new external_value(PARAM_INT, 'timestamp when the student checkin', VALUE_DEFAULT, null),
                                 'timeout' => new external_value(PARAM_INT, 'timestamp when the student checkout', VALUE_DEFAULT, null),
-                                'status' => new external_value(PARAM_INT, 'status of the student', VALUE_DEFAULT, null),
+                                'statusid' => new external_value(PARAM_INT, 'statusid of the student', VALUE_DEFAULT, null),
                             )
                         ),'checkin infomation of a student in a course'
                     )
@@ -418,7 +418,7 @@ class local_webservices_external extends external_api {
                 $student_object->name = $student->lastname. ' ' .$student->firstname;
                 $student_object->timein = $student->timein;
                 $student_object->timeout = $student->timeout;
-                $student_object->status = $student->status;
+                $student_object->statusid = $student->statusid;
                 $students_array[] = $student_object;
             }
         }
@@ -443,7 +443,7 @@ class local_webservices_external extends external_api {
                                 'name' => new external_value(PARAM_TEXT, 'student name', VALUE_DEFAULT, null),
                                 'timein' => new external_value(PARAM_INT, 'checkin time', VALUE_DEFAULT, null),
                                 'timeout' => new external_value(PARAM_INT, 'checkout time', VALUE_DEFAULT, null),
-                                'status' => new external_value(PARAM_INT, 'status number', VALUE_DEFAULT, null),
+                                'statusid' => new external_value(PARAM_INT, 'statusid number', VALUE_DEFAULT, null),
                             )
                         )
                     ),

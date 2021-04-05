@@ -42,7 +42,7 @@
                 <FIELD NAME="sessionid" SEQUENCE="false" TYPE="int" LENGTH="10" NOTNULL="true"/>
                 <FIELD NAME="timein" SEQUENCE="false" TYPE="int" LENGTH="20" NOTNULL="false"/>
                 <FIELD NAME="timeout" SEQUENCE="false" TYPE="int" LENGTH="20" NOTNULL="false"/>
-                <FIELD NAME="status" SEQUENCE="false" TYPE="int" LENGTH="1" NOTNULL="true"/>
+                <FIELD NAME="statusid" SEQUENCE="false" TYPE="int" LENGTH="1" NOTNULL="true"/>
 
             </FIELDS>
             <KEYS>
