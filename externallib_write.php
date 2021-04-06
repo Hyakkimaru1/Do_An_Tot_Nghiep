@@ -31,7 +31,7 @@ class local_webservices_external_write extends external_api {
                 WHERE course.id = :courseid";
         $result1 = $DB->get_record_sql($sql1,array('courseid'=>$courseid),IGNORE_MISSING);
 
-        $return = array('message' => '');
+        $return = array('errorcode' => '', 'message' => '');
         if ($result1 == false)
         {
             $return['message'] = "There isn't any course with this ID";
@@ -47,10 +47,12 @@ class local_webservices_external_write extends external_api {
                 if ($DB->insert_record('attendance', $data)) {
                     $return['message'] = "Created attendance successfully";
                 } else {
+                    $return['errorcode'] = '400';
                     $return['message'] = "Couldn't create attedance";
                 }
             }
             else {
+                $return['errorcode'] = '400';
                 $return['message'] = "There is already an attendance record for this course";
             }
         }
@@ -61,6 +63,7 @@ class local_webservices_external_write extends external_api {
     {
         return new external_single_structure(
             array(
+                'errorcode' => new external_value(PARAM_TEXT, 'Error code'),
                 'message' => new external_value(PARAM_TEXT, 'Message to the back-end'),
             )
         );
@@ -96,7 +99,7 @@ class local_webservices_external_write extends external_api {
                 WHERE a.course = :courseid";
         $result1 = $DB->get_record_sql($sql1,array('courseid'=>$courseid));
 
-        $return = array('message' => '');
+        $return = array('errorcode' => '', 'message' => '');
         if ($result1 == false)
         {
             $return['message'] = "This course doesn't have an attendance record";
@@ -113,6 +116,7 @@ class local_webservices_external_write extends external_api {
                 FROM {room} r WHERE r.id = :roomid";
                 $result3 = $DB->get_record_sql($sql3,array('roomid'=>$roomid));
                 if ($result3 == false) {
+                    $return['errorcode'] = '404';
                     $return['message'] = "There isn't any room with this ID";
                 }
                 else {
@@ -125,11 +129,13 @@ class local_webservices_external_write extends external_api {
                         $DB->insert_records('attendance_sessions', $data);
                         $return['message'] = "Created sessions successfully";
                     } catch (coding_exception | dml_exception $e) {
+                        $return['errorcode'] = '400';
                         $return['message'] = "Couldn't create sessions";
                     }
                 }
             }
             else {
+                $return['errorcode'] = '404';
                 $return['message'] = "There isn't any room with this ID";
             }
         }
@@ -140,6 +146,7 @@ class local_webservices_external_write extends external_api {
     {
         return new external_single_structure(
             array(
+                'errorcode' => new external_value(PARAM_TEXT, 'Error code'),
                 'message' => new external_value(PARAM_TEXT, 'Message to the back-end'),
             )
         );
@@ -177,9 +184,10 @@ class local_webservices_external_write extends external_api {
                 WHERE e.courseid = :courseid AND ue.userid = :studentid";
         $result1 = $DB->get_record_sql($sql1,array('courseid'=>$courseid,'studentid'=>$studentid));
 
-        $return = array('message' => '');
+        $return = array('errorcode' => '', 'message' => '');
         if ($result1 == false)
         {
+            $return['errorcode'] = '404';
             $return['message'] = "This student wasn't assigned to this course / This course or student does not exist";
         }
         else {
@@ -210,14 +218,17 @@ class local_webservices_external_write extends external_api {
                         $DB->insert_records('attendance_log', $data);
                         $return['message'] = "Created logs successfully";
                     } catch (coding_exception | dml_exception $e) {
+                        $return['errorcode'] = '400';
                         $return['message'] = "Couldn't create logs";
                     }
                 }
                 else {
+                    $return['errorcode'] = '404';
                     $return['message'] = "There are already log records for this student in this course";
                 }
             }
             else {
+                $return['errorcode'] = '404';
                 $return['message'] = "There isn't any session records with this course";
             }
         }
@@ -228,6 +239,7 @@ class local_webservices_external_write extends external_api {
     {
         return new external_single_structure(
             array(
+                'errorcode' => new external_value(PARAM_TEXT, 'Error code'),
                 'message' => new external_value(PARAM_TEXT, 'Message to the back-end'),
             )
         );
@@ -286,9 +298,10 @@ class local_webservices_external_write extends external_api {
                 WHERE s.id = :sessionid";
         $result = $DB->get_record_sql($sql,array('sessionid'=>$sessionid));
 
-        $return = array('message' => '');
+        $return = array('errorcode' => '', 'message' => '');
         if ($result == false)
         {
+            $return['errorcode'] = '404';
             $return['message'] = "There isn't any record with this session ID";
         }
         else {
@@ -311,6 +324,7 @@ class local_webservices_external_write extends external_api {
                 $checkroom = $DB->get_record_sql($sql1,array('roomid'=>$roomid));
                 if ($checkroom == false)
                 {
+                    $return['errorcode'] = '404';
                     $return['message'] = "There isn't any room with this room ID";
                     return $return;
                 }
@@ -320,6 +334,7 @@ class local_webservices_external_write extends external_api {
                 $return['message'] = "Updated the record successfully";
             }
             else {
+                $return['errorcode'] = '400';
                 $return['message'] = "Couldn't update the record";
             }
         }
@@ -330,6 +345,7 @@ class local_webservices_external_write extends external_api {
     {
         return new external_single_structure(
             array(
+                'errorcode' => new external_value(PARAM_TEXT,'Error code'),
                 'message' => new external_value(PARAM_TEXT, 'Message to the back-end'),
             )
         );
@@ -392,7 +408,7 @@ class local_webservices_external_write extends external_api {
                 WHERE l.studentid = :studentid AND l.sessionid = :sessionid";
         $result = $DB->get_record_sql($sql,array('studentid'=>$studentid,'sessionid'=>$sessionid),IGNORE_MISSING);
 
-        $return = array('message' => '');
+        $return = array('errorcode' => '','message'=>'');
         if ($result == false)
         {
             $sql1= "SELECT s.*
@@ -401,6 +417,7 @@ class local_webservices_external_write extends external_api {
             $result1 = $DB->get_record_sql($sql1,array('sessionid'=>$sessionid),
                 IGNORE_MISSING);
             if ($result1 == false) {
+                $return['errorcode'] = '404';
                 $return['message'] = "This session doesn't exist";
                 return $return;
             }
@@ -415,6 +432,7 @@ class local_webservices_external_write extends external_api {
                 $result2 = $DB->get_record_sql($sql2,array('sessionid'=>$sessionid,'studentid'=>$studentid),
                     IGNORE_MISSING);
                 if ($result2 == false) {
+                    $return['errorcode'] = '404';
                     $return['message'] = "This student isn't in this course";
                     return $return;
                 }
@@ -439,6 +457,7 @@ class local_webservices_external_write extends external_api {
                 $return['message'] = "Created the log successfully";
             }
             else {
+                $return['errorcode'] = '400';
                 $return['message'] = "Couldn't create the log";
             }
         }
@@ -461,6 +480,7 @@ class local_webservices_external_write extends external_api {
                 $return['message'] = "Updated the log successfully";
             }
             else {
+                $return['errorcode'] = '400';
                 $return['message'] = "Couldn't update the log";
             }
         }
@@ -471,6 +491,7 @@ class local_webservices_external_write extends external_api {
     {
         return new external_single_structure(
             array(
+                'errorcode' => new external_value(PARAM_TEXT,'Error code'),
                 'message' => new external_value(PARAM_TEXT, 'Message to the back-end'),
             )
         );
