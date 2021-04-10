@@ -332,7 +332,7 @@ class local_webservices_external extends external_api {
                     }
                 }
                 if ($flag == false) {
-                    $data = array('sessionid' => $session->id, 'sessdate' => $session->sessdate,
+                    $data = (object) array('sessionid' => $session->id, 'sessdate' => $session->sessdate,
                         'lesson' => $session->lesson, 'room' => $session->room, 'campus' => $session->campus,
                         'timein' => null, 'timeout' => null, 'statusid' => null);
                     $reports[] = $data;
@@ -460,7 +460,7 @@ class local_webservices_external extends external_api {
                         }
                     }
                     if ($flag == false) {
-                        $data = array('sessionid'=>$session->id,'sessdate'=>$session->sessdate,
+                        $data = (object) array('sessionid'=>$session->id,'sessdate'=>$session->sessdate,
                             'lesson'=>$session->lesson,'room'=>$session->room,'campus'=>$session->campus,
                             'timein'=>null,'timeout'=>null, 'statusid'=>null);
                         $reports[] = $data;
