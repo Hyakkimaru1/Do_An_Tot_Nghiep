@@ -45,6 +45,12 @@ class student_object {
 class student_log {
     public $studentid;
     public $name;
+    public $email;
+    public $count;
+    public $c = 0;
+    public $b = 0;
+    public $t = 0;
+    public $v = 0;
     public $reports;
 }
 
@@ -253,16 +259,15 @@ class local_webservices_external extends external_api {
     }
 
     /**
-
-     *
+ *
      * This function returns student's logs in this course.
      *
      * @param int $studentid Student ID.
      * @param int $courseid Course ID.
-     * @return array The student's logs.
+     * @return object|null The student's logs.
      * @throws invalid_parameter_exception|dml_exception
      */
-    public static function get_student_logs_by_course_id(int $studentid, int $courseid): array
+    public static function get_student_logs_by_course_id(int $studentid, int $courseid): ?object
     {
 
         // Validate parameters passed from web service.
@@ -271,15 +276,75 @@ class local_webservices_external extends external_api {
             'courseid' => $courseid));
         global $DB;
 
-        $sql = "SELECT l.*, a.course,r.name as room,r.campus, s.lesson
-                  FROM {attendance_log} l
-            LEFT JOIN {attendance_sessions} s ON s.id = l.sessionid
-            LEFT JOIN {room} r ON r.id = s.roomid
-            LEFT JOIN {attendance} a ON a.id = s.attendanceid
-             WHERE (l.studentid = :studentid AND a.course = :courseid)
-              ORDER BY l.id ASC";
+        $sql = "SELECT s.*, r.name as room, r.campus
+                FROM {attendance_sessions} s 
+                LEFT JOIN {attendance} a ON s.attendanceid = a.id
+                LEFT JOIN {room} r ON r.id = s.roomid
+                WHERE a.course = $courseid
+                ORDER BY s.lesson ASC";
+        $sessions = $DB->get_records_sql($sql);
 
-        return $DB->get_records_sql($sql,array('studentid'=>$studentid,'courseid'=>$courseid));
+
+        $sql1 = "SELECT u.*
+                FROM {user_enrolments} ue
+                LEFT JOIN {enrol} e ON ue.enrolid = e.id
+                LEFT JOIN {user} u ON u.id = ue.userid
+                WHERE e.courseid = :courseid AND u.id = :studentid";
+
+        $student =  $DB->get_record_sql($sql1,array('courseid'=>$courseid,'studentid'=>$studentid));
+        $return = array();
+        if ($student != false) {
+            //var_dump($student);
+            $student_log = new student_log();
+            $student_log->studentid = $student->id;
+
+            $student_log->name = $student->lastname . ' ' . $student->firstname;
+            $student_log->email = $student->email;
+            $sql2 = "SELECT l.*, r.name as room, r.campus, s.lesson, s.sessdate
+                FROM {attendance_log} l
+                LEFT JOIN {attendance_sessions} s ON l.sessionid = s.id
+                LEFT JOIN {room} r ON r.id = s.roomid
+                LEFT JOIN {attendance} a ON s.attendanceid = a.id
+                WHERE a.course = :courseid AND l.studentid = :studentid";
+            $datas = $DB->get_records_sql($sql2, array('courseid' => $courseid,
+                'studentid' => $student_log->studentid));
+
+            $student_log->count = count($datas);
+            foreach ($datas as $log) {
+                if ($log->statusid == 1) {
+                    $student_log->c++;
+                } else if ($log->statusid == 2) {
+                    $student_log->b++;
+                } else if ($log->statusid == 3) {
+                    $student_log->t++;
+                } else if ($log->statusid == 4) {
+                    $student_log->v++;
+                }
+            }
+            $reports = array();
+            foreach ($sessions as $session) {
+                $flag = false;
+                foreach ($datas as $log) {
+                    if ($session->id == $log->sessionid) {
+                        $flag = true;
+                        $reports[] = $log;
+                        break;
+                    }
+                }
+                if ($flag == false) {
+                    $data = array('sessionid' => $session->id, 'sessdate' => $session->sessdate,
+                        'lesson' => $session->lesson, 'room' => $session->room, 'campus' => $session->campus,
+                        'timein' => null, 'timeout' => null, 'statusid' => null);
+                    $reports[] = $data;
+                }
+            }
+
+            $student_log->reports = $reports;
+            return $student_log;
+        }
+        else {
+            return new student_log();
+        }
     }
 
     /**
@@ -288,18 +353,29 @@ class local_webservices_external extends external_api {
      * @return external_description
      */
     public static function get_student_logs_by_course_id_returns() {
-        return new external_multiple_structure(
-            new external_single_structure(
-                array(
-                    'id' => new external_value(PARAM_INT, 'log ID', VALUE_DEFAULT, null),
-                    'studentid' => new external_value(PARAM_INT, 'student ID', VALUE_DEFAULT, null),
-                    'sessionid' => new external_value(PARAM_INT, 'session ID', VALUE_DEFAULT, null),
-                    'lesson' => new external_value(PARAM_INT, 'lesson number', VALUE_DEFAULT, null),
-                    'room' => new external_value(PARAM_TEXT, 'room name', VALUE_DEFAULT, null),
-                    'campus' => new external_value(PARAM_TEXT, 'campus location', VALUE_DEFAULT, null),
-                    'timein' => new external_value(PARAM_INT, 'timestamp when the student checkin', VALUE_DEFAULT, null),
-                    'timeout' => new external_value(PARAM_INT, 'timestamp when the student go out', VALUE_DEFAULT, null),
-                    'statusid' => new external_value(PARAM_INT, 'statusid of the student', VALUE_DEFAULT, null),
+        return new external_single_structure(
+            array(
+                'studentid' => new external_value(PARAM_INT, 'student ID', VALUE_DEFAULT, null),
+                'name' => new external_value(PARAM_TEXT,"student's name", VALUE_DEFAULT,null),
+                'email' => new external_value(PARAM_TEXT,"student's email", VALUE_DEFAULT,null),
+                'count' => new external_value(PARAM_INT,"number of logs", VALUE_DEFAULT,null),
+                'c' => new external_value(PARAM_INT, 'active count', VALUE_DEFAULT, null),
+                'b' => new external_value(PARAM_INT, 'passive count', VALUE_DEFAULT, null),
+                't' => new external_value(PARAM_INT, 'late count', VALUE_DEFAULT, null),
+                'v' => new external_value(PARAM_INT, 'absent count', VALUE_DEFAULT, null),
+                'reports' => new external_multiple_structure(
+                    new external_single_structure(
+                        array(
+                            'sessionid' => new external_value(PARAM_INT, 'session ID', VALUE_DEFAULT, null),
+                            'sessdate' => new external_value(PARAM_INT,'timestamp when the class start',VALUE_DEFAULT,null),
+                            'lesson' => new external_value(PARAM_INT, 'lesson number', VALUE_DEFAULT, null),
+                            'room' => new external_value(PARAM_TEXT, 'room name', VALUE_DEFAULT, null),
+                            'campus' => new external_value(PARAM_TEXT, 'campus location', VALUE_DEFAULT, null),
+                            'timein' => new external_value(PARAM_INT, 'timestamp when the student checkin', VALUE_DEFAULT, null),
+                            'timeout' => new external_value(PARAM_INT, 'timestamp when the student checkout', VALUE_DEFAULT, null),
+                            'statusid' => new external_value(PARAM_INT, 'statusid of the student', VALUE_DEFAULT, null),
+                        )
+                    ),'all reports of a student in a course'
                 )
             )
         );
@@ -323,6 +399,15 @@ class local_webservices_external extends external_api {
         );
         global $DB;
 
+        $sql = "SELECT s.*, r.name as room, r.campus
+                FROM {attendance_sessions} s 
+                LEFT JOIN {attendance} a ON s.attendanceid = a.id
+                LEFT JOIN {room} r ON r.id = s.roomid
+                WHERE a.course = $courseid
+                ORDER BY s.lesson ASC";
+        $sessions = $DB->get_records_sql($sql);
+
+
         $sql1 = "SELECT u.*
                 FROM {user_enrolments} ue
                 LEFT JOIN {enrol} e ON ue.enrolid = e.id
@@ -338,7 +423,8 @@ class local_webservices_external extends external_api {
                 $student_log->studentid = $student->id;
 
                 $student_log->name = $student->lastname . ' ' . $student->firstname;
-                $sql2 = "SELECT l.*, r.name as room, r.campus, s.lesson
+                $student_log->email = $student->email;
+                $sql2 = "SELECT l.*, r.name as room, r.campus, s.lesson, s.sessdate
                     FROM {attendance_log} l
                     LEFT JOIN {attendance_sessions} s ON l.sessionid = s.id
                     LEFT JOIN {room} r ON r.id = s.roomid
@@ -347,8 +433,43 @@ class local_webservices_external extends external_api {
                 $datas = $DB->get_records_sql($sql2, array('courseid' => $courseid,
                     'studentid' => $student_log->studentid));
 
-                $student_log->reports = $datas;
-                //var_dump($datas);
+                $student_log->count = count($datas);
+                foreach ($datas as $log) {
+                    if ($log->statusid == 1) {
+                        $student_log->c++;
+                    }
+                    else if ($log->statusid == 2) {
+                        $student_log->b++;
+                    }
+                    else if ($log->statusid == 3) {
+                        $student_log->t++;
+                    }
+                    else if ($log->statusid == 4) {
+                        $student_log->v++;
+                    }
+                }
+                $reports = array();
+                foreach ($sessions as $session) {
+                    $flag = false;
+                    foreach ($datas as $log) {
+                        if ($session->id == $log->sessionid)
+                        {
+                            $flag = true;
+                            $reports[] = $log;
+                            break;
+                        }
+                    }
+                    if ($flag == false) {
+                        $data = array('sessionid'=>$session->id,'sessdate'=>$session->sessdate,
+                            'lesson'=>$session->lesson,'room'=>$session->room,'campus'=>$session->campus,
+                            'timein'=>null,'timeout'=>null, 'statusid'=>null);
+                        $reports[] = $data;
+                    }
+                }
+
+
+
+                $student_log->reports = $reports;
                 $return[] = $student_log;
             }
         }
@@ -363,10 +484,17 @@ class local_webservices_external extends external_api {
                 array(
                     'studentid' => new external_value(PARAM_INT, 'student ID', VALUE_DEFAULT, null),
                     'name' => new external_value(PARAM_TEXT,"student's name", VALUE_DEFAULT,null),
+                    'email' => new external_value(PARAM_TEXT,"student's email", VALUE_DEFAULT,null),
+                    'count' => new external_value(PARAM_INT,"number of logs", VALUE_DEFAULT,null),
+                    'c' => new external_value(PARAM_INT, 'active count', VALUE_DEFAULT, null),
+                    'b' => new external_value(PARAM_INT, 'passive count', VALUE_DEFAULT, null),
+                    't' => new external_value(PARAM_INT, 'late count', VALUE_DEFAULT, null),
+                    'v' => new external_value(PARAM_INT, 'absent count', VALUE_DEFAULT, null),
                     'reports' => new external_multiple_structure(
                         new external_single_structure(
                             array(
                                 'sessionid' => new external_value(PARAM_INT, 'session ID', VALUE_DEFAULT, null),
+                                'sessdate' => new external_value(PARAM_INT,'timestamp when the class start',VALUE_DEFAULT,null),
                                 'lesson' => new external_value(PARAM_INT, 'lesson number', VALUE_DEFAULT, null),
                                 'room' => new external_value(PARAM_TEXT, 'room name', VALUE_DEFAULT, null),
                                 'campus' => new external_value(PARAM_TEXT, 'campus location', VALUE_DEFAULT, null),
@@ -374,12 +502,21 @@ class local_webservices_external extends external_api {
                                 'timeout' => new external_value(PARAM_INT, 'timestamp when the student checkout', VALUE_DEFAULT, null),
                                 'statusid' => new external_value(PARAM_INT, 'statusid of the student', VALUE_DEFAULT, null),
                             )
-                        ),'checkin infomation of a student in a course'
+                        ),'all reports of a student in a course'
                     )
                 )
             )
         );
     }
+
+
+
+//    public static function get_logs_by_course_id_for_moodle(int $courseid): array
+//    {
+//
+//
+//    }
+
 
     public static function get_session_detail_parameters() {
         return new external_function_parameters(

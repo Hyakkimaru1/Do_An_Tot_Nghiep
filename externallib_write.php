@@ -364,7 +364,8 @@ class local_webservices_external_write extends external_api {
     {
         return new external_function_parameters(
             array(
-                'studentid' => new external_value(PARAM_INT, 'Student ID parameter'),
+                'studentid' => new external_value(PARAM_INT, 'Student ID parameter',VALUE_DEFAULT,null),
+                'username' => new external_value(PARAM_TEXT,"Student's username",VALUE_DEFAULT,''),
                 'sessionid'  => new external_value(PARAM_INT, 'Session ID parameter'),
                 'timein' => new external_value(PARAM_INT, 'Checkin timestamp',VALUE_DEFAULT,0),
                 'timeout' => new external_value(PARAM_INT, 'Checkout timestamp',VALUE_DEFAULT,0),
@@ -380,7 +381,8 @@ class local_webservices_external_write extends external_api {
      *
      * This function will update (optionally) statusid, timein and timeout.
      *
-     * @param int $studentid Student ID (required).
+     * @param int $studentid Student ID .
+     * @param string $username Student's username. (Student ID or username required)
      * @param int $sessionid Session ID (required).
      * @param int $timein Timestamp in millisecond when the student checkin (can be null if not need to update).
      * @param int $timeout Timestamp in millisecond when the student out (can be null if not need to update).
@@ -389,10 +391,11 @@ class local_webservices_external_write extends external_api {
      * @throws invalid_parameter_exception|dml_exception
      */
 
-    public static function update_log(int $studentid, int $sessionid, int $timein, int $timeout, int $statusid): array
+    public static function update_log(int $studentid, string $username, int $sessionid, int $timein, int $timeout, int $statusid): array
     {
         $params = self::validate_parameters(self::update_log_parameters(), array(
                 'studentid' => $studentid,
+                'username' => $username,
                 'sessionid' => $sessionid,
                 'timein' => $timein,
                 'timeout' => $timeout,
@@ -401,14 +404,26 @@ class local_webservices_external_write extends external_api {
         );
 
         global $DB;
-
-
-        $sql = "SELECT l.*
+        $return = array('errorcode' => '', 'message' => '');
+        if ($studentid != null) {
+            $sql = "SELECT l.*
                 FROM {attendance_log} l 
-                WHERE l.studentid = :studentid AND l.sessionid = :sessionid";
-        $result = $DB->get_record_sql($sql,array('studentid'=>$studentid,'sessionid'=>$sessionid),IGNORE_MISSING);
+                WHERE l.studentid = $studentid AND l.sessionid = $sessionid";
+        }
+        else if ($username != '') {
+            $sql = "SELECT l.*
+                FROM {attendance_log} l 
+                LEFT JOIN {user} u ON l.studentid = u.id
+                WHERE u.username = $username AND l.sessionid = $sessionid";
+        }
+        else {
+            $return['errorcode'] = '400';
+            $return['message'] = "The student ID and username are all missing";
+            return $return;
+        }
+        $result = $DB->get_record_sql($sql);
 
-        $return = array('errorcode' => '','message'=>'');
+
         if ($result == false)
         {
             $sql1= "SELECT s.*
@@ -422,15 +437,26 @@ class local_webservices_external_write extends external_api {
                 return $return;
             }
             else {
-                $sql2 = "SELECT u.*
-                FROM {user_enrolments} ue
-                LEFT JOIN {enrol} e ON ue.enrolid = e.id
-                LEFT JOIN {user} u ON u.id = ue.userid
-                LEFT JOIN {attendance} a ON a.course = e.courseid
-                LEFT JOIN {attendance_sessions} s ON s.attendanceid = a.id
-                WHERE ue.userid = :studentid AND s.id = :sessionid";
-                $result2 = $DB->get_record_sql($sql2,array('sessionid'=>$sessionid,'studentid'=>$studentid),
-                    IGNORE_MISSING);
+                $sql2 = null;
+                if ($studentid != null) {
+                    $sql2 = "SELECT u.*
+                            FROM {user_enrolments} ue
+                            LEFT JOIN {enrol} e ON ue.enrolid = e.id
+                            LEFT JOIN {user} u ON u.id = ue.userid
+                            LEFT JOIN {attendance} a ON a.course = e.courseid
+                            LEFT JOIN {attendance_sessions} s ON s.attendanceid = a.id
+                            WHERE ue.userid = $studentid AND s.id = $sessionid";
+                }
+                else if ($username != '') {
+                    $sql2 = "SELECT u.*
+                            FROM {user_enrolments} ue
+                            LEFT JOIN {enrol} e ON ue.enrolid = e.id
+                            LEFT JOIN {user} u ON u.id = ue.userid
+                            LEFT JOIN {attendance} a ON a.course = e.courseid
+                            LEFT JOIN {attendance_sessions} s ON s.attendanceid = a.id
+                            WHERE u.username = $username AND s.id = $sessionid";
+                }
+                $result2 = $DB->get_record_sql($sql2);
                 if ($result2 == false) {
                     $return['errorcode'] = '404';
                     $return['message'] = "This student isn't in this course";
@@ -440,10 +466,21 @@ class local_webservices_external_write extends external_api {
 
 
             $data = (object) array('studentid'=>$studentid,'sessionid'=>$sessionid,
-                'statusid'=>0,'timein'=>null, 'timeout'=>null);
-            if ($timein)
-            {
+                'statusid'=> 1,'timein'=>time(), 'timeout'=>null);
+            if ($timein) {
+                if ($result1->sessdate > $timein || $result1->sessdate + $result1->duration < $timein) {
+                    $return['errorcode'] = '400';
+                    $return['message'] = "The time is not allowed";
+                    return $return;
+                }
                 $data->timein = $timein;
+            }
+            else {
+                if ($result1->sessdate > $data->timein || $result1->sessdate + $result1->duration < $timein) {
+                    $return['errorcode'] = '400';
+                    $return['message'] = "The time is not allowed";
+                    return $return;
+                }
             }
             if ($timeout)
             {
@@ -454,6 +491,8 @@ class local_webservices_external_write extends external_api {
                 $data->statusid = $statusid;
             }
             if ($DB->insert_record('attendance_log',$data)) {
+                $update_session = (object)array('id' => $result1->id, 'lasttaken' => time(), 'lasttakenby' => 1);
+                $DB->update_record('attendance_sessions',$update_session);
                 $return['message'] = "Created the log successfully";
             }
             else {
@@ -464,8 +503,18 @@ class local_webservices_external_write extends external_api {
         else {
             $data = (object) array('id'=>$result->id,'statusid'=>$result->statusid,'timein'=>$result->timein,
                 'timeout'=>$result->timeout);
+            $sql1= "SELECT s.*
+                FROM {attendance_sessions} s 
+                WHERE s.id = :sessionid";
+            $result1 = $DB->get_record_sql($sql1,array('sessionid'=>$sessionid),
+                IGNORE_MISSING);
             if ($timein)
             {
+                if ($result1->sessdate > $timein || $result1->sessdate + $result1->duration < $timein) {
+                    $return['errorcode'] = '400';
+                    $return['message'] = "The time is not allowed";
+                    return $return;
+                }
                 $data->timein = $timein;
             }
             if ($timeout)
@@ -477,6 +526,8 @@ class local_webservices_external_write extends external_api {
                 $data->statusid = $statusid;
             }
             if ($DB->update_record('attendance_log',$data)) {
+                $update_session = (object)array('id' => $result1->id, 'lasttaken' => time(), 'lasttakenby' => 1);
+                $DB->update_record('attendance_sessions',$update_session);
                 $return['message'] = "Updated the log successfully";
             }
             else {
