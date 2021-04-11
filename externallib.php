@@ -281,7 +281,7 @@ class local_webservices_external extends external_api {
                 LEFT JOIN {attendance} a ON s.attendanceid = a.id
                 LEFT JOIN {room} r ON r.id = s.roomid
                 WHERE a.course = $courseid
-                ORDER BY s.lesson ASC";
+                ORDER BY s.sessdate ASC";
         $sessions = $DB->get_records_sql($sql);
 
 
@@ -404,7 +404,7 @@ class local_webservices_external extends external_api {
                 LEFT JOIN {attendance} a ON s.attendanceid = a.id
                 LEFT JOIN {room} r ON r.id = s.roomid
                 WHERE a.course = $courseid
-                ORDER BY s.lesson ASC";
+                ORDER BY s.sessdate ASC";
         $sessions = $DB->get_records_sql($sql);
 
 
