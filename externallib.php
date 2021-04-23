@@ -56,6 +56,102 @@ class student_log {
 
 class local_webservices_external extends external_api {
 
+    public static function get_action_logs_pagination_parameters(): external_function_parameters
+    {
+        return new external_function_parameters(
+            array(
+                'sessionid' => new external_value(PARAM_INT, 'session ID'),
+                'page' => new external_value(PARAM_INT, 'page number'),
+                'pagesize'  => new external_value(PARAM_INT, 'page size'),
+                'value' => new external_value(PARAM_TEXT,'search value',VALUE_DEFAULT,''),
+                'filter' => new external_value(PARAM_TEXT, 'filter criteria',VALUE_DEFAULT,''),
+                'order'  => new external_value(PARAM_TEXT, 'order criteria',VALUE_DEFAULT,''),
+            )
+        );
+    }
+
+    /**
+     * @throws invalid_parameter_exception
+     * @throws dml_exception
+     */
+    public static function get_action_logs_pagination(int $sessionid, int $page, int $pagesize,
+                                                      string $value, string $filter, string $order): array
+    {
+        $params = self::validate_parameters(self::get_action_logs_pagination_parameters(), array(
+            'sessionid' => $sessionid,
+            'page' => $page,
+            'pagesize' => $pagesize,
+            'value' => $value,
+            'filter' => $filter,
+            'order' => $order
+        ));
+
+
+        global $DB;
+        $result = null;
+        if ($value != '') {
+            $string = '%' . $value . '%';
+            $sql = "SELECT l.*, CONCAT(usertaken.lastname,' ',usertaken.firstname) as usertaken_name,
+                CONCAT(userbetaken.lastname,' ',userbetaken.firstname) as userbetaken_name
+                FROM {attendance_action_log} l
+                LEFT JOIN {user} usertaken ON l.usertaken = usertaken.id
+                LEFT JOIN {user} userbetaken ON l.userbetaken = userbetaken.id
+                WHERE (usertaken.firstname LIKE :string1 OR usertaken.lastname LIKE :string2
+                OR userbetaken.firstname LIKE :string3 OR userbetaken.lastname LIKE :string4) AND l.sessionid = $sessionid
+                ORDER BY $filter $order";
+            $result = $DB->get_records_sql($sql,array('string1' => '%' . $value . '%','string2' => '%' . $value . '%',
+                'string3' => '%' . $value . '%','string4' => '%' . $value . '%',));
+        }
+        else {
+            $sql = "SELECT l.*, CONCAT(usertaken.lastname,' ',usertaken.firstname) as usertaken_name,
+                CONCAT(userbetaken.lastname,' ',userbetaken.firstname) as userbetaken_name
+                FROM {attendance_action_log} l
+                LEFT JOIN {user} usertaken ON l.usertaken = usertaken.id
+                LEFT JOIN {user} userbetaken ON l.userbetaken = userbetaken.id
+                WHERE l.sessionid = $sessionid
+                ORDER BY l.id ASC";
+            $result = $DB->get_records_sql($sql);
+        }
+
+        $logs = array();
+        $index = 0;
+        foreach ($result as $item => $value) {
+            if (($page-1)*$pagesize<=$index && $page*$pagesize>$index) {
+                $logs[] = $value;
+                $index++;
+            }
+            else if ($index<($page-1)*$pagesize) {
+                $index++;
+            }
+            else break;
+
+        }
+        return array('totalrecords' => count($result), 'logs' => $logs);
+    }
+
+    public static function get_action_logs_pagination_returns(): external_single_structure
+    {
+        return new external_single_structure(
+            array(
+                'totalrecords' => new external_value(PARAM_INT,'total records',VALUE_DEFAULT,null),
+                'logs' => new external_multiple_structure(
+                    new external_single_structure(
+                        array(
+                            'id' => new external_value(PARAM_INT, 'log ID', VALUE_DEFAULT, null),
+                            'usertaken' => new external_value(PARAM_INT, "user taken's ID", VALUE_DEFAULT, null),
+                            'usertaken_name' => new external_value(PARAM_TEXT, "user taken's full name", VALUE_DEFAULT, null),
+                            'userbetaken' => new external_value(PARAM_INT, "user be taken's ID", VALUE_DEFAULT, null),
+                            'userbetaken_name' => new external_value(PARAM_TEXT, "user be taken's full name", VALUE_DEFAULT, null),
+                            'oldstatus' => new external_value(PARAM_INT, "Old status number", VALUE_DEFAULT, null),
+                            'newstatus' => new external_value(PARAM_INT, "New status number", VALUE_DEFAULT, null),
+                            'timetaken' => new external_value(PARAM_INT, "Time taken timestamp", VALUE_DEFAULT, null),
+                        )
+                    )
+                )
+            )
+        );
+    }
+
     public static function get_courses_pagination_parameters(): external_function_parameters
     {
         return new external_function_parameters(
@@ -69,6 +165,8 @@ class local_webservices_external extends external_api {
         );
     }
 
+
+
     public static function get_courses_pagination(int $page, int $pagesize,
                                                   string $value, string $filter, string $order): array
     {
@@ -79,6 +177,19 @@ class local_webservices_external extends external_api {
             'filter' => $filter,
             'order' => $order
         ));
+
+//        $d = DateTime::createFromFormat(
+//            'd/m/Y',
+//            '22/04/2021',
+//            new DateTimeZone('Asia/Ho_Chi_Minh')
+//        );
+//
+//        if ($d === false) {
+//            die("Incorrect date string");
+//        } else {
+//            echo $d->getTimestamp();
+//        }
+
 
         global $DB;
         $result = null;

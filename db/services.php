@@ -25,6 +25,14 @@
 defined('MOODLE_INTERNAL') || die();
 
 $functions = array(
+    'local_webservices_get_action_logs_pagination' => array(
+        'classname' => 'local_webservices_external',
+        'methodname' => 'get_action_logs_pagination',
+        'classpath' => 'local/webservices/externallib.php',
+        'description' => 'Get all attendance action logs based on session ID with pagination',
+        'type' => 'read',
+        'capabilities' => '',
+    ),
     'local_webservices_get_courses_pagination' => array(
         'classname' => 'local_webservices_external',
         'methodname' => 'get_courses_pagination',
