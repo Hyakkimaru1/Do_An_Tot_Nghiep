@@ -60,7 +60,7 @@ class local_webservices_external extends external_api {
     {
         return new external_function_parameters(
             array(
-                'sessionid' => new external_value(PARAM_INT, 'session ID'),
+                'attendanceid' => new external_value(PARAM_INT, 'attendance ID'),
                 'page' => new external_value(PARAM_INT, 'page number'),
                 'pagesize'  => new external_value(PARAM_INT, 'page size'),
                 'value' => new external_value(PARAM_TEXT,'search value',VALUE_DEFAULT,''),
@@ -74,11 +74,11 @@ class local_webservices_external extends external_api {
      * @throws invalid_parameter_exception
      * @throws dml_exception
      */
-    public static function get_action_logs_pagination(int $sessionid, int $page, int $pagesize,
+    public static function get_action_logs_pagination(int $attendanceid, int $page, int $pagesize,
                                                       string $value, string $filter, string $order): array
     {
         $params = self::validate_parameters(self::get_action_logs_pagination_parameters(), array(
-            'sessionid' => $sessionid,
+            'attendanceid' => $attendanceid,
             'page' => $page,
             'pagesize' => $pagesize,
             'value' => $value,
@@ -92,23 +92,25 @@ class local_webservices_external extends external_api {
         if ($value != '') {
             $string = '%' . $value . '%';
             $sql = "SELECT l.*, CONCAT(usertaken.lastname,' ',usertaken.firstname) as usertaken_name,
-                CONCAT(userbetaken.lastname,' ',userbetaken.firstname) as userbetaken_name
+                CONCAT(userbetaken.lastname,' ',userbetaken.firstname) as userbetaken_name, s.sessdate
                 FROM {attendance_action_log} l
+                LEFT JOIN {attendance_sessions} s ON l.sessionid = s.id
                 LEFT JOIN {user} usertaken ON l.usertaken = usertaken.id
                 LEFT JOIN {user} userbetaken ON l.userbetaken = userbetaken.id
                 WHERE (usertaken.firstname LIKE :string1 OR usertaken.lastname LIKE :string2
-                OR userbetaken.firstname LIKE :string3 OR userbetaken.lastname LIKE :string4) AND l.sessionid = $sessionid
+                OR userbetaken.firstname LIKE :string3 OR userbetaken.lastname LIKE :string4) AND l.attendanceid = $attendanceid
                 ORDER BY $filter $order";
             $result = $DB->get_records_sql($sql,array('string1' => '%' . $value . '%','string2' => '%' . $value . '%',
                 'string3' => '%' . $value . '%','string4' => '%' . $value . '%',));
         }
         else {
             $sql = "SELECT l.*, CONCAT(usertaken.lastname,' ',usertaken.firstname) as usertaken_name,
-                CONCAT(userbetaken.lastname,' ',userbetaken.firstname) as userbetaken_name
+                CONCAT(userbetaken.lastname,' ',userbetaken.firstname) as userbetaken_name, s.sessdate
                 FROM {attendance_action_log} l
+                LEFT JOIN {attendance_sessions} s ON l.sessionid = s.id
                 LEFT JOIN {user} usertaken ON l.usertaken = usertaken.id
                 LEFT JOIN {user} userbetaken ON l.userbetaken = userbetaken.id
-                WHERE l.sessionid = $sessionid
+                WHERE l.attendanceid = $attendanceid
                 ORDER BY l.id ASC";
             $result = $DB->get_records_sql($sql);
         }
@@ -138,6 +140,7 @@ class local_webservices_external extends external_api {
                     new external_single_structure(
                         array(
                             'id' => new external_value(PARAM_INT, 'log ID', VALUE_DEFAULT, null),
+                            'sessdate' => new external_value(PARAM_INT,'session start timestamp',VALUE_DEFAULT,null),
                             'usertaken' => new external_value(PARAM_INT, "user taken's ID", VALUE_DEFAULT, null),
                             'usertaken_name' => new external_value(PARAM_TEXT, "user taken's full name", VALUE_DEFAULT, null),
                             'userbetaken' => new external_value(PARAM_INT, "user be taken's ID", VALUE_DEFAULT, null),
