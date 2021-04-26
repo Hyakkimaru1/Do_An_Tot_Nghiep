@@ -486,19 +486,19 @@ function attendance_print_settings_tabs($selected = 'settings') {
             get_string('defaultwarnings', 'attendance'), get_string('defaultwarnings', 'attendance'), false);
     }
 
-    $tabs[] = new tabobject('coursesummary', $CFG->wwwroot.'/mod/attendance/coursesummary.php',
-        get_string('coursesummary', 'attendance'), get_string('coursesummary', 'attendance'), false);
+//    $tabs[] = new tabobject('coursesummary', $CFG->wwwroot.'/mod/attendance/coursesummary.php',
+//        get_string('coursesummary', 'attendance'), get_string('coursesummary', 'attendance'), false);
 
-    if (get_config('attendance', 'enablewarnings')) {
-        $tabs[] = new tabobject('absentee', $CFG->wwwroot . '/mod/attendance/absentee.php',
-            get_string('absenteereport', 'attendance'), get_string('absenteereport', 'attendance'), false);
-    }
+//    if (get_config('attendance', 'enablewarnings')) {
+//        $tabs[] = new tabobject('absentee', $CFG->wwwroot . '/mod/attendance/absentee.php',
+//            get_string('absenteereport', 'attendance'), get_string('absenteereport', 'attendance'), false);
+//    }
 
-    $tabs[] = new tabobject('resetcalendar', $CFG->wwwroot.'/mod/attendance/resetcalendar.php',
-        get_string('resetcalendar', 'attendance'), get_string('resetcalendar', 'attendance'), false);
-
-    $tabs[] = new tabobject('importsessions', $CFG->wwwroot . '/mod/attendance/import/sessions.php',
-        get_string('importsessions', 'attendance'), get_string('importsessions', 'attendance'), false);
+//    $tabs[] = new tabobject('resetcalendar', $CFG->wwwroot.'/mod/attendance/resetcalendar.php',
+//        get_string('resetcalendar', 'attendance'), get_string('resetcalendar', 'attendance'), false);
+//
+//    $tabs[] = new tabobject('importsessions', $CFG->wwwroot . '/mod/attendance/import/sessions.php',
+//        get_string('importsessions', 'attendance'), get_string('importsessions', 'attendance'), false);
 
     ob_start();
     print_tabs(array($tabs), $selected);

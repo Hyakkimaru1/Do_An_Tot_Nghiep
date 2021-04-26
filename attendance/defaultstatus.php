@@ -51,7 +51,7 @@ switch ($action) {
         $newacronym         = optional_param('newacronym', null, PARAM_TEXT);
         $newdescription     = optional_param('newdescription', null, PARAM_TEXT);
         $newgrade           = optional_param('newgrade', 0, PARAM_RAW);
-        $newstudentavailability = optional_param('newstudentavailability', null, PARAM_INT);
+//        $newstudentavailability = optional_param('newstudentavailability', null, PARAM_INT);
         $newgrade = unformat_float($newgrade);
 
         // Default value uses setnumber/attendanceid = 0.
@@ -60,7 +60,7 @@ switch ($action) {
         $status->acronym = $newacronym;
         $status->description = $newdescription;
         $status->grade = $newgrade;
-        $status->studentavailability = $newstudentavailability;
+//        $status->studentavailability = $newstudentavailability;
         $status->setnumber = 0;
         attendance_add_status($status);
 
@@ -100,8 +100,8 @@ switch ($action) {
         $acronym        = required_param_array('acronym', PARAM_TEXT);
         $description    = required_param_array('description', PARAM_TEXT);
         $grade          = required_param_array('grade', PARAM_RAW);
-        $studentavailability = optional_param_array('studentavailability', '0', PARAM_RAW);
-        $unmarkedstatus = optional_param('setunmarked', null, PARAM_INT);
+//        $studentavailability = optional_param_array('studentavailability', '0', PARAM_RAW);
+        $unmarkedstatus = optional_param('setunmarked', true, PARAM_INT);
         foreach ($grade as &$val) {
             $val = unformat_float($val);
         }
@@ -113,14 +113,16 @@ switch ($action) {
             if ($unmarkedstatus == $id) {
                 $setunmarked = true;
             }
-            if (!isset($studentavailability[$id]) || !is_numeric($studentavailability[$id])) {
-                $studentavailability[$id] = 0;
-            }
+//            if (!isset($studentavailability[$id]) || !is_numeric($studentavailability[$id])) {
+//                $studentavailability[$id] = 0;
+//            }
+//            $errors[$id] = attendance_update_status($status, $acronym[$id], $description[$id], $grade[$id],
+//                                             null, null, null, $studentavailability[$id], $setunmarked);
+
             $errors[$id] = attendance_update_status($status, $acronym[$id], $description[$id], $grade[$id],
-                                             null, null, null, $studentavailability[$id], $setunmarked);
+                null, null, null);
         }
         echo $OUTPUT->notification(get_string('eventstatusupdated', 'attendance'), 'success');
-
         break;
 }
 

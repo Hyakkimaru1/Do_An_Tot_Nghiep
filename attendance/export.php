@@ -185,7 +185,25 @@ if ($formdata = $mform->get_data()) {
             }
 
             $cellsgenerator = new user_sessions_cells_text_generator($reportdata, $user);
-            $data->table[$i] = array_merge($data->table[$i], $cellsgenerator->get_cells(isset($formdata->includeremarks)));
+            $temps = $cellsgenerator->get_cells(isset($formdata->includeremarks));
+            $t = array();
+            foreach ($temps as $temp){
+                if($temp === '<i class="fa fa-check-circle" style="color: green" aria-hidden="true"></i>'){
+                    $t[] = 'C';
+                }else if($temp === '<i class="fa fa-user-plus" style="color: blue" aria-hidden="true"></i>'){
+                    $t[] = 'B';
+                }else if($temp === '<i class="fa fa-clock-o" style="color:orange;" aria-hidden="true"></i>'){
+                    $t[] = 'T';
+                }else if($temps === '<i class="fa fa-times-circle" style="color: red" aria-hidden="true"></i>'){
+                    $t[] = 'V';
+                }else{
+                    $t[] = '?';
+                }
+            }
+            //var_dump($t);die();
+
+            $data->table[$i] = array_merge($data->table[$i], $t);
+//            $data->table[$i] = array_merge($data->table[$i], $cellsgenerator->get_cells(isset($formdata->includeremarks)));
 
             $usersummary = $reportdata->summary->get_taken_sessions_summary_for($user->id);
 
@@ -207,6 +225,7 @@ if ($formdata = $mform->get_data()) {
         if ($formdata->format === 'text') {
             attendance_exporttocsv($data, $filename);
         } else {
+            //var_dump($filename); die();
             attendance_exporttotableed($data, $filename, $formdata->format);
         }
         exit;

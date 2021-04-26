@@ -197,19 +197,19 @@ class addsession extends moodleform {
         $mform->setType('previoussessiondate', PARAM_INT);
 
         // Students can mark own attendance.
-        $studentscanmark = get_config('attendance', 'studentscanmark');
+//        $studentscanmark = get_config('attendance', 'studentscanmark');
 
         $mform->addElement('header', 'headerstudentmarking', get_string('studentmarking', 'attendance'), true);
         if (!empty($pluginconfig->studentrecordingexpanded)) {
             $mform->setExpanded('headerstudentmarking');
         }
-        if (!empty($studentscanmark)) {
-            $mform->addElement('checkbox', 'studentscanmark', '', get_string('studentscanmark', 'attendance'));
-            $mform->addHelpButton('studentscanmark', 'studentscanmark', 'attendance');
-        } else {
-            $mform->addElement('hidden', 'studentscanmark', '0');
-            $mform->settype('studentscanmark', PARAM_INT);
-        }
+//        if (!empty($studentscanmark)) {
+//            $mform->addElement('checkbox', 'studentscanmark', '', get_string('studentscanmark', 'attendance'));
+//            $mform->addHelpButton('studentscanmark', 'studentscanmark', 'attendance');
+//        } else {
+//            $mform->addElement('hidden', 'studentscanmark', '0');
+//            $mform->settype('studentscanmark', PARAM_INT);
+//        }
 
         $options = attendance_get_automarkoptions();
 
@@ -262,41 +262,41 @@ class addsession extends moodleform {
                 $mform->setDefault('automark', $pluginconfig->automark_default);
             }
         }
-        $mgroup2 = array();
-        $mgroup2[] = & $mform->createElement('text', 'subnet', get_string('requiresubnet', 'attendance'));
-        if (empty(get_config('attendance', 'subnetactivitylevel'))) {
-            $mform->setDefault('subnet', get_config('attendance', 'subnet'));
-        } else {
-            $mform->setDefault('subnet', $this->_customdata['att']->subnet);
-        }
+//        $mgroup2 = array();
+//        $mgroup2[] = & $mform->createElement('text', 'subnet', get_string('requiresubnet', 'attendance'));
+//        if (empty(get_config('attendance', 'subnetactivitylevel'))) {
+//            $mform->setDefault('subnet', get_config('attendance', 'subnet'));
+//        } else {
+//            $mform->setDefault('subnet', $this->_customdata['att']->subnet);
+//        }
 
-        $mgroup2[] = & $mform->createElement('checkbox', 'usedefaultsubnet', get_string('usedefaultsubnet', 'attendance'));
-        $mform->setDefault('usedefaultsubnet', 1);
-        $mform->setType('subnet', PARAM_TEXT);
-
-        $mform->addGroup($mgroup2, 'subnetgrp', get_string('requiresubnet', 'attendance'), array(' '), false);
-        $mform->setAdvanced('subnetgrp');
-        $mform->addHelpButton('subnetgrp', 'requiresubnet', 'attendance');
-        $mform->hideif('subnet', 'usedefaultsubnet', 'checked');
-
-        $mgroup3 = array();
-        $options = attendance_get_sharedipoptions();
-        $mgroup3[] = & $mform->createElement('select', 'preventsharedip',
-            get_string('preventsharedip', 'attendance'), $options);
-        $mgroup3[] = & $mform->createElement('text', 'preventsharediptime',
-            get_string('preventsharediptime', 'attendance'), '', 'test');
-        $mform->addGroup($mgroup3, 'preventsharedgroup', get_string('preventsharedip', 'attendance'), array(' '), false);
-        $mform->addHelpButton('preventsharedgroup', 'preventsharedip', 'attendance');
-        $mform->setAdvanced('preventsharedgroup');
-        $mform->setType('preventsharedip', PARAM_INT);
-        $mform->setType('preventsharediptime', PARAM_INT);
-
-        if (isset($pluginconfig->preventsharedip)) {
-            $mform->setDefault('preventsharedip', $pluginconfig->preventsharedip);
-        }
-        if (isset($pluginconfig->preventsharediptime)) {
-            $mform->setDefault('preventsharediptime', $pluginconfig->preventsharediptime);
-        }
+//        $mgroup2[] = & $mform->createElement('checkbox', 'usedefaultsubnet', get_string('usedefaultsubnet', 'attendance'));
+//        $mform->setDefault('usedefaultsubnet', 1);
+//        $mform->setType('subnet', PARAM_TEXT);
+//
+//        $mform->addGroup($mgroup2, 'subnetgrp', get_string('requiresubnet', 'attendance'), array(' '), false);
+//        $mform->setAdvanced('subnetgrp');
+//        $mform->addHelpButton('subnetgrp', 'requiresubnet', 'attendance');
+//        $mform->hideif('subnet', 'usedefaultsubnet', 'checked');
+//
+//        $mgroup3 = array();
+//        $options = attendance_get_sharedipoptions();
+//        $mgroup3[] = & $mform->createElement('select', 'preventsharedip',
+//            get_string('preventsharedip', 'attendance'), $options);
+//        $mgroup3[] = & $mform->createElement('text', 'preventsharediptime',
+//            get_string('preventsharediptime', 'attendance'), '', 'test');
+//        $mform->addGroup($mgroup3, 'preventsharedgroup', get_string('preventsharedip', 'attendance'), array(' '), false);
+//        $mform->addHelpButton('preventsharedgroup', 'preventsharedip', 'attendance');
+//        $mform->setAdvanced('preventsharedgroup');
+//        $mform->setType('preventsharedip', PARAM_INT);
+//        $mform->setType('preventsharediptime', PARAM_INT);
+//
+//        if (isset($pluginconfig->preventsharedip)) {
+//            $mform->setDefault('preventsharedip', $pluginconfig->preventsharedip);
+//        }
+//        if (isset($pluginconfig->preventsharediptime)) {
+//            $mform->setDefault('preventsharediptime', $pluginconfig->preventsharediptime);
+//        }
 
         $this->add_action_buttons(true, get_string('add', 'attendance'));
     }

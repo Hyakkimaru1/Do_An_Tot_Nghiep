@@ -67,10 +67,10 @@ class export extends \moodleform {
             $userlist[$user->id] = fullname($user);
         }
         unset($allusers);
-        $tempusers = $DB->get_records('attendance_tempusers', array('courseid' => $course->id), 'studentid, fullname');
-        foreach ($tempusers as $user) {
-            $userlist[$user->studentid] = $user->fullname;
-        }
+//        $tempusers = $DB->get_records('attendance_tempusers', array('courseid' => $course->id), 'studentid, fullname');
+//        foreach ($tempusers as $user) {
+//            $userlist[$user->studentid] = $user->fullname;
+//        }
         if (empty($userlist)) {
             $mform->addElement('static', 'nousers', '', get_string('noattendanceusers', 'attendance'));
             return;

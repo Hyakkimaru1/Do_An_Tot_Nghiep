@@ -63,19 +63,28 @@ function attendance_get_statuses($attid, $onlyvisible=true, $statusset = -1) {
 
     // Set selector.
     $params = array('aid' => $attid);
-    $setsql = '';
-    if ($statusset >= 0) {
-        $params['statusset'] = $statusset;
-        $setsql = ' AND setnumber = :statusset ';
-    }
 
     if ($onlyvisible) {
-        $statuses = $DB->get_records_select('attendance_statuses', "visible = 1 AND deleted = 0 $setsql",
-                                            $params, 'setnumber ASC, grade DESC');
+        $statuses = $DB->get_records_select('attendance_statuses', "visible = 1 AND deleted = 0",
+            $params, 'id ASC');
     } else {
-        $statuses = $DB->get_records_select('attendance_statuses', "deleted = 0 $setsql",
-                                            $params, 'setnumber ASC, grade DESC');
+        $statuses = $DB->get_records_select('attendance_statuses', "deleted = 0",
+            $params, 'id ASC');
     }
+
+//    $setsql = '';
+//    if ($statusset >= 0) {
+//        $params['statusset'] = $statusset;
+//        $setsql = ' AND setnumber = :statusset ';
+//    }
+//
+//    if ($onlyvisible) {
+//        $statuses = $DB->get_records_select('attendance_statuses', "visible = 1 AND deleted = 0 $setsql",
+//                                            $params, 'setnumber ASC, grade DESC');
+//    } else {
+//        $statuses = $DB->get_records_select('attendance_statuses', "deleted = 0 $setsql",
+//                                            $params, 'setnumber ASC, grade DESC');
+//    }
 
 //    $statuses = [
 //        (object)[ "id"=> "1",
@@ -194,8 +203,7 @@ function attendance_get_user_sessions_log_full($userid, $pageparams) {
     // ats.groupid 0 => get all sessions that are for all students enrolled in course
     // al.id not null => get all marked sessions whether or not user currently still in group.
     $sql = "SELECT ats.id, ats.groupid, ats.sessdate, ats.duration, ats.description, ats.statusset,
-                   al.statusid, al.remarks, ats.studentscanmark, ats.autoassignstatus,
-                   ats.preventsharedip, ats.preventsharediptime,
+                   al.statusid, al.remarks,ats.autoassignstatus
                    ats.attendanceid, att.name AS attname, att.course AS courseid, c.fullname AS cname
               FROM {attendance_sessions} ats
               JOIN {attendance} att
@@ -526,12 +534,10 @@ function attendance_remove_status($status, $context = null, $cm = null) {
  * @param bool $visible
  * @param stdClass $context
  * @param stdClass $cm
- * @param int $studentavailability
- * @param bool $setunmarked
  * @return array
  */
 function attendance_update_status($status, $acronym, $description, $grade, $visible,
-                                  $context = null, $cm = null, $studentavailability = null, $setunmarked = false) {
+                                  $context = null, $cm = null) {
     global $DB;
 
     if (empty($context)) {
@@ -559,21 +565,21 @@ function attendance_update_status($status, $acronym, $description, $grade, $visi
         $status->grade = $grade;
         $updated[] = $grade;
     }
-    if (isset($studentavailability)) {
-        if (empty($studentavailability)) {
-            if ($studentavailability !== '0') {
-                $studentavailability = null;
-            }
-        }
-
-        $status->studentavailability = $studentavailability;
-        $updated[] = $studentavailability;
-    }
-    if ($setunmarked) {
-        $status->setunmarked = 1;
-    } else {
-        $status->setunmarked = 0;
-    }
+//    if (isset($studentavailability)) {
+//        if (empty($studentavailability)) {
+//            if ($studentavailability !== '0') {
+//                $studentavailability = null;
+//            }
+//        }
+//
+//        $status->studentavailability = $studentavailability;
+//        $updated[] = $studentavailability;
+//    }
+//    if ($setunmarked) {
+//        $status->setunmarked = 1;
+//    } else {
+//        $status->setunmarked = 0;
+//    }
     $DB->update_record('attendance_statuses', $status);
 
     $event = \mod_attendance\event\status_updated::create(array(
@@ -684,11 +690,14 @@ function attendance_exporttotableed($data, $filename, $format) {
     global $CFG;
 
     if ($format === 'excel') {
-        require_once("$CFG->libdir/excellib.class.php");
+        require_once(__DIR__ . '/../../lib/excellib.class.php');
+        //require_once("$CFG->libdir/excellib.class.php");
         $filename .= ".xls";
         $workbook = new MoodleExcelWorkbook("-");
-    } else {
-        require_once("$CFG->libdir/odslib.class.php");
+    }
+    else {
+        require_once(__DIR__ . '/../../lib/odslib.class.php');
+        //require_once("$CFG->libdir/odslib.class.php");
         $filename .= ".ods";
         $workbook = new MoodleODSWorkbook("-");
     }
@@ -702,8 +711,8 @@ function attendance_exporttotableed($data, $filename, $format) {
 
     $myxls->write(0, 0, get_string('course'), $formatbc);
     $myxls->write(0, 1, $data->course);
-    $myxls->write(1, 0, get_string('group'), $formatbc);
-    $myxls->write(1, 1, $data->group);
+    $myxls->write(1, 0, 'Chú thích',$formatbc);
+    $myxls->write(1, 1, 'C: Chủ động, B: Bị động, T: Trễ, V: Vắng');
 
     $i = 3;
     $j = 0;
@@ -745,7 +754,7 @@ function attendance_exporttocsv($data, $filename) {
     header("Pragma: public");
 
     echo get_string('course')."\t".$data->course."\n";
-    echo get_string('group')."\t".$data->group."\n\n";
+//    echo get_string('group')."\t".$data->group."\n\n";
 
     echo implode("\t", $data->tabhead)."\n";
     foreach ($data->table as $row) {
@@ -774,9 +783,9 @@ function attendance_construct_sessions_data_for_add($formdata, mod_attendance_st
 
     $now = time();
 
-    if (empty(get_config('attendance', 'studentscanmark'))) {
-        $formdata->studentscanmark = 0;
-    }
+//    if (empty(get_config('attendance', 'studentscanmark'))) {
+//        $formdata->studentscanmark = 0;
+//    }
 
     $calendarevent = 0;
     if (isset($formdata->calendarevent)) { // Calendar event should be created.
@@ -978,9 +987,9 @@ function add_multiply_attedance_session($formdata) {
 
     $now = time();
 
-    if (empty(get_config('attendance', 'studentscanmark'))) {
-        $formdata->studentscanmark = 0;
-    }
+//    if (empty(get_config('attendance', 'studentscanmark'))) {
+//        $formdata->studentscanmark = 0;
+//    }
 
     $calendarevent = 0;
     if (isset($formdata->calendarevent)) { // Calendar event should be created.

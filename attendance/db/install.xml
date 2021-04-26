@@ -8,6 +8,7 @@
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" COMMENT="id of the table, please edit me"/>
         <FIELD NAME="course" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+
         <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="grade" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="100" SEQUENCE="false" COMMENT="This is maximum grade for instance"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="The time the settings for this attendance instance were last modified."/>
@@ -20,6 +21,8 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Primary key for attendance"/>
+        <KEY NAME="foreign_attendance_course" TYPE="foreign" FIELDS="course"
+             REFTABLE="course" REFFIELDS="id"/>
       </KEYS>
       <INDEXES>
         <INDEX NAME="course" UNIQUE="false" FIELDS="course"/>
@@ -29,35 +32,37 @@
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="attendanceid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
-        <FIELD NAME="groupid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="roomid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" DEFAULT="0"/>
+        <FIELD NAME="lesson" TYPE="int" LENGTH="4" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="sessdate" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="duration" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+
+        <FIELD NAME="groupid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="lasttaken" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="lasttakenby" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="description" TYPE="text" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="descriptionformat" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
-        <FIELD NAME="studentscanmark" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+<!--        <FIELD NAME="studentscanmark" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>-->
         <FIELD NAME="autoassignstatus" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
-        <FIELD NAME="studentpassword" TYPE="char" LENGTH="50" NOTNULL="false" DEFAULT="" SEQUENCE="false"/>
+<!--        <FIELD NAME="studentpassword" TYPE="char" LENGTH="50" NOTNULL="false" DEFAULT="" SEQUENCE="false"/>-->
         <FIELD NAME="subnet" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="Restrict ability for students to mark by subnet."/>
         <FIELD NAME="automark" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="automarkcompleted" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="statusset" TYPE="int" LENGTH="5" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Which set of statuses to use"/>
         <FIELD NAME="absenteereport" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
-        <FIELD NAME="preventsharedip" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
-        <FIELD NAME="preventsharediptime" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+<!--        <FIELD NAME="preventsharedip" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>-->
+<!--        <FIELD NAME="preventsharediptime" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>-->
         <FIELD NAME="caleventid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="calendarevent" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
-        <FIELD NAME="includeqrcode" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Include a QR code image when displaying the password"/>
-        <FIELD NAME="rotateqrcode" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
-        <FIELD NAME="rotateqrcodesecret" TYPE="char" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
-
-        <FIELD NAME="roomid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" DEFAULT="0"/>
-        <FIELD NAME="lesson" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+<!--     mdl_auth_oauth2_linked_login   <FIELD NAME="includeqrcode" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Include a QR code image when displaying the password"/>-->
+<!--        <FIELD NAME="rotateqrcode" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>-->
+<!--        <FIELD NAME="rotateqrcodesecret" TYPE="char" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>-->
       </FIELDS>
       <KEYS>
-        <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Primary key for attendance_sessions"/>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id" />
+        <KEY NAME="foreign_sessions_attendance" TYPE="foreign" FIELDS="attendanceid"
+             REFTABLE="attendance" REFFIELDS="id"/>
         <KEY NAME="foreign_sessions_room" TYPE="foreign" FIELDS="roomid"
              REFTABLE="room" REFFIELDS="id"/>
       </KEYS>
@@ -74,23 +79,37 @@
         <FIELD NAME="sessionid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="studentid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="statusid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="link with attendance_status table"/>
+        <FIELD NAME="timein" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timeout" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+
 <!--        <FIELD NAME="statusset" TYPE="char" LENGTH="1333" NOTNULL="false" SEQUENCE="false"/>-->
         <FIELD NAME="timetaken" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="When attendance of this student was taken"/>
         <FIELD NAME="takenby" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="remarks" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
-        <FIELD NAME="ipaddress" TYPE="char" LENGTH="45" NOTNULL="false" SEQUENCE="false"/>
+<!--        <FIELD NAME="ipaddress" TYPE="char" LENGTH="45" NOTNULL="false" SEQUENCE="false"/>-->
 
-        <FIELD NAME="timein" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
-        <FIELD NAME="timeout" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Primary key for attendance_log"/>
+        <KEY NAME="foreign_log_sessions" TYPE="foreign" FIELDS="sessionid"
+             REFTABLE="attendance_sessions" REFFIELDS="id"/>
       </KEYS>
       <INDEXES>
         <INDEX NAME="sessionid" UNIQUE="false" FIELDS="sessionid"/>
         <INDEX NAME="studentid" UNIQUE="false" FIELDS="studentid"/>
         <INDEX NAME="statusid" UNIQUE="false" FIELDS="statusid"/>
       </INDEXES>
+    </TABLE>
+    <TABLE NAME="room" COMMENT="room table">
+      <FIELDS>
+        <FIELD NAME="id" SEQUENCE="true" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="name" SEQUENCE="false" TYPE="text" NOTNULL="true"/>
+        <FIELD NAME="campus" SEQUENCE="false" TYPE="text" NOTNULL="true"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
     </TABLE>
     <TABLE NAME="attendance_statuses" COMMENT="attendance_statuses table retrofitted from MySQL">
       <FIELDS>
@@ -99,8 +118,8 @@
         <FIELD NAME="acronym" TYPE="char" LENGTH="2" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="description" TYPE="char" LENGTH="30" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="grade" TYPE="number" LENGTH="5" NOTNULL="true" DEFAULT="0" SEQUENCE="false" DECIMALS="2"/>
-        <FIELD NAME="studentavailability" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="How many minutes this status is available when self marking is enabled."/>
-        <FIELD NAME="setunmarked" TYPE="int" LENGTH="2" NOTNULL="false" SEQUENCE="false" COMMENT="Set this status if unmarked at end of session."/>
+<!--        <FIELD NAME="studentavailability" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="How many minutes this status is available when self marking is enabled."/>-->
+<!--        <FIELD NAME="setunmarked" TYPE="int" LENGTH="2" NOTNULL="false" SEQUENCE="false" COMMENT="Set this status if unmarked at end of session."/>-->
         <FIELD NAME="visible" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
         <FIELD NAME="deleted" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="setnumber" TYPE="int" LENGTH="5" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Allows different sets of statuses to be allocated to different sessions"/>
@@ -114,23 +133,23 @@
         <INDEX NAME="deleted" UNIQUE="false" FIELDS="deleted"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="attendance_tempusers" COMMENT="Stores temporary users details">
-      <FIELDS>
-        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-        <FIELD NAME="studentid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="student id"/>
-        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="course id"/>
-        <FIELD NAME="fullname" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" COMMENT="temp user fullname"/>
-        <FIELD NAME="email" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" COMMENT="temporary user email"/>
-        <FIELD NAME="created" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="unix timestamp for temp user creation"/>
-      </FIELDS>
-      <KEYS>
-        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-      </KEYS>
-      <INDEXES>
-        <INDEX NAME="courseid" UNIQUE="false" FIELDS="courseid"/>
-        <INDEX NAME="studentid" UNIQUE="true" FIELDS="studentid"/>
-      </INDEXES>
-    </TABLE>
+<!--    <TABLE NAME="attendance_tempusers" COMMENT="Stores temporary users details">-->
+<!--      <FIELDS>-->
+<!--        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>-->
+<!--        <FIELD NAME="studentid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="student id"/>-->
+<!--        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="course id"/>-->
+<!--        <FIELD NAME="fullname" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" COMMENT="temp user fullname"/>-->
+<!--        <FIELD NAME="email" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" COMMENT="temporary user email"/>-->
+<!--        <FIELD NAME="created" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="unix timestamp for temp user creation"/>-->
+<!--      </FIELDS>-->
+<!--      <KEYS>-->
+<!--        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>-->
+<!--      </KEYS>-->
+<!--      <INDEXES>-->
+<!--        <INDEX NAME="courseid" UNIQUE="false" FIELDS="courseid"/>-->
+<!--        <INDEX NAME="studentid" UNIQUE="true" FIELDS="studentid"/>-->
+<!--      </INDEXES>-->
+<!--    </TABLE>-->
     <TABLE NAME="attendance_warning" COMMENT="Warning configuration">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
@@ -163,16 +182,39 @@
         <INDEX NAME="notifyid_userid" UNIQUE="false" FIELDS="notifyid, userid"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="attendance_rotate_passwords" COMMENT="Table to hold temporary passwords for rotate QR code feature.">
+    <TABLE NAME="attendance_action_log" COMMENT="actions log">
       <FIELDS>
-        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-        <FIELD NAME="attendanceid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
-        <FIELD NAME="password" TYPE="char" LENGTH="20" NOTNULL="true" SEQUENCE="false"/>
-        <FIELD NAME="expirytime" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="id" SEQUENCE="true" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="timetaken" SEQUENCE="false" TYPE="int" LENGTH="20" NOTNULL="true"/>
+        <FIELD NAME="usertaken" SEQUENCE="false" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="userbetaken" SEQUENCE="false" TYPE="int" LENGTH="10" NOTNULL="false"/>
+        <FIELD NAME="attendanceid" SEQUENCE="false" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="sessionid" SEQUENCE="false" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="eventname" TYPE="char" LENGTH="30" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="description" TYPE="text" NOTNULL="true" SEQUENCE="false"/>
       </FIELDS>
       <KEYS>
-        <KEY NAME="id" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="foreign_action_attendance" TYPE="foreign" FIELDS="attendanceid"
+             REFTABLE="attendance" REFFIELDS="id"/>
+        <KEY NAME="foreign_action_session" TYPE="foreign" FIELDS="sessionid"
+             REFTABLE="attendance_session" REFFIELDS="id"/>
+        <KEY NAME="foreign_action_usertaken" TYPE="foreign" FIELDS="usertaken"
+             REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="foreign_action_userbetaken" TYPE="foreign" FIELDS="userbetaken"
+             REFTABLE="user" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
+<!--    <TABLE NAME="attendance_rotate_passwords" COMMENT="Table to hold temporary passwords for rotate QR code feature.">-->
+<!--      <FIELDS>-->
+<!--        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>-->
+<!--        <FIELD NAME="attendanceid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>-->
+<!--        <FIELD NAME="password" TYPE="char" LENGTH="20" NOTNULL="true" SEQUENCE="false"/>-->
+<!--        <FIELD NAME="expirytime" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>-->
+<!--      </FIELDS>-->
+<!--      <KEYS>-->
+<!--        <KEY NAME="id" TYPE="primary" FIELDS="id"/>-->
+<!--      </KEYS>-->
+<!--    </TABLE>-->
   </TABLES>
 </XMLDB>

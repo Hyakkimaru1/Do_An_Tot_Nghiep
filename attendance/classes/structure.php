@@ -346,6 +346,12 @@ class mod_attendance_structure {
         return new moodle_url('/mod/attendance/tempedit.php', $params);
     }
 
+    //hd981
+    public function url_log($params=array()) : moodle_url {
+        $params = array_merge(array('id' => $this->cm->id), $params);
+        return new moodle_url('/mod/attendance/log.php', $params);
+    }
+
     /**
      * Get temp edit url.
      *
@@ -474,7 +480,7 @@ class mod_attendance_structure {
      * @return int $sessionid
      */
     public function add_session($sess) : int {
-        global $DB;
+        global $DB,$USER;
         $config = get_config('attendance');
 
         $sess->attendanceid = $this->id;
@@ -539,6 +545,16 @@ class mod_attendance_structure {
         $event->add_record_snapshot('attendance_sessions', $sess);
         $event->trigger();
 
+        $action_log = new stdClass();
+        $action_log->timetaken = time();
+        $action_log->usertaken = (int)$USER->id;
+        $action_log->userbetaken = null;
+        $action_log->attendanceid = $sess->attendanceid;
+        $action_log->sessionid = $sess->id;
+        $action_log->eventname = "Add session";
+        $action_log->description = "User with id = $action_log->usertaken add session for session with id = $action_log->sessionid is [ roomid: $sess->roomid, sessdate: $sess->sessdate, duration: $sess->duration, description: $sess->description, automark: $sess->automark]";
+        $DB->insert_record('attendance_action_log',$action_log,false);
+
         return $sess->id;
     }
 
@@ -549,7 +565,7 @@ class mod_attendance_structure {
      * @param int $sessionid
      */
     public function update_session_from_form_data($formdata, $sessionid) {
-        global $DB;
+        global $DB,$USER;
 
         if (!$sess = $DB->get_record('attendance_sessions', array('id' => $sessionid) )) {
             print_error('No such session in this course');
@@ -589,22 +605,22 @@ class mod_attendance_structure {
         if (!empty($formdata->autoassignstatus)) {
             $sess->autoassignstatus = $formdata->autoassignstatus;
         }
-        $studentscanmark = get_config('attendance', 'studentscanmark');
-
-        if (!empty($studentscanmark) &&
-            !empty($formdata->studentscanmark)) {
-            $sess->studentscanmark = $formdata->studentscanmark;
-            $sess->studentpassword = $formdata->studentpassword;
-            $sess->autoassignstatus = $formdata->autoassignstatus;
-            if (!empty($formdata->includeqrcode)) {
-                $sess->includeqrcode = $formdata->includeqrcode;
-            }
-            if (!empty($formdata->rotateqrcode)) {
-                $sess->rotateqrcode = $formdata->rotateqrcode;
-                $sess->studentpassword = attendance_random_string();
-                $sess->rotateqrcodesecret = attendance_random_string();
-            }
-        }
+//        $studentscanmark = get_config('attendance', 'studentscanmark');
+//
+//        if (!empty($studentscanmark) &&
+//            !empty($formdata->studentscanmark)) {
+//            $sess->studentscanmark = $formdata->studentscanmark;
+//            $sess->studentpassword = $formdata->studentpassword;
+//            $sess->autoassignstatus = $formdata->autoassignstatus;
+//            if (!empty($formdata->includeqrcode)) {
+//                $sess->includeqrcode = $formdata->includeqrcode;
+//            }
+//            if (!empty($formdata->rotateqrcode)) {
+//                $sess->rotateqrcode = $formdata->rotateqrcode;
+//                $sess->studentpassword = attendance_random_string();
+//                $sess->rotateqrcodesecret = attendance_random_string();
+//            }
+//        }
         if (!empty($formdata->usedefaultsubnet)) {
             $sess->subnet = $this->subnet;
         } else {
@@ -622,7 +638,21 @@ class mod_attendance_structure {
         }
 
         $sess->timemodified = time();
+
+        $dbsession = $DB->get_record('attendance_sessions', array('id' => $sessionid) );
+        $action_log = new stdClass();
+        $action_log->timetaken = time();
+        $action_log->usertaken = (int)$USER->id;
+        $action_log->userbetaken = null;
+        $action_log->attendanceid = $dbsession->attendanceid;
+        $action_log->sessionid = $sessionid;
+        $action_log->eventname = "Update session";
+        $action_log->description = "User with id = $action_log->usertaken update session for session with id = $action_log->sessionid from [ roomid: $dbsession->roomid, sessdate: $dbsession->sessdate, duration: $dbsession->duration, description: $dbsession->description, automark: $dbsession->automark] to [ roomid: $sess->roomid, sessdate: $sess->sessdate, duration: $sess->duration, description: $sess->description, automark: $sess->automark]";
+        $DB->insert_record('attendance_action_log',$action_log,false);
+
         $DB->update_record('attendance_sessions', $sess);
+
+
 
         if (empty($sess->caleventid)) {
              // This shouldn't really happen, but just in case to prevent fatal error.
@@ -722,6 +752,7 @@ class mod_attendance_structure {
         $sesslog = array();
 
         $formdata = (array)$data;
+        //var_dump($formdata);die();
 
         foreach ($formdata as $key => $value) {
             // Look at Remarks field because the user options may not be passed if empty.
@@ -772,9 +803,32 @@ class mod_attendance_structure {
 
                         $log->id = $dbsesslog[$log->studentid]->id;
                         $DB->update_record('attendance_log', $log);
+
+                        if($dbsesslog[$log->studentid]->statusid !== $log->statusid){
+                            $action_log = new stdClass();
+                            $action_log->timetaken = time();
+                            $action_log->usertaken = (int)$USER->id;
+                            $action_log->userbetaken = (int)$log->studentid;
+                            $action_log->attendanceid = $this->id;
+                            $action_log->sessionid = $this->pageparams->sessionid;
+                            $action_log->eventname = "Update status student";
+                            $action_log->description = "User with id = $action_log->usertaken update status for student with id = $action_log->userbetaken from ".$dbsesslog[$log->studentid]->statusid. " to " .$log->statusid;
+                            $DB->insert_record('attendance_action_log',$action_log,false);
+                        }
+
+
                     }
                 } else {
                     $DB->insert_record('attendance_log', $log, false);
+                    $action_log = new stdClass();
+                    $action_log->timetaken = time();
+                    $action_log->usertaken = (int)$USER->id;
+                    $action_log->userbetaken = (int)$log->studentid;
+                    $action_log->attendanceid = $this->id;
+                    $action_log->sessionid = $this->pageparams->sessionid;
+                    $action_log->eventname = "Add status student";
+                    $action_log->description = "User with id = $action_log->usertaken add status for student with id = $action_log->userbetaken is " .$log->statusid;
+                    $DB->insert_record('attendance_action_log',$action_log,false);
                 }
             }
         }
@@ -894,11 +948,11 @@ class mod_attendance_structure {
             }
         }
 
-        // Add the 'temporary' users to this list.
-        $tempusers = $DB->get_records('attendance_tempusers', array('courseid' => $this->course->id));
-        foreach ($tempusers as $tempuser) {
-            $users[$tempuser->studentid] = self::tempuser_to_user($tempuser);
-        }
+//        // Add the 'temporary' users to this list.
+//        $tempusers = $DB->get_records('attendance_tempusers', array('courseid' => $this->course->id));
+//        foreach ($tempusers as $tempuser) {
+//            $users[$tempuser->studentid] = self::tempuser_to_user($tempuser);
+//        }
 
         return $users;
     }
@@ -1109,13 +1163,19 @@ class mod_attendance_structure {
 
         } else {
             //hd981
-            $sql = "SELECT ats.id, ats.sessdate, ats.groupid, al.statusid, al.remarks,
-                           ats.preventsharediptime, ats.preventsharedip,al.timein,al.timeout
+            $sql = "SELECT ats.id, ats.sessdate, ats.groupid, al.statusid, al.remarks,al.timein,al.timeout
                   FROM {attendance_sessions} ats
                   JOIN {attendance_log} al
                     ON ats.id = al.sessionid AND al.studentid = :uid
                  WHERE $where
               ORDER BY ats.sessdate ASC";
+//            $sql = "SELECT ats.id, ats.sessdate, ats.groupid, al.statusid, al.remarks,
+//                           ats.preventsharediptime, ats.preventsharedip,al.timein,al.timeout
+//                  FROM {attendance_sessions} ats
+//                  JOIN {attendance_log} al
+//                    ON ats.id = al.sessionid AND al.studentid = :uid
+//                 WHERE $where
+//              ORDER BY ats.sessdate ASC";
 
             $params = array(
                 'uid'       => $userid,
@@ -1164,8 +1224,7 @@ class mod_attendance_structure {
         } else {
             //hd981
             $sql = "SELECT $id, ats.id, ats.groupid, ats.sessdate, ats.duration, ats.description, ats.statusset,
-                           al.statusid, al.remarks, ats.studentscanmark, ats.autoassignstatus,
-                           ats.preventsharedip, ats.preventsharediptime, ats.rotateqrcode,al.timein,al.timeout
+                           al.statusid, al.remarks,ats.autoassignstatus,al.timein,al.timeout
                       FROM {attendance_sessions} ats
                 RIGHT JOIN {attendance_log} al
                         ON ats.id = al.sessionid AND al.studentid = :uid
@@ -1196,8 +1255,7 @@ class mod_attendance_structure {
         }
         //hd981
         $sql = "SELECT $id, ats.id, ats.groupid, ats.sessdate, ats.duration, ats.description, ats.statusset,
-                       al.statusid, al.remarks, ats.studentscanmark, ats.autoassignstatus,
-                       ats.preventsharedip, ats.preventsharediptime, ats.rotateqrcode,al.timein,al.timeout
+                       al.statusid, al.remarks, ats.autoassignstatus,al.timein,al.timeout
                   FROM {attendance_sessions} ats
              LEFT JOIN {attendance_log} al
                     ON ats.id = al.sessionid AND al.studentid = :uid
@@ -1224,9 +1282,22 @@ class mod_attendance_structure {
      * @param array $sessionsids
      */
     public function delete_sessions($sessionsids) {
-        global $DB;
+        global $DB,$USER;
         if (attendance_existing_calendar_events_ids($sessionsids)) {
             attendance_delete_calendar_events($sessionsids);
+        }
+
+        foreach ($sessionsids as $sessionsid){
+            $dbsession = $DB->get_record('attendance_sessions', array('id' => $sessionsid) );
+            $action_log = new stdClass();
+            $action_log->timetaken = time();
+            $action_log->usertaken = (int)$USER->id;
+            $action_log->userbetaken = null;
+            $action_log->attendanceid = $dbsession->attendanceid;
+            $action_log->sessionid = $dbsession->id;
+            $action_log->eventname = "Delete session";
+            $action_log->description = "User with id = $action_log->usertaken delete session for session with id = $action_log->sessionid include info [ roomid: $dbsession->roomid, sessdate: $dbsession->sessdate, duration: $dbsession->duration, description: $dbsession->description, automark: $dbsession->automark]";
+            $DB->insert_record('attendance_action_log',$action_log,false);
         }
 
         list($sql, $params) = $DB->get_in_or_equal($sessionsids);

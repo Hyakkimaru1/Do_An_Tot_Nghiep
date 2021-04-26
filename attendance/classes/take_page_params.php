@@ -40,6 +40,8 @@ class mod_attendance_take_page_params {
     const DEFAULT_VIEW_MODE     = self::SORTED_LIST;
 
     /** @var int */
+    public $attendanceid;
+    /** @var int */
     public $sessionid;
     /** @var int */
     public $grouptype;

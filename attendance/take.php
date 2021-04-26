@@ -28,6 +28,7 @@ require_once(dirname(__FILE__).'/locallib.php');
 $pageparams = new mod_attendance_take_page_params();
 
 $id                     = required_param('id', PARAM_INT);
+$pageparams->attendanceid = required_param('id',PARAM_INT);
 $pageparams->sessionid  = required_param('sessionid', PARAM_INT);
 $pageparams->grouptype  = required_param('grouptype', PARAM_INT);
 $pageparams->sort       = optional_param('sort', ATT_SORT_DEFAULT, PARAM_INT);

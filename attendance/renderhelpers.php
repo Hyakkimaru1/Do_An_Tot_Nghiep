@@ -58,6 +58,10 @@ class user_sessions_cells_generator {
      * @param boolean $remarks - include remarks cell.
      */
     public function get_cells($remarks = false) {
+        $icon = array( 1=> '<i class="fa fa-check-circle" style="color: green" aria-hidden="true"></i>',
+            2=>'<i class="fa fa-user-plus" style="color: blue" aria-hidden="true"></i>',
+            3=>'<i class="fa fa-clock-o" style="color:orange;" aria-hidden="true"></i>',
+            4=>'<i class="fa fa-times-circle" style="color: red" aria-hidden="true"></i>');
         foreach ($this->reportdata->sessions as $sess) {
             if (array_key_exists($sess->id, $this->reportdata->sessionslog[$this->user->id]) &&
             !empty($this->reportdata->sessionslog[$this->user->id][$sess->id]->statusid)) {
@@ -65,10 +69,12 @@ class user_sessions_cells_generator {
                 if (array_key_exists($statusid, $this->reportdata->statuses)) {
                     $points = format_float($this->reportdata->statuses[$statusid]->grade, 1, true, true);
                     $maxpoints = format_float($sess->maxpoints, 1, true, true);
-                    $this->construct_existing_status_cell($this->reportdata->statuses[$statusid]->acronym .
-                                " ({$points}/{$maxpoints})");
+//                    $this->construct_existing_status_cell($this->reportdata->statuses[$statusid]->acronym .
+//                                " ({$points}/{$maxpoints})");
+                    $this->construct_existing_status_cell($icon[$statusid]);
                 } else {
-                    $this->construct_hidden_status_cell($this->reportdata->allstatuses[$statusid]->acronym);
+                    //$this->construct_hidden_status_cell($this->reportdata->allstatuses[$statusid]->acronym);
+                    $this->construct_hidden_status_cell($icon[$statusid]);
                 }
                 if ($remarks) {
                     $this->construct_remarks_cell($this->reportdata->sessionslog[$this->user->id][$sess->id]->remarks);

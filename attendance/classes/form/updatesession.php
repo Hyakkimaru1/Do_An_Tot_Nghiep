@@ -64,8 +64,8 @@ class updatesession extends \moodleform {
         $endminute = floor(($endtime - $endhour * HOURSECS) / MINSECS);
 
         //hd981
-        $sql = "SELECT r.* FROM {room} r WHERE r.id = $sess->roomid";
-        $room = $DB->get_records_sql($sql);
+        $sql = "SELECT r.* FROM {room} r WHERE r.id = ".$sess->roomid;
+        $room = $DB->get_record_sql($sql);
 
         $data = array(
             'sessiondate' => $sess->sessdate,
@@ -86,7 +86,7 @@ class updatesession extends \moodleform {
             'rotateqrcode' => $sess->rotateqrcode,
 
             //hd981
-            'room' => $room[0]->campus.'_'.$room[0]->name,
+            'room' => $room->campus.'_'.$room->name,
         );
         if ($sess->subnet == $attendancesubnet) {
             $data['usedefaultsubnet'] = 1;
@@ -107,7 +107,7 @@ class updatesession extends \moodleform {
         $olddate = construct_session_full_date_time($sess->sessdate, $sess->duration);
         $mform->addElement('static', 'olddate', get_string('olddate', 'attendance'), $olddate);
 
-        $mform->addElement('static', 'oldroom', 'Old room', $room[0]->campus.'_'.$room[0]->name);
+        $mform->addElement('static', 'oldroom', 'Old room', $room->campus.'_'.$room->name);
         $op = attendance_get_roomptions();
         $mform->addElement('select', 'room', 'Room', $op);
         attendance_form_sessiondate_selector($mform);
@@ -140,17 +140,17 @@ class updatesession extends \moodleform {
         }
 
         // Students can mark own attendance.
-        $studentscanmark = get_config('attendance', 'studentscanmark');
+//        $studentscanmark = get_config('attendance', 'studentscanmark');
 
         $mform->addElement('header', 'headerstudentmarking', get_string('studentmarking', 'attendance'), true);
         $mform->setExpanded('headerstudentmarking');
-        if (!empty($studentscanmark)) {
-            $mform->addElement('checkbox', 'studentscanmark', '', get_string('studentscanmark', 'attendance'));
-            $mform->addHelpButton('studentscanmark', 'studentscanmark', 'attendance');
-        } else {
-            $mform->addElement('hidden', 'studentscanmark', '0');
-            $mform->settype('studentscanmark', PARAM_INT);
-        }
+//        if (!empty($studentscanmark)) {
+//            $mform->addElement('checkbox', 'studentscanmark', '', get_string('studentscanmark', 'attendance'));
+//            $mform->addHelpButton('studentscanmark', 'studentscanmark', 'attendance');
+//        } else {
+//            $mform->addElement('hidden', 'studentscanmark', '0');
+//            $mform->settype('studentscanmark', PARAM_INT);
+//        }
 
         $options2 = attendance_get_automarkoptions();
 
@@ -176,32 +176,32 @@ class updatesession extends \moodleform {
             $mform->hideif('autoassignstatus', 'studentscanmark', 'notchecked');
         }
 
-        $mgroup = array();
-        $mgroup[] = & $mform->createElement('text', 'subnet', get_string('requiresubnet', 'attendance'));
-        $mform->setDefault('subnet', $this->_customdata['att']->subnet);
-        $mgroup[] = & $mform->createElement('checkbox', 'usedefaultsubnet', get_string('usedefaultsubnet', 'attendance'));
-        $mform->setDefault('usedefaultsubnet', 1);
-        $mform->setType('subnet', PARAM_TEXT);
-
-        $mform->addGroup($mgroup, 'subnetgrp', get_string('requiresubnet', 'attendance'), array(' '), false);
-        $mform->setAdvanced('subnetgrp');
-        $mform->addHelpButton('subnetgrp', 'requiresubnet', 'attendance');
-        $mform->hideif('subnet', 'usedefaultsubnet', 'checked');
+//        $mgroup = array();
+//        $mgroup[] = & $mform->createElement('text', 'subnet', get_string('requiresubnet', 'attendance'));
+//        $mform->setDefault('subnet', $this->_customdata['att']->subnet);
+//        $mgroup[] = & $mform->createElement('checkbox', 'usedefaultsubnet', get_string('usedefaultsubnet', 'attendance'));
+//        $mform->setDefault('usedefaultsubnet', 1);
+//        $mform->setType('subnet', PARAM_TEXT);
+//
+//        $mform->addGroup($mgroup, 'subnetgrp', get_string('requiresubnet', 'attendance'), array(' '), false);
+//        $mform->setAdvanced('subnetgrp');
+//        $mform->addHelpButton('subnetgrp', 'requiresubnet', 'attendance');
+//        $mform->hideif('subnet', 'usedefaultsubnet', 'checked');
 
         $mform->addElement('hidden', 'automarkcompleted', '0');
         $mform->settype('automarkcompleted', PARAM_INT);
 
-        $mgroup3 = array();
-        $options = attendance_get_sharedipoptions();
-        $mgroup3[] = & $mform->createElement('select', 'preventsharedip',
-            get_string('preventsharedip', 'attendance'), $options);
-        $mgroup3[] = & $mform->createElement('text', 'preventsharediptime',
-            get_string('preventsharediptime', 'attendance'), '', 'test');
-        $mform->addGroup($mgroup3, 'preventsharedgroup',
-            get_string('preventsharedip', 'attendance'), array(' '), false);
-        $mform->addHelpButton('preventsharedgroup', 'preventsharedip', 'attendance');
-        $mform->setAdvanced('preventsharedgroup');
-        $mform->setType('preventsharediptime', PARAM_INT);
+//        $mgroup3 = array();
+//        $options = attendance_get_sharedipoptions();
+//        $mgroup3[] = & $mform->createElement('select', 'preventsharedip',
+//            get_string('preventsharedip', 'attendance'), $options);
+//        $mgroup3[] = & $mform->createElement('text', 'preventsharediptime',
+//            get_string('preventsharediptime', 'attendance'), '', 'test');
+//        $mform->addGroup($mgroup3, 'preventsharedgroup',
+//            get_string('preventsharedip', 'attendance'), array(' '), false);
+//        $mform->addHelpButton('preventsharedgroup', 'preventsharedip', 'attendance');
+//        $mform->setAdvanced('preventsharedgroup');
+//        $mform->setType('preventsharediptime', PARAM_INT);
 
         $mform->setDefaults($data);
         $this->add_action_buttons(true);

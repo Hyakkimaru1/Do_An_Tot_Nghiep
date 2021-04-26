@@ -196,6 +196,50 @@ class mod_attendance_summary {
         return $usersummary;
     }
 
+//    public function get_all_sessions_summary_for($userid) {
+//        $usersummary = $this->get_taken_sessions_summary_for($userid);
+//
+//        if (!isset($this->maxpointsbygroupsessions)) {
+//            $this->compute_maxpoints_by_group_session();
+//        }
+//
+//        $usersummary->numallsessions = $this->maxpointsbygroupsessions[0]->numsessions;
+//        $usersummary->allsessionsmaxpoints = $this->maxpointsbygroupsessions[0]->maxpoints;
+//
+//        if ($this->with_groups()) {
+//            $groupids = array_keys(groups_get_all_groups($this->course->id, $userid));
+//            foreach ($groupids as $gid) {
+//                if (isset($this->maxpointsbygroupsessions[$gid])) {
+//                    $usersummary->numallsessions += $this->maxpointsbygroupsessions[$gid]->numsessions;
+//                    $usersummary->allsessionsmaxpoints += $this->maxpointsbygroupsessions[$gid]->maxpoints;
+//                }
+//            }
+//        }
+//        $usersummary->allsessionspercentage = attendance_calc_fraction($usersummary->takensessionspoints,
+//            $usersummary->allsessionsmaxpoints);
+//        $usersummary->allsessionspercentage = format_float($usersummary->allsessionspercentage * 100) . '%';
+//
+//        $deltapoints = $usersummary->allsessionsmaxpoints - $usersummary->takensessionsmaxpoints;
+//
+//        $usersummary->maxpossiblepoints = $usersummary->takensessionspoints + $deltapoints;
+//        $usersummary->maxpossiblepoints = format_float($usersummary->maxpossiblepoints, 1, true, true) . ' / ' .
+//            format_float($usersummary->allsessionsmaxpoints, 1, true, true);
+//
+//        $usersummary->maxpossiblepercentage = attendance_calc_fraction(($usersummary->takensessionspoints + $deltapoints),
+//            $usersummary->allsessionsmaxpoints);
+//        $usersummary->maxpossiblepercentage = format_float($usersummary->maxpossiblepercentage * 100) . '%';
+//
+//        $usersummary->pointssessionscompleted = format_float($usersummary->takensessionspoints, 1, true, true) . ' / ' .
+//            format_float($usersummary->takensessionsmaxpoints, 1, true, true);
+//
+//        $usersummary->percentagesessionscompleted = format_float($usersummary->takensessionspercentage * 100) . '%';
+//
+//        $usersummary->pointsallsessions = format_float($usersummary->takensessionspoints, 1, true, true) . ' / ' .
+//            format_float($usersummary->allsessionsmaxpoints, 1, true, true);
+//
+//        return $usersummary;
+//    }
+
     /**
      * Computes the summary of points for the users that have some taken session
      *
@@ -239,7 +283,7 @@ class mod_attendance_summary {
             $where .= ' AND ats.groupid = 0';
         }
 
-        //hd981
+//        //hd981
         $sql = " SELECT atl.studentid AS userid, COUNT(DISTINCT ats.id) AS numtakensessions,
                         SUM(stg.grade) AS points, SUM(stm.maxgrade) AS maxpoints
                    FROM {attendance_sessions} ats
@@ -256,6 +300,21 @@ class mod_attendance_summary {
                     AND ats.lasttaken != 0
                     {$where}
                 GROUP BY atl.studentid";
+//        $sql = " SELECT atl.studentid AS userid, COUNT(DISTINCT ats.id) AS numtakensessions,
+//                        SUM(stg.grade) AS points, SUM(stm.maxgrade) AS maxpoints
+//                   FROM {attendance_sessions} ats
+//                   JOIN {attendance_log} atl ON (atl.sessionid = ats.id)
+//                   JOIN {attendance_statuses} stg ON (stg.id = atl.statusid AND stg.deleted = 0 AND stg.visible = 1)
+//                   JOIN (SELECT MAX(grade) AS maxgrade
+//                           FROM {attendance_statuses}
+//                          WHERE deleted = 0
+//                            AND visible = 1) stm
+//                     ON (0 = ats.statusset)
+//                   {$joingroup}
+//                  WHERE ats.sessdate >= :cstartdate
+//                    AND ats.lasttaken != 0
+//                    {$where}
+//                GROUP BY atl.studentid";
         $this->userspoints = $DB->get_records_sql($sql, $params);
     }
 
@@ -315,6 +374,7 @@ class mod_attendance_summary {
 //                   AND ats.lasttaken != 0
 //                   {$where}
 //              GROUP BY atl.studentid, sts.setnumber, sts.acronym";
+
         $sql = "SELECT atl.studentid AS userid, sts.setnumber, sts.acronym, COUNT(*) AS numtakensessions
                   FROM {attendance_sessions} ats
                   JOIN {attendance_log} atl ON (atl.sessionid = ats.id)
@@ -323,11 +383,12 @@ class mod_attendance_summary {
                         sts.id = atl.statusid AND
                         sts.deleted = 0 AND sts.visible = 1)
                   {$joingroup}
-                 WHERE 
+                 WHERE
                    ats.sessdate >= :cstartdate
                    AND ats.lasttaken != 0
                    {$where}
               GROUP BY atl.studentid, sts.setnumber, sts.acronym";
+
         $this->userstakensessionsbyacronym = array();
         $records = $DB->get_recordset_sql($sql, $params);
         foreach ($records as $rec) {
