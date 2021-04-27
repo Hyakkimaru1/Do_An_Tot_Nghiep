@@ -123,6 +123,14 @@ $functions = array(
         'type' => 'write',
         'capabilities' => '',
     ),
+    'local_webservices_checkin' => array(
+        'classname' => 'local_webservices_external_write',
+        'methodname' => 'checkin',
+        'classpath' => 'local/webservices/externallib_write.php',
+        'description' => "Create the log when a student checkin by username and room ID",
+        'type' => 'write',
+        'capabilities' => '',
+    ),
     'local_webservices_get_roles' => array(
         'classname' => 'local_webservices_external',
         'methodname' => 'get_roles',

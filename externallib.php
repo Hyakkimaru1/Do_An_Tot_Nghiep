@@ -111,7 +111,7 @@ class local_webservices_external extends external_api {
                 LEFT JOIN {user} usertaken ON l.usertaken = usertaken.id
                 LEFT JOIN {user} userbetaken ON l.userbetaken = userbetaken.id
                 WHERE l.attendanceid = $attendanceid
-                ORDER BY l.id ASC";
+                ORDER BY $filter $order";
             $result = $DB->get_records_sql($sql);
         }
 
@@ -140,13 +140,13 @@ class local_webservices_external extends external_api {
                     new external_single_structure(
                         array(
                             'id' => new external_value(PARAM_INT, 'log ID', VALUE_DEFAULT, null),
-                            'sessdate' => new external_value(PARAM_INT,'session start timestamp',VALUE_DEFAULT,null),
+                            'attendanceid' => new external_value(PARAM_INT,'attendance ID',VALUE_DEFAULT,null),
+                            'sessionid' => new external_value(PARAM_INT,'session ID',VALUE_DEFAULT,null),
                             'usertaken' => new external_value(PARAM_INT, "user taken's ID", VALUE_DEFAULT, null),
                             'usertaken_name' => new external_value(PARAM_TEXT, "user taken's full name", VALUE_DEFAULT, null),
                             'userbetaken' => new external_value(PARAM_INT, "user be taken's ID", VALUE_DEFAULT, null),
                             'userbetaken_name' => new external_value(PARAM_TEXT, "user be taken's full name", VALUE_DEFAULT, null),
-                            'oldstatus' => new external_value(PARAM_INT, "Old status number", VALUE_DEFAULT, null),
-                            'newstatus' => new external_value(PARAM_INT, "New status number", VALUE_DEFAULT, null),
+                            'description' => new external_value(PARAM_TEXT, "Description", VALUE_DEFAULT, null),
                             'timetaken' => new external_value(PARAM_INT, "Time taken timestamp", VALUE_DEFAULT, null),
                         )
                     )
@@ -523,10 +523,13 @@ class local_webservices_external extends external_api {
 
 
         $sql1 = "SELECT u.*
-                FROM {user_enrolments} ue
-                LEFT JOIN {enrol} e ON ue.enrolid = e.id
-                LEFT JOIN {user} u ON u.id = ue.userid
-                WHERE e.courseid = :courseid";
+                FROM {role_assignments} ra
+                LEFT JOIN {context} con ON con.id = ra.contextid
+                LEFT JOIN {course} c ON c.id = con.instanceid
+                LEFT JOIN {role} r ON ra.roleid = r.id
+                LEFT JOIN {user} u ON u.id = ra.userid
+                WHERE c.id = :courseid AND r.shortname = 'student'
+                ORDER BY u.id ASC";
 
         $students =  $DB->get_records_sql($sql1,array('courseid'=>$courseid));
         $return = array();

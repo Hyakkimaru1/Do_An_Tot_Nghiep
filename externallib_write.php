@@ -364,7 +364,7 @@ class local_webservices_external_write extends external_api {
     {
         return new external_function_parameters(
             array(
-                'studentid' => new external_value(PARAM_INT, 'Student ID parameter',VALUE_DEFAULT,null),
+                'studentid' => new external_value(PARAM_INT, 'Student ID parameter',VALUE_DEFAULT,-1),
                 'username' => new external_value(PARAM_TEXT,"Student's username",VALUE_DEFAULT,''),
                 'sessionid'  => new external_value(PARAM_INT, 'Session ID parameter'),
                 'timein' => new external_value(PARAM_INT, 'Checkin timestamp',VALUE_DEFAULT,0),
@@ -405,7 +405,7 @@ class local_webservices_external_write extends external_api {
 
         global $DB;
         $return = array('errorcode' => '', 'message' => '');
-        if ($studentid != null) {
+        if ($studentid != -1) {
             $sql = "SELECT l.*
                 FROM {attendance_log} l 
                 WHERE l.studentid = $studentid AND l.sessionid = $sessionid";
@@ -438,7 +438,7 @@ class local_webservices_external_write extends external_api {
             }
             else {
                 $sql2 = null;
-                if ($studentid != null) {
+                if ($studentid != -1) {
                     $sql2 = "SELECT u.*
                             FROM {user_enrolments} ue
                             LEFT JOIN {enrol} e ON ue.enrolid = e.id
@@ -448,6 +448,7 @@ class local_webservices_external_write extends external_api {
                             WHERE ue.userid = $studentid AND s.id = $sessionid";
                 }
                 else if ($username != '') {
+                    $username = '"'.$username.'"';
                     $sql2 = "SELECT u.*
                             FROM {user_enrolments} ue
                             LEFT JOIN {enrol} e ON ue.enrolid = e.id
@@ -548,4 +549,99 @@ class local_webservices_external_write extends external_api {
         );
     }
 
+    public static function checkin_parameters(): external_function_parameters
+    {
+        return new external_function_parameters(
+            array(
+                'username' => new external_value(PARAM_TEXT, "Student's username parameter",VALUE_DEFAULT,''),
+                'roomid' => new external_value(PARAM_INT,"Room ID parameter",VALUE_DEFAULT,-1),
+            )
+        );
+    }
+
+    public static function checkin(string $username, int $roomid) {
+        $params = self::validate_parameters(self::checkin_parameters(), array(
+                'username' => $username,
+                'roomid' => $roomid
+            )
+        );
+        $return = array('errorcode' => '', 'message' => '');
+        if ($username == '') {
+            $return['errorcode'] = '400';
+            $return['message'] = "The student's username is missing";
+            return $return;
+
+        }
+
+        if ($roomid == -1) {
+            $return['errorcode'] = '400';
+            $return['message'] = "The room ID is missing";
+            return $return;
+
+        }
+        global $DB;
+        $time = time();
+        $sql1 = "SELECT s.*
+                    FROM {attendance_sessions} s 
+                    LEFT JOIN {room} r ON s.roomid = r.id
+                    WHERE r.id = $roomid AND (s.sessdate + s.duration) >= $time AND s.sessdate <= $time";
+
+        $session = $DB->get_record_sql($sql1);
+        if ($session == false) {
+            $return['errorcode'] = '404';
+            $return['message'] = "There are not any sessions in this time at this room/There are not any rooms with this id";
+            return $return;
+        }
+
+        $username = '"'.$username.'"';
+        //var_dump($username);
+        $sql2 = "SELECT u.*
+                FROM {user_enrolments} ue
+                LEFT JOIN {enrol} e ON ue.enrolid = e.id
+                LEFT JOIN {user} u ON u.id = ue.userid
+                LEFT JOIN {attendance} a ON a.course = e.courseid
+                LEFT JOIN {attendance_sessions} s ON s.attendanceid = a.id
+                WHERE u.username = $username AND s.id = :sessionid";
+
+        //var_dump($sql2);
+
+        $user = $DB->get_record_sql($sql2,array('sessionid'=>$session->id));
+        if ($user == false) {
+            $return['errorcode'] = '404';
+            $return['message'] = "This student isn't in this course";
+            return $return;
+        }
+
+        $sql3 = "SELECT l.*
+                FROM {attendance_log} l 
+                LEFT JOIN {user} u ON l.studentid = u.id
+                WHERE u.username = $username AND l.sessionid = :sessionid";
+        $log = $DB->get_record_sql($sql3,array('sessionid'=>$session->id));
+        if ($log) {
+            $return['errorcode'] = '400';
+            $return['message'] = "This student already checked in";
+            return $return;
+        }
+        $data = (object) array('studentid'=>$user->id,'sessionid'=>$session->id,
+            'statusid'=> 1,'timein'=>$time, 'timeout'=>null);
+        if ($DB->insert_record('attendance_log',$data)) {
+            $update_session = (object)array('id' => $session->id, 'lasttaken' => $time, 'lasttakenby' => 1);
+            $DB->update_record('attendance_sessions',$update_session);
+            $return['message'] = "Checkin successfully";
+        }
+        else {
+            $return['errorcode'] = '400';
+            $return['message'] = "Couldn't create the log";
+        }
+        return $return;
+    }
+
+    public static function checkin_returns() {
+        return new external_single_structure(
+            array(
+                'errorcode' => new external_value(PARAM_TEXT,'Error code'),
+                'message' => new external_value(PARAM_TEXT, 'Message to the back-end'),
+            )
+        );
+    }
 }
