@@ -100,7 +100,6 @@ class local_webservices_external extends external_api {
                 WHERE (usertaken.firstname LIKE :string1 OR usertaken.lastname LIKE :string2
                 OR userbetaken.firstname LIKE :string3 OR userbetaken.lastname LIKE :string4
                 OR f.description LIKE :string5 OR r.name LIKE :string6) AND f.attendanceid = $attendanceid
-                AND (s.sessdate + s.duration) >= f.timetaken AND s.sessdate <= f.timetaken
                 ORDER BY $filter $order";
             $result = $DB->get_records_sql($sql,array('string1' => '%' . $value . '%','string2' => '%' . $value . '%',
                 'string3' => '%' . $value . '%','string4' => '%' . $value . '%','string5' => '%' . $value . '%',
@@ -114,7 +113,7 @@ class local_webservices_external extends external_api {
                 LEFT JOIN {room} r ON r.id = s.roomid
                 LEFT JOIN {user} usertaken ON f.usertaken = usertaken.id
                 LEFT JOIN {user} userbetaken ON f.userbetaken = userbetaken.id
-                WHERE f.attendanceid = $attendanceid AND (s.sessdate + s.duration) >= f.timetaken AND s.sessdate <= f.timetaken
+                WHERE f.attendanceid = $attendanceid
                 ORDER BY $filter $order";
             $result = $DB->get_records_sql($sql);
         }
