@@ -644,4 +644,84 @@ class local_webservices_external_write extends external_api {
             )
         );
     }
+
+    public static function create_feedback_parameters(): external_function_parameters
+    {
+        return new external_function_parameters(
+            array(
+                'usertaken' => new external_value(PARAM_INT, "User's ID that sent the feedback",VALUE_DEFAULT,-1),
+                'roomid' => new external_value(PARAM_INT,"Room ID parameter",VALUE_DEFAULT,-1),
+                'description' => new external_value(PARAM_TEXT,"Description",VALUE_DEFAULT,''),
+                'userbetaken' => new external_value(PARAM_INT,"User's ID that was mistaken",VALUE_DEFAULT,-1),
+                'image' => new external_value(PARAM_TEXT,"Image's link",VALUE_DEFAULT,''),
+            )
+        );
+    }
+
+    public static function create_feedback(int $usertaken, int $roomid, string $description, int $userbetaken, string $image) {
+        $params = self::validate_parameters(self::create_feedback_parameters(), array(
+                'usertaken' => $usertaken,
+                'roomid' => $roomid,
+                'description'=>$description,
+                'userbetaken'=>$userbetaken,
+                'image'=>$image
+            )
+        );
+        $return = array('errorcode' => '', 'message' => '');
+        if ($usertaken == -1) {
+            $return['errorcode'] = '400';
+            $return['message'] = "The usertaken's ID is missing";
+            return $return;
+        }
+        if ($roomid == -1) {
+            $return['errorcode'] = '400';
+            $return['message'] = "The room's ID is missing";
+            return $return;
+        }
+
+        if ($description == '') {
+            $return['errorcode'] = '400';
+            $return['message'] = "The description is missing";
+            return $return;
+        }
+        global $DB;
+
+        $time = time();
+        $sql1 = "SELECT a.*
+                FROM {attendance} a
+                LEFT JOIN {attendance_sessions} s ON a.id = s.attendanceid
+                LEFT JOIN {room} r ON s.roomid = r.id
+                WHERE r.id = $roomid AND (s.sessdate + s.duration) >= $time AND s.sessdate <= $time";
+        $attendance = $DB->get_record_sql($sql1);
+        //var_dump($attendance);
+        if ($attendance == false) {
+            $return['errorcode'] = '404';
+            $return['message'] = "There are not any classes in this room now/There is not any room with this ID";
+            return $return;
+        }
+        if ($userbetaken == -1)
+            $data = (object) array('timetaken'=>$time,'usertaken'=>$usertaken,'userbetaken' => null,
+                'attendanceid'=> $attendance->id,'description'=>$description, 'image'=> $image);
+        else
+            $data = (object) array('timetaken'=>$time,'usertaken'=>$usertaken,'userbetaken' => $userbetaken,
+                'attendanceid'=> $attendance->id,'description'=>$description, 'image'=> $image);
+
+        if ($DB->insert_record('attendance_feedback',$data)) {
+            $return['message'] = "Created the record successfully";
+        }
+        else {
+            $return['errorcode'] = '400';
+            $return['message'] = "Couldn't create the record";
+        }
+        return $return;
+    }
+    public static function create_feedback_returns(): external_single_structure
+    {
+        return new external_single_structure(
+            array(
+                'errorcode' => new external_value(PARAM_TEXT,'Error code'),
+                'message' => new external_value(PARAM_TEXT, 'Message to the back-end'),
+            )
+        );
+    }
 }

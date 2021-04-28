@@ -25,6 +25,14 @@
 defined('MOODLE_INTERNAL') || die();
 
 $functions = array(
+    'local_webservices_get_feedbacks_pagination' => array(
+        'classname' => 'local_webservices_external',
+        'methodname' => 'get_feedbacks_pagination',
+        'classpath' => 'local/webservices/externallib.php',
+        'description' => 'Get all feedbacks based on session ID with pagination',
+        'type' => 'read',
+        'capabilities' => '',
+    ),
     'local_webservices_get_action_logs_pagination' => array(
         'classname' => 'local_webservices_external',
         'methodname' => 'get_action_logs_pagination',
@@ -128,6 +136,14 @@ $functions = array(
         'methodname' => 'checkin',
         'classpath' => 'local/webservices/externallib_write.php',
         'description' => "Create the log when a student checkin by username and room ID",
+        'type' => 'write',
+        'capabilities' => '',
+    ),
+    'local_webservices_create_feedback' => array(
+        'classname' => 'local_webservices_external_write',
+        'methodname' => 'create_feedback',
+        'classpath' => 'local/webservices/externallib_write.php',
+        'description' => "Create a feedback record in the database",
         'type' => 'write',
         'capabilities' => '',
     ),
