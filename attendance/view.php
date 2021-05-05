@@ -74,6 +74,7 @@ if (isset($pageparams->studentid) && $USER->id != $pageparams->studentid) {
 
 $url = $att->url_view($pageparams->get_significant_params());
 $PAGE->set_url($url);
+$PAGE->requires->css(new moodle_url('https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css'));
 
 $buttons = '';
 $capabilities = array('mod/attendance:takeattendances', 'mod/attendance:changeattendances');
@@ -120,8 +121,17 @@ if (empty($userdata->pageparams->studentid)) {
 } else {
     $relateduserid = $userdata->pageparams->studentid;
 }
+// && confirm_sesskey()
+if (($formdata = data_submitted()) && $edit == -1) {
+        $fb = new stdClass();
+        $fb->attendanceid = $attendance->id;
+        $fb->usertaken = $USER->id;
+        $fb->description = $formdata->description;
+        $fb->timetaken = time();
+        $DB->insert_record('attendance_feedback',$fb,false);
+        $admin = get_admin();
+        send_notification($USER,$admin,$cm,$course,'attendance',$fb->description,'/mod/attendance/feedback.php?id='.$id);
 
-if (($formdata = data_submitted()) && confirm_sesskey() && $edit == -1) {
     $userdata->take_sessions_from_form_data($formdata);
 
     // Trigger updated event.
@@ -154,5 +164,29 @@ echo $output->header();
 
 echo $output->render($header);
 echo $output->render($userdata);
+$role = get_user_roles_in_course($USER->id,$course->id);
+if (strpos($role,"Student",0) !== false) {
+    echo "
+<button id='btn_prev_feedback'>Feedback</button>
+<form id='f' method='post' action='/mod/attendance/view.php'>
+    <input type='hidden' value='$id' name ='id'>
+    <label for='description' id='label'>Issue description:</label>
+    <input type='text' id='description' name='description' form='f'>
+    <button id='btn_feedback'>Send feedback</button>
+</form>
+
+<script src='https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js'></script>
+<script>
+$(document).ready( function () {
+    $('#f').hide();
+    $('#btn_prev_feedback').click(function() {
+        $('#f').show();
+        $(this).hide();  
+    });
+} );
+</script>
+";
+}
+
 
 echo $output->footer();

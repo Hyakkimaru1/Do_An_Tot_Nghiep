@@ -56,6 +56,7 @@ class attendance_tabs implements renderable {
     const TAB_WARNINGS = 8;
     /** Absentee tab */
     const TAB_ABSENTEE      = 9;
+    const TAB_FEEDBACK = 10;
     /** @var int current tab */
     public $currenttab;
 
@@ -126,6 +127,8 @@ class attendance_tabs implements renderable {
             //hd981
             $toprow[] = new tabobject(self::TAB_LOG, $this->att->url_log()->out(),
                             'Log');
+            $toprow[] = new tabobject(self::TAB_FEEDBACK, $this->att->url_feedback()->out(),
+                'Feedback');
         }
         if ($this->currenttab == self::TAB_UPDATE && has_capability('mod/attendance:manageattendances', $context)) {
             $toprow[] = new tabobject(self::TAB_UPDATE,

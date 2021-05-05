@@ -1601,3 +1601,41 @@ function attendance_return_passwords($session) {
     $sql = 'SELECT * FROM {attendance_rotate_passwords} WHERE attendanceid = ? AND expirytime > ? ORDER BY expirytime ASC';
     return json_encode($DB->get_records_sql($sql, ['attendanceid' => $session->id, time()], $strictness = IGNORE_MISSING));
 }
+
+function send_notification($userfrom,
+                            $userto,
+                            $coursemodule,
+                            $course,
+                            $modulename,$description,$url) {
+    global $CFG, $PAGE;
+
+    $eventdata = new \core\message\message();
+    $eventdata->courseid         = $course->id;
+    $eventdata->modulename       = $modulename;
+    $eventdata->userfrom         = $userfrom;
+    $eventdata->userto           = $userto;
+    $eventdata->subject          = 'Attendance feedback';
+    $eventdata->fullmessage      = 'User '.$userfrom->id.': '. $description;
+    $eventdata->fullmessageformat = FORMAT_PLAIN;
+    $eventdata->fullmessagehtml  = '';
+    $eventdata->smallmessage     = '';
+
+    $eventdata->name            = 'attendance_notification';
+    $eventdata->component       = 'mod_attendance';
+    $eventdata->notification    = 1;
+    $eventdata->contexturl      = (new \moodle_url($url))->out(false);;
+    $customdata = [
+        'cmid' => $coursemodule->id,
+        'instance' => $coursemodule->instance,
+    ];
+    // Check if the userfrom is real and visible.
+    if (!empty($userfrom->id) && core_user::is_real_user($userfrom->id)) {
+        $userpicture = new user_picture($userfrom);
+        $userpicture->size = 1; // Use f1 size.
+        $userpicture->includetoken = $userto->id; // Generate an out-of-session token for the user receiving the message.
+        $customdata['notificationiconurl'] = $userpicture->get_url($PAGE)->out(false);
+    }
+    $eventdata->customdata = $customdata;
+
+    message_send($eventdata);
+}

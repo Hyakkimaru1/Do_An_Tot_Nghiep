@@ -352,6 +352,11 @@ class mod_attendance_structure {
         return new moodle_url('/mod/attendance/log.php', $params);
     }
 
+    public function url_feedback($params=array()) : moodle_url {
+        $params = array_merge(array('id' => $this->cm->id), $params);
+        return new moodle_url('/mod/attendance/feedback.php', $params);
+    }
+
     /**
      * Get temp edit url.
      *

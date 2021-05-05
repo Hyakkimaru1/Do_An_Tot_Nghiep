@@ -1608,6 +1608,12 @@ class mod_attendance_renderer extends plugin_renderer_base {
 
         $statussetmaxpoints = attendance_get_statusset_maxpoints($userdata->statuses);
 
+        $icons = array(
+            1=>'<i class="fa fa-check-circle" style="color: green" aria-hidden="true"></i>',
+            2=>'<i class="fa fa-user-plus" style="color: blue" aria-hidden="true"></i>',
+            3=>'<i class="fa fa-clock-o" style="color:orange;" aria-hidden="true"></i>',
+            4=>'<i class="fa fa-times-circle" style="color: red" aria-hidden="true"></i>');
+
         $i = 0;
         foreach ($userdata->sessionslog as $sess) {
             $i++;
@@ -1625,9 +1631,13 @@ class mod_attendance_renderer extends plugin_renderer_base {
             $row->cells[] = userdate($sess->sessdate, get_string('strftimedmyw', 'attendance')) .
              " ". $this->construct_time($sess->sessdate, $sess->duration);
             $row->cells[] = $sess->description;
+
             if (!empty($sess->statusid)) {
                 $status = $userdata->statuses[$sess->statusid];
-                $row->cells[] = $status->description;
+
+                $row->cells[] = $icons[$status->id];
+                //$status = $icon[$userdata->statuses[$sess->statusid]];
+                //$row->cells[] = $status->description;
                 $row->cells[] = format_float($status->grade, 1, true, true) . ' / ' .
                                     format_float($statussetmaxpoints[$status->setnumber], 1, true, true);
                 //$row->cells[] = $sess->remarks;
@@ -1678,7 +1688,7 @@ class mod_attendance_renderer extends plugin_renderer_base {
                     $row->cells[] = '? / ' . format_float($statussetmaxpoints[$sess->statusset], 1, true, true);
                     $row->cells[] = '?';
                     $row->cells[] = '?';
-                    //$row->cells[] = '';
+//                    $row->cells[] = '';
                 }
             }
 

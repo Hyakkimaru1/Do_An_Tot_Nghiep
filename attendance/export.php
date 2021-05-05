@@ -194,7 +194,7 @@ if ($formdata = $mform->get_data()) {
                     $t[] = 'B';
                 }else if($temp === '<i class="fa fa-clock-o" style="color:orange;" aria-hidden="true"></i>'){
                     $t[] = 'T';
-                }else if($temps === '<i class="fa fa-times-circle" style="color: red" aria-hidden="true"></i>'){
+                }else if($temp === '<i class="fa fa-times-circle" style="color: red" aria-hidden="true"></i>'){
                     $t[] = 'V';
                 }else{
                     $t[] = '?';

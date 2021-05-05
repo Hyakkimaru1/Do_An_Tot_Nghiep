@@ -24,6 +24,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot . '/mod/attendance/locallib.php');
+require_once($CFG->dirroot . '/local/webservices/externallib.php');
 
 /**
  * Class that computes summary of users points
@@ -119,18 +120,45 @@ class mod_attendance_summary {
      * @return array
      */
     public function get_taken_sessions_summary_for($userid) {
+//        $usersummary = new stdClass();
+//        if ($this->has_taken_sessions($userid)) {
+//            $usersummary->numtakensessions = $this->userspoints[$userid]->numtakensessions;
+//            $usersummary->takensessionspoints = $this->userspoints[$userid]->points;
+//            $usersummary->takensessionsmaxpoints = $this->userspoints[$userid]->maxpoints;
+//        } else {
+//            $usersummary->numtakensessions = 0;
+//            $usersummary->takensessionspoints = 0;
+//            $usersummary->takensessionsmaxpoints = 0;
+//        }
+//        $usersummary->takensessionspercentage = attendance_calc_fraction($usersummary->takensessionspoints,
+//                                                                         $usersummary->takensessionsmaxpoints);
+//        if (isset($this->userstakensessionsbyacronym[$userid])) {
+//            $usersummary->userstakensessionsbyacronym = $this->userstakensessionsbyacronym[$userid];
+//        } else {
+//            $usersummary->userstakensessionsbyacronym = array();
+//        }
+//
+//        $usersummary->pointssessionscompleted = format_float($usersummary->takensessionspoints, 1, true, true) . ' / ' .
+//            format_float($usersummary->takensessionsmaxpoints, 1, true, true);
+//
+//        $usersummary->percentagesessionscompleted = format_float($usersummary->takensessionspercentage * 100) . '%';
+
+        $a = new local_webservices_external();
+
+        $user_log = $a->get_student_logs_by_course_id((int)$userid,(int)$this->course->id);
+        //var_dump($user_log);die();
         $usersummary = new stdClass();
-        if ($this->has_taken_sessions($userid)) {
-            $usersummary->numtakensessions = $this->userspoints[$userid]->numtakensessions;
-            $usersummary->takensessionspoints = $this->userspoints[$userid]->points;
-            $usersummary->takensessionsmaxpoints = $this->userspoints[$userid]->maxpoints;
+        if ($user_log->count > 0) {
+            $usersummary->numtakensessions = $user_log->count;
+            $usersummary->takensessionspoints = $user_log->c*2 + $user_log->b*2 + $user_log->t;
+            $usersummary->takensessionsmaxpoints = $user_log->count*2;
         } else {
             $usersummary->numtakensessions = 0;
             $usersummary->takensessionspoints = 0;
             $usersummary->takensessionsmaxpoints = 0;
         }
         $usersummary->takensessionspercentage = attendance_calc_fraction($usersummary->takensessionspoints,
-                                                                         $usersummary->takensessionsmaxpoints);
+            $usersummary->takensessionsmaxpoints);
         if (isset($this->userstakensessionsbyacronym[$userid])) {
             $usersummary->userstakensessionsbyacronym = $this->userstakensessionsbyacronym[$userid];
         } else {
@@ -141,7 +169,7 @@ class mod_attendance_summary {
             format_float($usersummary->takensessionsmaxpoints, 1, true, true);
 
         $usersummary->percentagesessionscompleted = format_float($usersummary->takensessionspercentage * 100) . '%';
-
+        //var_dump($usersummary);die();
         return $usersummary;
     }
 

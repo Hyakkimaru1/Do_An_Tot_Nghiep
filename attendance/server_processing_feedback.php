@@ -10,26 +10,25 @@ require_once(__DIR__ . '/../../local/webservices/externallib.php');
 /*
  * Output
  */
-$columns = array('timetaken','sessdate','usertaken_name','userbetaken_name','eventname');
+$columns = array('timetaken','usertaken_name','userbetaken_name','description');
 $value= $_GET['search']['value'];
 $filter = $columns[$_GET['order'][0]['column']];
 $order = $_GET['order'][0]['dir'];
 $attendanceid = $_GET['attendanceid'];
 $a = new local_webservices_external();
-$result = $a->get_action_logs_pagination($attendanceid,(int)$_GET['start']/10 + 1,(int)$_GET['length'],$value,$filter,$order);
+$result = $a->get_feedbacks_pagination($attendanceid,(int)$_GET['start']/10 + 1,(int)$_GET['length'],$value,$filter,$order);
 $data = array();
-foreach ($result['logs'] as $res){
+foreach ($result['feedbacks'] as $res){
     $temp = new stdClass();
     $temp->timetaken = date('d-m-Y H:i:s',$res->timetaken);
-    $temp->sessdate = date('d-m-Y H:i:s',$res->sessdate);
     $temp->usertaken = $res->usertaken_name;
     if($res->userbetaken == null){
         $temp->userbetaken = "";
     }else{
         $temp->userbetaken = $res->userbetaken_name;
     }
-    $temp->eventname = $res->eventname;
     $temp->description = $res->description;
+    $temp->image = $res->image;
     $data[] = $temp;
 }
 
