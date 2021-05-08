@@ -160,6 +160,22 @@ class local_webservices_external extends external_api {
         );
     }
 
+    /**
+     * @throws dml_exception
+     */
+    public static function get_action_logs(int $sessionid) {
+        global $DB;
+        $sql = "SELECT l.*, CONCAT(usertaken.lastname,' ',usertaken.firstname) as usertaken_name,
+                CONCAT(userbetaken.lastname,' ',userbetaken.firstname) as userbetaken_name, s.sessdate
+                FROM {attendance_action_log} l
+                LEFT JOIN {attendance_sessions} s ON l.sessionid = s.id
+                LEFT JOIN {user} usertaken ON l.usertaken = usertaken.id
+                LEFT JOIN {user} userbetaken ON l.userbetaken = userbetaken.id
+                WHERE (l.eventname LIKE 'Update status student' OR l.eventname LIKE 'Add status student')
+                AND l.sessionid = $sessionid";
+        return $DB->get_records_sql($sql);
+    }
+
 
     public static function get_action_logs_pagination_parameters(): external_function_parameters
     {
