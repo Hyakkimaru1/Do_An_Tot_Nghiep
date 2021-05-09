@@ -25,26 +25,26 @@
 defined('MOODLE_INTERNAL') || die();
 
 $functions = array(
-    'local_webservices_get_feedbacks_pagination' => array(
-        'classname' => 'local_webservices_external',
+    'local_webservices_frontend_get_feedbacks_pagination' => array(
+        'classname' => 'local_webservices_frontend',
         'methodname' => 'get_feedbacks_pagination',
-        'classpath' => 'local/webservices/externallib.php',
+        'classpath' => 'local/webservices/externallib_frontend.php',
         'description' => 'Get all feedbacks based on session ID with pagination',
         'type' => 'read',
         'capabilities' => '',
     ),
-    'local_webservices_get_action_logs_pagination' => array(
-        'classname' => 'local_webservices_external',
+    'local_webservices_frontend_get_action_logs_pagination' => array(
+        'classname' => 'local_webservices_frontend',
         'methodname' => 'get_action_logs_pagination',
-        'classpath' => 'local/webservices/externallib.php',
+        'classpath' => 'local/webservices/externallib_frontend.php',
         'description' => 'Get all attendance action logs based on session ID with pagination',
         'type' => 'read',
         'capabilities' => '',
     ),
-    'local_webservices_get_courses_pagination' => array(
-        'classname' => 'local_webservices_external',
+    'local_webservices_frontend_get_courses_pagination' => array(
+        'classname' => 'local_webservices_frontend',
         'methodname' => 'get_courses_pagination',
-        'classpath' => 'local/webservices/externallib.php',
+        'classpath' => 'local/webservices/externallib_frontend.php',
         'description' => 'Get all checkin-courses with pagination',
         'type' => 'read',
         'capabilities' => '',

@@ -687,7 +687,7 @@ class local_webservices_external_write extends external_api {
         global $DB;
 
         $time = time();
-        $sql1 = "SELECT a.*
+        $sql1 = "SELECT a.*,s.id as sessionid
                 FROM {attendance} a
                 LEFT JOIN {attendance_sessions} s ON a.id = s.attendanceid
                 LEFT JOIN {room} r ON s.roomid = r.id
@@ -701,10 +701,10 @@ class local_webservices_external_write extends external_api {
         }
         if ($userbetaken == -1)
             $data = (object) array('timetaken'=>$time,'usertaken'=>$usertaken,'userbetaken' => null,
-                'attendanceid'=> $attendance->id,'description'=>$description, 'image'=> $image);
+                'attendanceid'=> $attendance->id, 'sessionid' => $attendance->sessionid, 'description'=>$description, 'image'=> $image);
         else
             $data = (object) array('timetaken'=>$time,'usertaken'=>$usertaken,'userbetaken' => $userbetaken,
-                'attendanceid'=> $attendance->id,'description'=>$description, 'image'=> $image);
+                'attendanceid'=> $attendance->id, 'sessionid' => $attendance->sessionid,'description'=>$description, 'image'=> $image);
 
         if ($DB->insert_record('attendance_feedback',$data)) {
             $return['message'] = "Created the record successfully";
