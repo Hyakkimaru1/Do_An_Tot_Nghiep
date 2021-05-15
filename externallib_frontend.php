@@ -43,7 +43,7 @@ class local_webservices_frontend extends external_api {
     {
         global $DB;
         $sql = "SELECT f.*, CONCAT(usertaken.lastname,' ',usertaken.firstname) as usertaken_name,
-                CONCAT(userbetaken.lastname,' ',userbetaken.firstname) as userbetaken_name
+                CONCAT(userbetaken.lastname,' ',userbetaken.firstname) as userbetaken_name, s.sessdate
                 FROM {attendance_feedback} f
                 LEFT JOIN {attendance_sessions} s ON f.sessionid = s.id
                 LEFT JOIN {user} usertaken ON f.usertaken = usertaken.id
@@ -56,7 +56,7 @@ class local_webservices_frontend extends external_api {
     {
         global $DB;
         $sql = "SELECT f.*, CONCAT(usertaken.lastname,' ',usertaken.firstname) as usertaken_name,
-                CONCAT(userbetaken.lastname,' ',userbetaken.firstname) as userbetaken_name
+                CONCAT(userbetaken.lastname,' ',userbetaken.firstname) as userbetaken_name, s.sessdate
                 FROM {attendance_feedback} f
                 LEFT JOIN {attendance_sessions} s ON f.sessionid = s.id
                 LEFT JOIN {user} usertaken ON f.usertaken = usertaken.id
