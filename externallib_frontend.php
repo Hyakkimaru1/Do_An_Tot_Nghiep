@@ -39,7 +39,8 @@ class local_webservices_frontend extends external_api {
     /**
      * @throws dml_exception
      */
-    public static function get_feedbacks(int $sessionid) {
+    public static function get_feedbacks(int $sessionid): array
+    {
         global $DB;
         $sql = "SELECT f.*, CONCAT(usertaken.lastname,' ',usertaken.firstname) as usertaken_name,
                 CONCAT(userbetaken.lastname,' ',userbetaken.firstname) as userbetaken_name
@@ -47,6 +48,18 @@ class local_webservices_frontend extends external_api {
                 LEFT JOIN {user} usertaken ON f.usertaken = usertaken.id
                 LEFT JOIN {user} userbetaken ON f.userbetaken = userbetaken.id
                 WHERE f.sessionid = $sessionid";
+        return $DB->get_records_sql($sql);
+    }
+
+    public static function get_feedbacks_by_ids(int $userid, int $sessionid): array
+    {
+        global $DB;
+        $sql = "SELECT f.*, CONCAT(usertaken.lastname,' ',usertaken.firstname) as usertaken_name,
+                CONCAT(userbetaken.lastname,' ',userbetaken.firstname) as userbetaken_name
+                FROM {attendance_feedback} f
+                LEFT JOIN {user} usertaken ON f.usertaken = usertaken.id
+                LEFT JOIN {user} userbetaken ON f.userbetaken = userbetaken.id
+                WHERE f.usertaken = $userid AND f.sessionid = $sessionid";
         return $DB->get_records_sql($sql);
     }
 
@@ -144,7 +157,8 @@ class local_webservices_frontend extends external_api {
                             'userbetaken' => new external_value(PARAM_INT, "user be taken's ID", VALUE_DEFAULT, null),
                             'userbetaken_name' => new external_value(PARAM_TEXT, "user be taken's full name", VALUE_DEFAULT, null),
                             'description' => new external_value(PARAM_TEXT, "Description", VALUE_DEFAULT, null),
-                            'image' => new external_value(PARAM_TEXT, "Image's link", VALUE_DEFAULT, null),
+                            'image_register' => new external_value(PARAM_TEXT, "Register image's base64 string", VALUE_DEFAULT, null),
+                            'image' => new external_value(PARAM_TEXT, "Feedback image's base64 string", VALUE_DEFAULT, null),
                             'room_name'=> new external_value(PARAM_TEXT, "Room's name", VALUE_DEFAULT, null),
                             'campus'=> new external_value(PARAM_TEXT, "Campus", VALUE_DEFAULT, null),
                         )
@@ -358,5 +372,5 @@ class local_webservices_frontend extends external_api {
             )
         );
     }
-    
+
 }

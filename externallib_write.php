@@ -653,17 +653,20 @@ class local_webservices_external_write extends external_api {
                 'roomid' => new external_value(PARAM_INT,"Room ID parameter",VALUE_DEFAULT,-1),
                 'description' => new external_value(PARAM_TEXT,"Description",VALUE_DEFAULT,''),
                 'userbetaken' => new external_value(PARAM_INT,"User's ID that was mistaken",VALUE_DEFAULT,-1),
-                'image' => new external_value(PARAM_TEXT,"Image's link",VALUE_DEFAULT,''),
+                'image_register' => new external_value(PARAM_TEXT,"Register image's base64 string",VALUE_DEFAULT,''),
+                'image' => new external_value(PARAM_TEXT,"Feedback image's base64 string",VALUE_DEFAULT,''),
             )
         );
     }
 
-    public static function create_feedback(int $usertaken, int $roomid, string $description, int $userbetaken, string $image) {
+    public static function create_feedback(int $usertaken, int $roomid, string $description, int $userbetaken,string $image_register,
+                                           string $image) {
         $params = self::validate_parameters(self::create_feedback_parameters(), array(
                 'usertaken' => $usertaken,
                 'roomid' => $roomid,
                 'description'=>$description,
                 'userbetaken'=>$userbetaken,
+                'image_register' => $image_register,
                 'image'=>$image
             )
         );
@@ -701,10 +704,12 @@ class local_webservices_external_write extends external_api {
         }
         if ($userbetaken == -1)
             $data = (object) array('timetaken'=>$time,'usertaken'=>$usertaken,'userbetaken' => null,
-                'attendanceid'=> $attendance->id, 'sessionid' => $attendance->sessionid, 'description'=>$description, 'image'=> $image);
+                'attendanceid'=> $attendance->id, 'sessionid' => $attendance->sessionid,
+                'description'=>$description,'image_register'=>$image_register, 'image'=> $image);
         else
             $data = (object) array('timetaken'=>$time,'usertaken'=>$usertaken,'userbetaken' => $userbetaken,
-                'attendanceid'=> $attendance->id, 'sessionid' => $attendance->sessionid,'description'=>$description, 'image'=> $image);
+                'attendanceid'=> $attendance->id, 'sessionid' => $attendance->sessionid,
+                'description'=>$description,'image_register'=>$image_register, 'image'=> $image);
 
         if ($DB->insert_record('attendance_feedback',$data)) {
             $return['message'] = "Created the record successfully";
