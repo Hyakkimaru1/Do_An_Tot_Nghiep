@@ -26,7 +26,11 @@ require_once(dirname(__FILE__).'/../../config.php');
 require_once($CFG->libdir.'/formslib.php');
 require_once($CFG->dirroot.'/mod/attendance/locallib.php');
 
+require_once(__DIR__ . '/../../local/webservices/externallib_frontend.php');
+
 $id = required_param('id', PARAM_INT);
+$userid = required_param('userid',PARAM_INT);
+$sessionid = required_param('sessionid',PARAM_INT);
 
 $PAGE->requires->js(new moodle_url('https://code.jquery.com/jquery-3.5.1.js'),true);
 $PAGE->requires->css(new moodle_url('https://cdn.datatables.net/1.10.24/css/jquery.dataTables.min.css'));
@@ -42,16 +46,6 @@ $PAGE->set_url($att->url_feedback());
 require_login($course, true, $cm);
 $context = context_module::instance($cm->id);
 
-//if (($formdata = data_submitted())) {
-//    $fb = new stdClass();
-//    $fb->attendanceid = $att->id;
-//    $fb->usertaken = $USER->id;
-//    $fb->description = $formdata->description;
-//    $fb->timetaken = time();
-//    $DB->insert_record('attendance_feedback',$fb,false);
-//    $admin = get_admin();
-//    send_notification($USER,$admin,$cm,$course,'attendance',$fb->description,'/mod/attendance/feedback.php?id='.$id);
-//}
 
 $PAGE->set_title($course->shortname.": ".$att->name.' - Feedback');
 $PAGE->set_heading($course->fullname);
@@ -74,37 +68,46 @@ echo '<p></p>';
 echo '<table id="table" summary="Attendance feedback">
         <thead><tr>';
 echo '<th>Time</th>';
+echo '<th>Sessdate</th>';
 echo '<th>User fullname</th>';
 echo '<th>Affected user</th>';
 echo '<th>Description</th>';
-echo '<th>Link image</th>';
+echo '<th>Image register</th>';
+echo '<th>Image feedback</th>';
 echo '</tr></thead><tbody>';
+$a = new local_webservices_frontend();
+$feedbacks = $a->get_feedbacks_by_ids($userid,$sessionid);
+$data = '';
+foreach ($feedbacks as $feed){
+    $img_register = base64_decode($feed->image_register);
+    $img = base64_decode($feed->image);
+    if($feed->userbetaken_name === null){
+        $feed->userbetaken = '';
+    }
+    $data .= '<tr>
+    <td>'.date('d-m-Y H:i:s',$feed->timetaken).'</td>
+    <td><a href="/mod/attendance/take.php?id='.$id.'&sessionid='.$sessionid.'&grouptype=0">'.date('d-m-Y H:i:s',$feed->sessdate).'</a></td>
+    <td>'.$feed->usertaken_name.'</td>
+    <td>'.$feed->userbetaken_name.'</td>
+    <td>'.$feed->description.'</td>';
+    if($feed->image !== null){
+        $data .= '
+        <td><img src="data:image/jpg;base64,' . $feed->image_register . '" width="200" height="200" /></td>
+    <td><img src="data:image/jpg;base64,' . $feed->image . '" width="200" height="200" /></td>
+        ';
+    }else{
+        $data.='<td></td><td></td>';
+    }
+
+    $data.='</tr>';
+}
+echo $data;
 echo '</tbody></table>';
 echo '</div>';
 
 echo "<script>
 $(document).ready( function () {
-    $('#table').DataTable({
-        'processing':true,
-        'serverSide':true,
-        'ajax':{
-           'url': '../attendance/server_processing_feedback.php',
-            'data': {
-              'attendanceid': $cm->instance      
-            },
-        },
-        		'columns': [
-        { data: 'timetaken' },
-        { data: 'usertaken' },
-        { data: 'userbetaken' },
-        { data: 'description'},
-        { data: 'image'}
-            ],
-            'columnDefs': [{
-        'targets': [4],
-        'orderable': false, 
-        }],
-    });
+    $('#table').DataTable();
 } );
 </script>";
 

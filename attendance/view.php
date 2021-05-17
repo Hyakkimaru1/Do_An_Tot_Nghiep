@@ -126,11 +126,13 @@ if (($formdata = data_submitted()) && $edit == -1) {
         $fb = new stdClass();
         $fb->attendanceid = $attendance->id;
         $fb->usertaken = $USER->id;
+        $fb->sessionid = $formdata->sessionid;
         $fb->description = $formdata->description;
         $fb->timetaken = time();
         $DB->insert_record('attendance_feedback',$fb,false);
+
         $admin = get_admin();
-        send_notification($USER,$admin,$cm,$course,'attendance',$fb->description,'/mod/attendance/feedback.php?id='.$id);
+        send_notification($USER,$admin,$cm,$course,'attendance',$fb->description,'/mod/attendance/take.php?id='.$id.'&sessionid='.$fb->sessionid.'&grouptype=0');
 
     $userdata->take_sessions_from_form_data($formdata);
 
@@ -164,29 +166,8 @@ echo $output->header();
 
 echo $output->render($header);
 echo $output->render($userdata);
-$role = get_user_roles_in_course($USER->id,$course->id);
-if (strpos($role,"Student",0) !== false) {
-    echo "
-<button id='btn_prev_feedback'>Feedback</button>
-<form id='f' method='post' action='/mod/attendance/view.php'>
-    <input type='hidden' value='$id' name ='id'>
-    <label for='description' id='label'>Issue description:</label>
-    <input type='text' id='description' name='description' form='f'>
-    <button id='btn_feedback'>Send feedback</button>
-</form>
 
-<script src='https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js'></script>
-<script>
-$(document).ready( function () {
-    $('#f').hide();
-    $('#btn_prev_feedback').click(function() {
-        $('#f').show();
-        $(this).hide();  
-    });
-} );
-</script>
-";
-}
+$role = get_user_roles_in_course($USER->id,$course->id);
 
 
 echo $output->footer();

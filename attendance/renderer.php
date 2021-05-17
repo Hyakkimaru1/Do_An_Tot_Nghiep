@@ -30,6 +30,9 @@ require_once(dirname(__FILE__).'/renderhelpers.php');
 require_once($CFG->libdir.'/tablelib.php');
 require_once($CFG->libdir.'/moodlelib.php');
 
+require_once(__DIR__ . '/../../local/webservices/externallib.php');
+require_once(__DIR__ . '/../../local/webservices/externallib_frontend.php');
+
 /**
  * Attendance module renderer class
  *
@@ -770,8 +773,13 @@ class mod_attendance_renderer extends plugin_renderer_base {
         }
 
         //$actions = $this->output->action_icon('', new pix_icon('t/check', ''));
+
+        $table->head[] = 'Feedback';
+        $table->align[] = 'center';
+        $table->head[] = '';
+        $table->align[] = 'center';
         $table->head[] = 'Status';
-        $table->align[] = 'right';
+        $table->align[] = 'center';
         $table->head[] = '';
 
 //        foreach ($takedata->statuses as $st) {
@@ -808,6 +816,8 @@ class mod_attendance_renderer extends plugin_renderer_base {
         foreach ($extrasearchfields as $field) {
             $row->cells[] = '';
         }
+        $row->cells[] = '';
+        $row->cells[] = '';
 
         $cell = new html_table_cell(html_writer::div($this->output->render($this->statusdropdown()), 'setallstatuses'));
 
@@ -826,14 +836,145 @@ class mod_attendance_renderer extends plugin_renderer_base {
         padding-left: 8px;
         background: transparent;
 	}
+	i{
+	cursor: pointer;
+	}
+		.popover {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1060;
+  display: none;
+  max-width: 276px;
+  padding: 1px;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 1.42857143;
+  line-break: auto;
+  text-align: left;
+  text-align: start;
+  text-decoration: none;
+  text-shadow: none;
+  text-transform: none;
+  letter-spacing: normal;
+  word-break: normal;
+  word-spacing: normal;
+  word-wrap: normal;
+  white-space: normal;
+  font-size: 14px;
+  background-color: #fff;
+  background-clip: padding-box;
+  border: 1px solid #ccc;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  -webkit-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+}
+.popover.top {
+  margin-top: -10px;
+}
+.popover.right {
+  margin-left: 10px;
+}
+.popover.bottom {
+  margin-top: 10px;
+}
+.popover.left {
+  margin-left: -10px;
+}
+.popover > .arrow {
+  border-width: 11px;
+}
+.popover > .arrow,
+.popover > .arrow:after {
+  position: absolute;
+  display: block;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+}
+.popover > .arrow:after {
+  border-width: 10px;
+}
+.popover.top > .arrow {
+  bottom: -11px;
+  left: 50%;
+  margin-left: -11px;
+  border-top-color: #999999;
+  border-top-color: rgba(0, 0, 0, 0.25);
+  border-bottom-width: 0;
+}
+.popover.top > .arrow:after {
+  bottom: 1px;
+  margin-left: -10px;
+  border-top-color: #fff;
+  border-bottom-width: 0;
+}
+.popover.right > .arrow {
+  top: 50%;
+  left: -11px;
+  margin-top: -11px;
+  border-right-color: #999999;
+  border-right-color: rgba(0, 0, 0, 0.25);
+  border-left-width: 0;
+}
+.popover.right > .arrow:after {
+  bottom: -10px;
+  left: 1px;
+  border-right-color: #fff;
+  border-left-width: 0;
+}
+.popover.bottom > .arrow {
+  top: -11px;
+  left: 50%;
+  margin-left: -11px;
+  border-top-width: 0;
+  border-bottom-color: #999999;
+  border-bottom-color: rgba(0, 0, 0, 0.25);
+}
+.popover.bottom > .arrow:after {
+  top: 1px;
+  margin-left: -10px;
+  border-top-width: 0;
+  border-bottom-color: #fff;
+}
+.popover.left > .arrow {
+  top: 50%;
+  right: -11px;
+  margin-top: -11px;
+  border-right-width: 0;
+  border-left-color: #999999;
+  border-left-color: rgba(0, 0, 0, 0.25);
+}
+.popover.left > .arrow:after {
+  right: 1px;
+  bottom: -10px;
+  border-right-width: 0;
+  border-left-color: #fff;
+}
+.popover-title {
+  padding: 8px 14px;
+  margin: 0;
+  font-size: 14px;
+  background-color: #f7f7f7;
+  border-bottom: 1px solid #ebebeb;
+  border-radius: 5px 5px 0 0;
+}
+.popover-content {
+  padding: 9px 14px;
+}
 </style>
-        <select id='radiocheckstatus' class='checkstatus' style='font-size: 20px;' name='setallstatuses' data-init-value=1>
+        <select id='radiocheckstatus' class='checkstatus' style='font-size: 20px;cursor: pointer' name='setallstatuses' data-init-value=1>
                     <option style='color: green' value='1' selected>&#xf058;</option>
                     <option style='color: blue' value=2>&#xf234;</option>
                     <option style='color: orange' value=3>&#xf017;</option>
                     <option style='color: red' value=4>&#xf057;</option>
         </select>
-        <script src='https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js'></script>
+        <link href='https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css' rel='stylesheet' />
+<script src='https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js'></script>
+<script src='https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js'></script>
         <script>
                 $(document).ready(function() {
             $('#radiocheckstatus').css('color','green');
@@ -931,7 +1072,9 @@ class mod_attendance_renderer extends plugin_renderer_base {
             $fullname = html_writer::link($takedata->url_view(array('studentid' => $user->id)), fullname($user));
             $fullname = $this->user_picture($user).$fullname; // Show different picture if it is a temporary user.
 
-            $ucdata = $this->construct_take_user_controls($takedata, $user);
+            $a = new local_webservices_frontend();
+            $action_logs = $a->get_action_logs($takedata->sessioninfo->id);
+            $ucdata = $this->construct_take_user_controls($takedata, $user,$action_logs);
             if (array_key_exists('warning', $ucdata)) {
                 $fullname .= html_writer::empty_tag('br');
                 $fullname .= $ucdata['warning'];
@@ -987,14 +1130,145 @@ class mod_attendance_renderer extends plugin_renderer_base {
         background: transparent;
         text-align: center;
 	}
+		i{
+	cursor: pointer;
+	}
+	.popover {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1060;
+  display: none;
+  max-width: 276px;
+  padding: 1px;
+  font-family: \"Helvetica Neue\", Helvetica, Arial, sans-serif;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 1.42857143;
+  line-break: auto;
+  text-align: left;
+  text-align: start;
+  text-decoration: none;
+  text-shadow: none;
+  text-transform: none;
+  letter-spacing: normal;
+  word-break: normal;
+  word-spacing: normal;
+  word-wrap: normal;
+  white-space: normal;
+  font-size: 14px;
+  background-color: #fff;
+  background-clip: padding-box;
+  border: 1px solid #ccc;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  -webkit-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+}
+.popover.top {
+  margin-top: -10px;
+}
+.popover.right {
+  margin-left: 10px;
+}
+.popover.bottom {
+  margin-top: 10px;
+}
+.popover.left {
+  margin-left: -10px;
+}
+.popover > .arrow {
+  border-width: 11px;
+}
+.popover > .arrow,
+.popover > .arrow:after {
+  position: absolute;
+  display: block;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+}
+.popover > .arrow:after {
+  border-width: 10px;
+}
+.popover.top > .arrow {
+  bottom: -11px;
+  left: 50%;
+  margin-left: -11px;
+  border-top-color: #999999;
+  border-top-color: rgba(0, 0, 0, 0.25);
+  border-bottom-width: 0;
+}
+.popover.top > .arrow:after {
+  bottom: 1px;
+  margin-left: -10px;
+  border-top-color: #fff;
+  border-bottom-width: 0;
+}
+.popover.right > .arrow {
+  top: 50%;
+  left: -11px;
+  margin-top: -11px;
+  border-right-color: #999999;
+  border-right-color: rgba(0, 0, 0, 0.25);
+  border-left-width: 0;
+}
+.popover.right > .arrow:after {
+  bottom: -10px;
+  left: 1px;
+  border-right-color: #fff;
+  border-left-width: 0;
+}
+.popover.bottom > .arrow {
+  top: -11px;
+  left: 50%;
+  margin-left: -11px;
+  border-top-width: 0;
+  border-bottom-color: #999999;
+  border-bottom-color: rgba(0, 0, 0, 0.25);
+}
+.popover.bottom > .arrow:after {
+  top: 1px;
+  margin-left: -10px;
+  border-top-width: 0;
+  border-bottom-color: #fff;
+}
+.popover.left > .arrow {
+  top: 50%;
+  right: -11px;
+  margin-top: -11px;
+  border-right-width: 0;
+  border-left-color: #999999;
+  border-left-color: rgba(0, 0, 0, 0.25);
+}
+.popover.left > .arrow:after {
+  right: 1px;
+  bottom: -10px;
+  border-right-width: 0;
+  border-left-color: #fff;
+}
+.popover-title {
+  padding: 8px 14px;
+  margin: 0;
+  font-size: 14px;
+  background-color: #f7f7f7;
+  border-bottom: 1px solid #ebebeb;
+  border-radius: 5px 5px 0 0;
+}
+.popover-content {
+  padding: 9px 14px;
+}
 </style>
-        <select id='radiocheckstatus' class='checkstatus' style='font-size: 20px;' name='setallstatuses' data-init-value=1>
+        <select id='radiocheckstatus' class='checkstatus' style='font-size: 20px; cursor: pointer' name='setallstatuses' data-init-value=1>
                     <option style='color: green' value='1'  selected>&#xf058;</option>
                     <option style='color: blue' value=2 >&#xf234;</option>
                     <option style='color: orangered' value=3 >&#xf017;</option>
                     <option style='color: red' value=4 >&#xf057;</option>
         </select>
-        <script src='https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js'></script>
+        <link href='https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css' rel='stylesheet' />
+<script src='https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js'></script>
+<script src='https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js'></script>
         <script>
                 $(document).ready(function() {
             $('#radiocheckstatus').css('color','green');
@@ -1080,7 +1354,9 @@ class mod_attendance_renderer extends plugin_renderer_base {
             $fullname = html_writer::link($takedata->url_view(array('studentid' => $user->id)), fullname($user));
             $celltext .= html_writer::tag('span', $fullname, array('class' => 'fullname'));
             $celltext .= html_writer::empty_tag('br');
-            $ucdata = $this->construct_take_user_controls($takedata, $user);
+            $a = new local_webservices_frontend();
+            $action_logs = $a->get_action_logs($takedata->sessioninfo->id);
+            $ucdata = $this->construct_take_user_controls($takedata, $user,$action_logs);
             $celltext .= is_array($ucdata['text']) ? implode('', $ucdata['text']) : $ucdata['text'];
             if (array_key_exists('warning', $ucdata)) {
                 $celltext .= html_writer::empty_tag('br');
@@ -1145,7 +1421,9 @@ class mod_attendance_renderer extends plugin_renderer_base {
      * @param stdClass $user
      * @return array
      */
-    private function construct_take_user_controls(attendance_take_data $takedata, $user) {
+    private function construct_take_user_controls(attendance_take_data $takedata, $user,$action_logs) {
+        $a = new local_webservices_frontend();
+        $feedbacks = $a->get_feedbacks($takedata->sessioninfo->id);
         $celldata = array();
         if ($user->enrolmentend and $user->enrolmentend < $takedata->sessioninfo->sessdate) {
             $celldata['text'] = get_string('enrolmentend', 'attendance', userdate($user->enrolmentend, '%d.%m.%Y'));
@@ -1181,24 +1459,53 @@ class mod_attendance_renderer extends plugin_renderer_base {
   //              $celldata['text'][] = $input;
 //            }
             $temp = false;
+//            $a = new local_webservices_external();
+//            $action_logs = $a->get_action_logs($takedata->sessioninfo->id);
+
+            $flag = false;
+            $feeds = '';
+            foreach ($feedbacks as $feed){
+                if($feed->usertaken === $user->id){
+                    $flag = true;
+                    $feeds .= '<p>User taken: '.$feed->usertaken_name.'<br>Detail: '.$feed->description.'</p>';
+                }
+
+            }
+            if($flag){
+                $content_feedbacks = html_writer::div(
+                    $feeds,
+                    'no-overflow'
+                );
+                $b = $takedata->cm->id; $c = $takedata->sessioninfo->id;
+                $celldata['text'][] = html_writer::div("
+            <a href='/mod/attendance/feedback.php?id=$b&userid=$user->id&sessionid=$c'><i class='fa fa-exclamation-triangle' id='feedback$user->id' aria-hidden='true' style='cursor: pointer; margin-top:13px' data-init-value=1 data-toggle='popover' data-container='body' data-trigger='hover' data-placement='auto' title='Feedback logs' data-html='true' data-content='$content_feedbacks'></i></a>
+            <script>
+                $(document).ready(function(){
+                    $('#feedback$user->id').parents('tr').css('color','red');
+                });
+            </script>
+            ");
+            }else{
+                $celldata['text'][] = '';
+            }
+            $celldata['text'][] = '';
+
             foreach ($takedata->statuses as $st) {
                 if (array_key_exists($user->id, $takedata->sessionlog) and $st->id == $takedata->sessionlog[$user->id]->statusid) {
                     $temp = true;
+                    $logs = '';
+                    foreach ($action_logs as $log){
+                        if($log->userbetaken === $user->id){
+                            $logs .= '<p>User taken: '.$log->usertaken_name.'<br>Detail: '.$log->description.'</p>';
+                        }
+
+                    }
+                    $content_logs = html_writer::div(
+                        $logs,
+                        'no-overflow'
+                    );
                     $input = html_writer::div("
-<link href='https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css' rel='stylesheet' />
-<script src='https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js'></script>
-<style>
-	.checkstatus{
-		font-family: fontAwesome;
-		border: none;
-        -moz-appearance: none;
-        -webkit-appearance: none;
-        padding: 5px;
-        background: transparent;
-        text-align: center;
-	}
-</style>
-        <select id='select_status$user->id' class='select_status checkstatus' style='font-size: 20px;' name='user$user->id' data-init-value=1>
+        <select id='select_status$user->id' class='select_status checkstatus' style='font-size: 20px; cursor: pointer' name='user$user->id' data-init-value=1 data-toggle='popover' data-container='body' data-trigger='hover' data-placement='auto' title='Action logs' data-html='true' data-content='$content_logs' >
                     <option style='color: green' value=1 selected >&#xf058;</option>
                     <option style='color: blue' value=2>&#xf234;</option>
                     <option style='color: orange' value=3 >&#xf017;</option>
@@ -1206,7 +1513,6 @@ class mod_attendance_renderer extends plugin_renderer_base {
         </select>
                 <script>
                 $(document).ready(function() {
-                    
                 $('#select_status$user->id').val($st->id);
                 var current = $('#select_status$user->id').val();
                 if (current == '1') {
@@ -1230,6 +1536,7 @@ class mod_attendance_renderer extends plugin_renderer_base {
                     $('#select_status$user->id').css('color','red');
                 }
             });
+                $('[data-toggle=\"popover\"]').popover();
         });
 </script>");
 
@@ -1250,7 +1557,7 @@ class mod_attendance_renderer extends plugin_renderer_base {
                     <option style='color: red' value=4 >&#xf057;</option>
         </select>
                 <script>
-                $(document).ready(function() {
+                $(document).ready(function() {                  
             $('#select_status$user->id').css('color','#d7c8cd');
             $('#select_status$user->id').change(function() {
                 var current = $('#select_status$user->id').val();
@@ -1267,6 +1574,7 @@ class mod_attendance_renderer extends plugin_renderer_base {
                 }
             });
         });
+                
 </script>");
                 if ($takedata->pageparams->viewmode == mod_attendance_take_page_params::SORTED_GRID) {
                     $input = html_writer::tag('nobr', $input);
@@ -1282,7 +1590,19 @@ class mod_attendance_renderer extends plugin_renderer_base {
             if (array_key_exists($user->id, $takedata->sessionlog)) {
                 $params['value'] = $takedata->sessionlog[$user->id]->remarks;
             }
+
+
+
+
+
             $celldata['text'][] = html_writer::empty_tag('input', $params);
+
+
+
+
+
+
+
 
             if ($user->enrolmentstart > $takedata->sessioninfo->sessdate + $takedata->sessioninfo->duration) {
                 $celldata['warning'] = get_string('enrolmentstart', 'attendance',
@@ -1596,13 +1916,17 @@ class mod_attendance_renderer extends plugin_renderer_base {
         $table->head[] = 'Timein';
         $table->head[] = 'Timeout';
 
-        $table->align = array_merge($table->align, array('', 'left', 'center', 'center', 'center','center'));
-        $table->colclasses = array_merge($table->colclasses, array('datecol', 'desccol', 'statuscol', 'pointscol', 'remarkscol'));
-        $table->size = array_merge($table->size, array('1px', '*', '*', '1px', '*'));
+        $table->align = array_merge($table->align, array('', 'left', 'center', 'center', 'center','center','center'));
+        $table->colclasses = array_merge($table->colclasses, array('datecol', 'desccol', 'statuscol', 'pointscol', 'timein','timeout'));
+        $table->size = array_merge($table->size, array('1px', '*', '*', '1px', '*','*'));
 
         if (has_capability('mod/attendance:takeattendances', $context)) {
             $table->head[] = get_string('action');
-            $table->align[] = '';
+            $table->align[] = 'center';
+            $table->size[] = '';
+        }else{
+            $table->head[] = 'Feedback';
+            $table->align[] = 'center';
             $table->size[] = '';
         }
 
@@ -1611,7 +1935,7 @@ class mod_attendance_renderer extends plugin_renderer_base {
         $icons = array(
             1=>'<i class="fa fa-check-circle" style="color: green" aria-hidden="true"></i>',
             2=>'<i class="fa fa-user-plus" style="color: blue" aria-hidden="true"></i>',
-            3=>'<i class="fa fa-clock-o" style="color:orange;" aria-hidden="true"></i>',
+            3=>'<i class="fa fa-clock-o" style="color:orange" aria-hidden="true"></i>',
             4=>'<i class="fa fa-times-circle" style="color: red" aria-hidden="true"></i>');
 
         $i = 0;
@@ -1699,6 +2023,48 @@ class mod_attendance_renderer extends plugin_renderer_base {
                 $url = new moodle_url('/mod/attendance/take.php', $params);
                 $icon = $this->output->pix_icon('redo', get_string('changeattendance', 'attendance'), 'attendance');
                 $row->cells[] = html_writer::link($url, $icon);
+            }else{
+                $url_f = (new moodle_url('/mod/attendance/view.php'))->__toString();
+
+                $id = $userdata->filtercontrols->cm->id;
+                $row->cells[] = html_writer::div("
+                <i id=$sess->id class='fa fa-hand-paper-o' aria-hidden='true' style='cursor: pointer'></i>
+                <div id='feedback$sess->id' style='display: none;'>
+                    <div class='f-content'>
+                        <textarea id='description$sess->id' aria-label='Add a comment...' cols='0' style='color: grey;'></textarea>
+                    </div>
+                    <div class='f-footer'>
+                        <a id='send-button$sess->id' href='#'>Sent</a>
+                        <span>|</span>
+                        <a id='cancel-button$sess->id' href='#'>Cancel</a>
+                    </div>
+                </div>
+                <script src='https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js'></script>
+                <script>
+                $(document).ready( function () {
+                    //$('#feedback$sess->id').hide();
+                    
+                    $('#$sess->id').click(function() {
+                        $('#feedback$sess->id').show();
+                        $(this).hide();  
+                    });
+                    $('#send-button$sess->id').click(function() {
+                        let des = $('#description$sess->id').val();
+                        $.post('/mod/attendance/view.php',{ 
+                                id: $id,
+                                sessionid:$sess->id,
+                                description:des})
+                          .done(function(data) {
+                            alert('Send feedback successfully!');
+                          });
+                    });
+                    $('#cancel-button$sess->id').click(function() {
+                        $('#$sess->id').show();
+                        $('#feedback$sess->id').hide();
+                    });
+                } );
+                </script>
+                ");
             }
 
             $table->data[] = $row;

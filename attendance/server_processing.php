@@ -7,6 +7,7 @@
 require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
 require_once(__DIR__ . '/../../local/webservices/externallib.php');
+require_once(__DIR__ . '/../../local/webservices/externallib_frontend.php');
 /*
  * Output
  */
@@ -15,7 +16,7 @@ $value= $_GET['search']['value'];
 $filter = $columns[$_GET['order'][0]['column']];
 $order = $_GET['order'][0]['dir'];
 $attendanceid = $_GET['attendanceid'];
-$a = new local_webservices_external();
+$a = new local_webservices_frontend();
 $result = $a->get_action_logs_pagination($attendanceid,(int)$_GET['start']/10 + 1,(int)$_GET['length'],$value,$filter,$order);
 $data = array();
 foreach ($result['logs'] as $res){

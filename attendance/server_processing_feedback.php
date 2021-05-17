@@ -15,7 +15,7 @@ $value= $_GET['search']['value'];
 $filter = $columns[$_GET['order'][0]['column']];
 $order = $_GET['order'][0]['dir'];
 $attendanceid = $_GET['attendanceid'];
-$a = new local_webservices_external();
+$a = new local_webservices_frontend();
 $result = $a->get_feedbacks_pagination($attendanceid,(int)$_GET['start']/10 + 1,(int)$_GET['length'],$value,$filter,$order);
 $data = array();
 foreach ($result['feedbacks'] as $res){

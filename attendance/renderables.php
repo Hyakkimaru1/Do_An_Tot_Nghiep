@@ -127,8 +127,8 @@ class attendance_tabs implements renderable {
             //hd981
             $toprow[] = new tabobject(self::TAB_LOG, $this->att->url_log()->out(),
                             'Log');
-            $toprow[] = new tabobject(self::TAB_FEEDBACK, $this->att->url_feedback()->out(),
-                'Feedback');
+//            $toprow[] = new tabobject(self::TAB_FEEDBACK, $this->att->url_feedback()->out(),
+//                'Feedback');
         }
         if ($this->currenttab == self::TAB_UPDATE && has_capability('mod/attendance:manageattendances', $context)) {
             $toprow[] = new tabobject(self::TAB_UPDATE,

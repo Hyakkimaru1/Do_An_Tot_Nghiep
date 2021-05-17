@@ -212,7 +212,9 @@
         <FIELD NAME="usertaken" SEQUENCE="false" TYPE="int" LENGTH="10" NOTNULL="true"/>
         <FIELD NAME="userbetaken" SEQUENCE="false" TYPE="int" LENGTH="10" NOTNULL="false"/>
         <FIELD NAME="attendanceid" SEQUENCE="false" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="sessionid" SEQUENCE="false" TYPE="int" LENGTH="10" NOTNULL="true"/>
         <FIELD NAME="description" TYPE="text" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="image_register" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="image" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
 
       </FIELDS>
@@ -220,6 +222,8 @@
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
         <KEY NAME="foreign_feedback_attendance" TYPE="foreign" FIELDS="attendanceid"
              REFTABLE="attendance" REFFIELDS="id"/>
+        <KEY NAME="foreign_feedback_session" TYPE="foreign" FIELDS="sessionid"
+             REFTABLE="attendance_session" REFFIELDS="id"/>
         <KEY NAME="foreign_feedback_usertaken" TYPE="foreign" FIELDS="usertaken"
              REFTABLE="user" REFFIELDS="id"/>
         <KEY NAME="foreign_feedback_userbetaken" TYPE="foreign" FIELDS="userbetaken"
