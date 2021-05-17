@@ -729,4 +729,74 @@ class local_webservices_external_write extends external_api {
             )
         );
     }
+
+    public static function create_images_parameters(): external_function_parameters
+    {
+        return new external_function_parameters(
+            array(
+                'studentid' => new external_value(PARAM_INT, "Student's ID",VALUE_DEFAULT,-1),
+                'image_front' => new external_value(PARAM_TEXT,"Front image's base64 string",VALUE_DEFAULT,''),
+                'image_left' => new external_value(PARAM_TEXT,"Left image's base64 string",VALUE_DEFAULT,''),
+                'image_right' => new external_value(PARAM_TEXT,"Right image's base64 string",VALUE_DEFAULT,''),
+            )
+        );
+    }
+
+    public static function create_images(int $studentid, string $image_front, string $image_left, string $image_right): array
+    {
+        $params = self::validate_parameters(self::create_images_parameters(), array(
+                'studentid' => $studentid,
+                'image_front' => $image_front,
+                'image_left' => $image_left,
+                'image_right' => $image_right
+            )
+        );
+
+        global $DB;
+        $return = array('errorcode' => '', 'message' => '');
+        $sql = "SELECT u.*
+                FROM {user} u
+                WHERE u.id = $studentid";
+        $student = $DB->get_record_sql($sql);
+        if ($student == false) {
+            $return['errorcode'] = '404';
+            $return['message'] = "There are not any students with this ID";
+            return $return;
+        }
+        $record = "SELECT i.id
+                FROM {attendance_images} i
+                WHERE i.studentid = $studentid";
+        if ($record == false) {
+            $data = (object) array('studentid'=>$studentid,'image_front'=>$image_front,'image_left'=>$image_left,'image_right'=>$image_right);
+            if ($DB->insert_record('attendance_images',$data)) {
+                $return['message'] = "Created the record successfully";
+            }
+            else {
+                $return['errorcode'] = '400';
+                $return['message'] = "Couldn't create the record";
+            }
+        }
+        else {
+            $data = (object) array('id'=> $record->id,'studentid'=>$studentid,'image_front'=>$image_front,
+                'image_left'=>$image_left,'image_right'=>$image_right);
+            if ($DB->insert_record('attendance_images',$data)) {
+                $return['message'] = "Updated the record successfully";
+            }
+            else {
+                $return['errorcode'] = '400';
+                $return['message'] = "Couldn't update the record";
+            }
+        }
+        return $return;
+    }
+
+    public static function create_images_returns(): external_single_structure
+    {
+        return new external_single_structure(
+            array(
+                'errorcode' => new external_value(PARAM_TEXT,'Error code'),
+                'message' => new external_value(PARAM_TEXT, 'Message to the back-end'),
+            )
+        );
+    }
 }

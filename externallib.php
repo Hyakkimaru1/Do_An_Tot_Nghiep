@@ -433,16 +433,58 @@ class local_webservices_external extends external_api {
         );
     }
 
+    public static function get_images_parameters(): external_function_parameters
+    {
+        return new external_function_parameters(
+            array(
+                'studentid' => new external_value(PARAM_INT, "Student's ID"),
+            )
+        );
+    }
 
+    /**
+     * @throws dml_exception
+     * @throws invalid_parameter_exception
+     */
+    public static function get_images(int $studentid): array
+    {
+        $params = self::validate_parameters(self::get_images_parameters(), array(
+                'studentid' => $studentid,
+            )
+        );
 
-//    public static function get_logs_by_course_id_for_moodle(int $courseid): array
-//    {
-//
-//
-//    }
+        global $DB;
+        $sql1 = "SELECT u.*
+                FROM {user} u
+                WHERE u.id = $studentid";
+        $student = $DB->get_record_sql($sql1);
+        if ($student == false) {
+            return array();
+        }
 
+        $sql2 = "SELECT i.*
+                FROM {attendance_images} i
+                WHERE i.studentid = $studentid";
 
-    public static function get_session_detail_parameters() {
+        return $DB->get_records_sql($sql2);
+    }
+
+    public static function get_images_returns(): external_multiple_structure
+    {
+        return new external_multiple_structure(
+            new external_single_structure(
+                array(
+                    'studentid' => new external_value(PARAM_INT, "Student's id", VALUE_DEFAULT, null),
+                    'image_front' => new external_value(PARAM_TEXT,"Front image's base64 string",VALUE_DEFAULT,''),
+                    'image_left' => new external_value(PARAM_TEXT,"Left image's base64 string",VALUE_DEFAULT,''),
+                    'image_right' => new external_value(PARAM_TEXT,"Right image's base64 string",VALUE_DEFAULT,''),
+                )
+            )
+        );
+    }
+
+    public static function get_session_detail_parameters(): external_function_parameters
+    {
         return new external_function_parameters(
             array(
                 'sessionid' => new external_value(PARAM_INT, 'Session ID'),
