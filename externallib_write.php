@@ -763,9 +763,10 @@ class local_webservices_external_write extends external_api {
             $return['message'] = "There are not any students with this ID";
             return $return;
         }
-        $record = "SELECT i.id
+        $sql2 = "SELECT i.id
                 FROM {attendance_images} i
                 WHERE i.studentid = $studentid";
+        $record = $DB->get_record_sql($sql2);
         if ($record == false) {
             $data = (object) array('studentid'=>$studentid,'image_front'=>$image_front,'image_left'=>$image_left,'image_right'=>$image_right);
             if ($DB->insert_record('attendance_images',$data)) {
@@ -779,7 +780,7 @@ class local_webservices_external_write extends external_api {
         else {
             $data = (object) array('id'=> $record->id,'studentid'=>$studentid,'image_front'=>$image_front,
                 'image_left'=>$image_left,'image_right'=>$image_right);
-            if ($DB->insert_record('attendance_images',$data)) {
+            if ($DB->update_record('attendance_images',$data)) {
                 $return['message'] = "Updated the record successfully";
             }
             else {
