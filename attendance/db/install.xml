@@ -230,16 +230,20 @@
              REFTABLE="user" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
-<!--    <TABLE NAME="attendance_rotate_passwords" COMMENT="Table to hold temporary passwords for rotate QR code feature.">-->
-<!--      <FIELDS>-->
-<!--        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>-->
-<!--        <FIELD NAME="attendanceid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>-->
-<!--        <FIELD NAME="password" TYPE="char" LENGTH="20" NOTNULL="true" SEQUENCE="false"/>-->
-<!--        <FIELD NAME="expirytime" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>-->
-<!--      </FIELDS>-->
-<!--      <KEYS>-->
-<!--        <KEY NAME="id" TYPE="primary" FIELDS="id"/>-->
-<!--      </KEYS>-->
-<!--    </TABLE>-->
+
+    <TABLE NAME="attendance_images" COMMENT="Images storage table">
+      <FIELDS>
+        <FIELD NAME="id" SEQUENCE="true" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="studentid" SEQUENCE="false" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="image_front" SEQUENCE="false" TYPE="text" NOTNULL="false"/>
+        <FIELD NAME="image_left" SEQUENCE="false" TYPE="text" NOTNULL="false"/>
+        <FIELD NAME="image_right" SEQUENCE="false" TYPE="text" NOTNULL="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="foreign_images_user" TYPE="foreign" FIELDS="studentid"
+             REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
   </TABLES>
 </XMLDB>
