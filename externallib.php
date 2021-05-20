@@ -264,7 +264,7 @@ class local_webservices_external extends external_api {
             return $student_log;
         }
         else {
-            return new student_log();
+            return null;
         }
     }
 
