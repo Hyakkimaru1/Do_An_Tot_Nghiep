@@ -228,7 +228,7 @@ class local_webservices_external extends external_api {
                 WHERE a.course = $courseid
                 ORDER BY s.sessdate ASC";
         $sessions = $DB->get_records_sql($sql);
-        //var_dump($sessions);
+
 
         $sql1 = "SELECT u.*
                 FROM {user_enrolments} ue
@@ -237,14 +237,24 @@ class local_webservices_external extends external_api {
                 WHERE e.courseid = :courseid AND u.id = :studentid";
 
         $student =  $DB->get_record_sql($sql1,array('courseid'=>$courseid,'studentid'=>$studentid));
-        //var_dump($student);
-        if ($student != false) {
-            //var_dump($student);
-            $student_log = new student_log();
-            $student_log->studentid = $student->id;
 
-            $student_log->name = $student->lastname . ' ' . $student->firstname;
-            $student_log->email = $student->email;
+        if ($student != false) {
+
+//            public $studentid;
+//            public $name;
+//            public $email;
+//            public $count;
+//            public $c = 0;
+//            public $b = 0;
+//            public $t = 0;
+//            public $v = 0;
+//            public $reports;
+
+            $student_log = array('studentid'=>null,'name'=>null,'email'=>null,'count'=>null,'c'=>0,'b'=>0,'t'=>0,'v'=>0,'reports'=>null);
+            $student_log['studentid'] = $student->id;
+
+            $student_log['name'] = $student->lastname . ' ' . $student->firstname;
+            $student_log['email'] = $student->email;
             $sql2 = "SELECT l.*, r.name as room, r.campus, s.lesson, s.sessdate
                 FROM {attendance_log} l
                 LEFT JOIN {attendance_sessions} s ON l.sessionid = s.id
@@ -254,16 +264,16 @@ class local_webservices_external extends external_api {
             $datas = $DB->get_records_sql($sql2, array('courseid' => $courseid,
                 'studentid' => $student_log->studentid));
 
-            $student_log->count = count($datas);
+            $student_log['count'] = count($datas);
             foreach ($datas as $log) {
                 if ($log->statusid == 1) {
-                    $student_log->c++;
+                    $student_log['c']++;
                 } else if ($log->statusid == 2) {
-                    $student_log->b++;
+                    $student_log['b']++;
                 } else if ($log->statusid == 3) {
-                    $student_log->t++;
+                    $student_log['t']++;
                 } else if ($log->statusid == 4) {
-                    $student_log->v++;
+                    $student_log['v']++;
                 }
             }
             $reports = array();
@@ -284,12 +294,12 @@ class local_webservices_external extends external_api {
                 }
             }
 
-            $student_log->reports = $reports;
+            $student_log['reports'] = $reports;
             return (object) $student_log;
             //var_dump($student_log);
         }
         else {
-            return (object) new student_log();
+            return null;
         }
     }
 
