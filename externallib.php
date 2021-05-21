@@ -204,7 +204,7 @@ class local_webservices_external extends external_api {
                 WHERE a.course = $courseid
                 ORDER BY s.sessdate ASC";
         $sessions = $DB->get_records_sql($sql);
-
+        var_dump($sessions);
 
         $sql1 = "SELECT u.*
                 FROM {user_enrolments} ue
@@ -213,7 +213,7 @@ class local_webservices_external extends external_api {
                 WHERE e.courseid = :courseid AND u.id = :studentid";
 
         $student =  $DB->get_record_sql($sql1,array('courseid'=>$courseid,'studentid'=>$studentid));
-        $return = array();
+        var_dump($student);
         if ($student != false) {
             //var_dump($student);
             $student_log = new student_log();
@@ -265,7 +265,7 @@ class local_webservices_external extends external_api {
             var_dump($student_log);
         }
         else {
-            return null;
+            return new student_log();
         }
     }
 
