@@ -197,6 +197,31 @@ class local_webservices_external extends external_api {
             'courseid' => $courseid));
         global $DB;
 
+        $dummy = "SELECT a.*
+                   FROM {attendance} a";
+
+        var_dump('attendance table');
+        var_dump($DB->get_records_sql($dummy));
+
+        $dummy1 = "SELECT a.*
+                   FROM {attendance_sessions} a";
+
+        var_dump('attendance sessions table');
+        var_dump($DB->get_records_sql($dummy1));
+
+        $dummy2 = "SELECT a.*
+                   FROM {attendance_log} a";
+
+        var_dump('attendance log table');
+        var_dump($DB->get_records_sql($dummy2));
+
+        $dummy3 = "SELECT a.*
+                   FROM {role} a";
+
+        var_dump('role table');
+        var_dump($DB->get_records_sql($dummy3));
+
+
         $sql = "SELECT s.*, r.name as room, r.campus
                 FROM {attendance_sessions} s 
                 LEFT JOIN {attendance} a ON s.attendanceid = a.id
@@ -204,7 +229,7 @@ class local_webservices_external extends external_api {
                 WHERE a.course = $courseid
                 ORDER BY s.sessdate ASC";
         $sessions = $DB->get_records_sql($sql);
-        var_dump($sessions);
+        //var_dump($sessions);
 
         $sql1 = "SELECT u.*
                 FROM {user_enrolments} ue
@@ -213,7 +238,7 @@ class local_webservices_external extends external_api {
                 WHERE e.courseid = :courseid AND u.id = :studentid";
 
         $student =  $DB->get_record_sql($sql1,array('courseid'=>$courseid,'studentid'=>$studentid));
-        var_dump($student);
+        //var_dump($student);
         if ($student != false) {
             //var_dump($student);
             $student_log = new student_log();
@@ -262,7 +287,7 @@ class local_webservices_external extends external_api {
 
             $student_log->reports = $reports;
             return $student_log;
-            var_dump($student_log);
+            //var_dump($student_log);
         }
         else {
             return new student_log();
