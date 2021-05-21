@@ -196,29 +196,28 @@ class local_webservices_external extends external_api {
             'studentid' => $studentid,
             'courseid' => $courseid));
         global $DB;
+//        $dummy = "SELECT a.*
+//                   FROM {attendance} a";
+//
+//        var_dump('attendance table');
+//        var_dump($DB->get_records_sql($dummy));
+//
+//        $dummy1 = "SELECT a.*
+//                   FROM {attendance_sessions} a";
+//
+//        var_dump('attendance sessions table');
+//        var_dump($DB->get_records_sql($dummy1));
+//
+//        $dummy2 = "SELECT a.*
+//                   FROM {attendance_log} a";
+//
+//        var_dump('attendance log table');
+//        var_dump($DB->get_records_sql($dummy2));
 
-        $dummy = "SELECT a.*
-                   FROM {attendance} a";
+        $dummy3 = "SELECT r.*
+                   FROM {room} r";
 
-        var_dump('attendance table');
-        var_dump($DB->get_records_sql($dummy));
-
-        $dummy1 = "SELECT a.*
-                   FROM {attendance_sessions} a";
-
-        var_dump('attendance sessions table');
-        var_dump($DB->get_records_sql($dummy1));
-
-        $dummy2 = "SELECT a.*
-                   FROM {attendance_log} a";
-
-        var_dump('attendance log table');
-        var_dump($DB->get_records_sql($dummy2));
-
-        $dummy3 = "SELECT a.*
-                   FROM {role} a";
-
-        var_dump('role table');
+        var_dump('room table');
         var_dump($DB->get_records_sql($dummy3));
 
 
