@@ -262,6 +262,7 @@ class local_webservices_external extends external_api {
 
             $student_log->reports = $reports;
             return $student_log;
+            var_dump($student_log);
         }
         else {
             return null;
