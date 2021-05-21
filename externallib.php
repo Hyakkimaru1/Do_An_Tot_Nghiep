@@ -250,7 +250,7 @@ class local_webservices_external extends external_api {
 //            public $v = 0;
 //            public $reports;
 
-            $student_log = array('studentid'=>null,'name'=>null,'email'=>null,'count'=>null,'c'=>0,'b'=>0,'t'=>0,'v'=>0,'reports'=>null);
+            $student_log = array('studentid'=>null,'name'=>null,'email'=>null,'count'=>null,'c'=>0,'b'=>0,'t'=>0,'v'=>0,'reports'=>array());
             $student_log['studentid'] = $student->id;
 
             $student_log['name'] = $student->lastname . ' ' . $student->firstname;
@@ -299,7 +299,7 @@ class local_webservices_external extends external_api {
             //var_dump($student_log);
         }
         else {
-            return null;
+            return (object) array('studentid'=>null,'name'=>null,'email'=>null,'count'=>null,'c'=>0,'b'=>0,'t'=>0,'v'=>0,'reports'=>array());
         }
     }
 
