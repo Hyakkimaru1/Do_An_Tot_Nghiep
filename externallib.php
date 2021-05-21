@@ -213,12 +213,12 @@ class local_webservices_external extends external_api {
 //
 //        var_dump('attendance log table');
 //        var_dump($DB->get_records_sql($dummy2));
-
-        $dummy3 = "SELECT r.*
-                   FROM {room} r";
-
-        var_dump('room table');
-        var_dump($DB->get_records_sql($dummy3));
+//
+//        $dummy3 = "SELECT r.*
+//                   FROM {room} r";
+//
+//        var_dump('room table');
+//        var_dump($DB->get_records_sql($dummy3));
 
 
         $sql = "SELECT s.*, r.name as room, r.campus
@@ -285,11 +285,11 @@ class local_webservices_external extends external_api {
             }
 
             $student_log->reports = $reports;
-            return $student_log;
+            return (object) $student_log;
             //var_dump($student_log);
         }
         else {
-            return new student_log();
+            return (object) new student_log();
         }
     }
 
