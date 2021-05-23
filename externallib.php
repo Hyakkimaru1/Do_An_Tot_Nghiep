@@ -172,7 +172,7 @@ class local_webservices_external extends external_api {
     public static function get_student_logs_by_course_id_parameters() {
         return new external_function_parameters(
             array(
-                'studentid' => new external_value(PARAM_INT, 'student ID parameter'),
+                'username' => new external_value(PARAM_TEXT, "student's username parameter"),
                 'courseid'  => new external_value(PARAM_INT, 'course ID parameter'),
             )
         );
@@ -182,17 +182,16 @@ class local_webservices_external extends external_api {
  *
      * This function returns student's logs in this course.
      *
-     * @param int $studentid Student ID.
+     * @param string $username Student's username.
      * @param int $courseid Course ID.
-     * @return object|null The student's logs.
      * @throws invalid_parameter_exception|dml_exception
      */
-    public static function get_student_logs_by_course_id(int $studentid, int $courseid) :array
+    public static function get_student_logs_by_course_id(string $username, int $courseid) :array
     {
 
         // Validate parameters passed from web service.
         $params = self::validate_parameters(self::get_student_logs_by_course_id_parameters(), array(
-            'studentid' => $studentid,
+            'username' => $username,
             'courseid' => $courseid));
         global $DB;
 
@@ -209,9 +208,9 @@ class local_webservices_external extends external_api {
                 FROM {user_enrolments} ue
                 LEFT JOIN {enrol} e ON ue.enrolid = e.id
                 LEFT JOIN {user} u ON u.id = ue.userid
-                WHERE e.courseid = :courseid AND u.id = :studentid";
+                WHERE e.courseid = :courseid AND u.username = :username";
 
-        $student =  $DB->get_record_sql($sql1,array('courseid'=>$courseid,'studentid'=>$studentid));
+        $student =  $DB->get_record_sql($sql1,array('courseid'=>$courseid,'username'=>$username));
         $return = array();
         if ($student != false) {
 
@@ -227,7 +226,7 @@ class local_webservices_external extends external_api {
                 LEFT JOIN {attendance} a ON s.attendanceid = a.id
                 WHERE a.course = :courseid AND l.studentid = :studentid";
             $datas = $DB->get_records_sql($sql2, array('courseid' => $courseid,
-                'studentid' => $student_log->studentid));
+                'studentid' => $student_log['studentid']));
 
             $student_log['count'] = count($datas);
             foreach ($datas as $log) {
@@ -432,7 +431,7 @@ class local_webservices_external extends external_api {
     {
         return new external_function_parameters(
             array(
-                'studentid' => new external_value(PARAM_INT, "Student's ID"),
+                'username' => new external_value(PARAM_TEXT, "Student's username"),
             )
         );
     }
@@ -441,25 +440,25 @@ class local_webservices_external extends external_api {
      * @throws dml_exception
      * @throws invalid_parameter_exception
      */
-    public static function get_images(int $studentid): array
+    public static function get_images(string $username): array
     {
         $params = self::validate_parameters(self::get_images_parameters(), array(
-                'studentid' => $studentid,
+                'username' => $username,
             )
         );
 
         global $DB;
         $sql1 = "SELECT u.*
                 FROM {user} u
-                WHERE u.id = $studentid";
-        $student = $DB->get_record_sql($sql1);
+                WHERE u.username = :username";
+        $student = $DB->get_record_sql($sql1,array('username'=>$username));
         if ($student == false) {
             return array();
         }
 
         $sql2 = "SELECT i.*
                 FROM {attendance_images} i
-                WHERE i.studentid = $studentid";
+                WHERE i.studentid = $student->id";
 
         return $DB->get_records_sql($sql2);
     }
@@ -570,13 +569,20 @@ class local_webservices_external extends external_api {
 
             global $DB, $PAGE;
 
+            $sql1 = "SELECT u.*
+                    FROM {user} u
+                    WHERE u.username = :username";
 
+            $user = $DB->get_records_sql($sql1,array('username'=>$username));
+            if ($user == false) {
+                return array();
+            }
 
-            $sql = "SELECT ra.*
+            $sql2 = "SELECT ra.*
                     FROM {role_assignments} ra
                     LEFT JOIN {user} u ON u.id = ra.userid
                     WHERE u.username = :username";
-            $roles = $DB->get_records_sql($sql,array('username'=>$username));
+            $roles = $DB->get_records_sql($sql2,array('username'=>$username));
             $min = PHP_INT_MAX;
 
             foreach ($roles as $role) {
