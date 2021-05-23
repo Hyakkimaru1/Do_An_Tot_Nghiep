@@ -35,7 +35,7 @@ require_once($CFG->dirroot . '/lib/externallib.php');
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-class local_webservices_external_frontend extends external_api {
+class local_webservices_frontend extends external_api {
     /**
      * @throws dml_exception
      */

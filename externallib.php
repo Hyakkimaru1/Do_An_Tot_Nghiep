@@ -25,7 +25,6 @@
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/lib/externallib.php');
-
 /**
  * Web service API definition.
  *
@@ -188,7 +187,7 @@ class local_webservices_external extends external_api {
      * @return object|null The student's logs.
      * @throws invalid_parameter_exception|dml_exception
      */
-    public static function get_student_logs_by_course_id(int $studentid, int $courseid): ?object
+    public static function get_student_logs_by_course_id(int $studentid, int $courseid) :array
     {
 
         // Validate parameters passed from web service.
@@ -196,30 +195,6 @@ class local_webservices_external extends external_api {
             'studentid' => $studentid,
             'courseid' => $courseid));
         global $DB;
-//        $dummy = "SELECT a.*
-//                   FROM {attendance} a";
-//
-//        var_dump('attendance table');
-//        var_dump($DB->get_records_sql($dummy));
-//
-//        $dummy1 = "SELECT a.*
-//                   FROM {attendance_sessions} a";
-//
-//        var_dump('attendance sessions table');
-//        var_dump($DB->get_records_sql($dummy1));
-//
-//        $dummy2 = "SELECT a.*
-//                   FROM {attendance_log} a";
-//
-//        var_dump('attendance log table');
-//        var_dump($DB->get_records_sql($dummy2));
-//
-//        $dummy3 = "SELECT r.*
-//                   FROM {room} r";
-//
-//        var_dump('room table');
-//        var_dump($DB->get_records_sql($dummy3));
-
 
         $sql = "SELECT s.*, r.name as room, r.campus
                 FROM {attendance_sessions} s 
@@ -237,9 +212,8 @@ class local_webservices_external extends external_api {
                 WHERE e.courseid = :courseid AND u.id = :studentid";
 
         $student =  $DB->get_record_sql($sql1,array('courseid'=>$courseid,'studentid'=>$studentid));
-
+        $return = array();
         if ($student != false) {
-
 //            public $studentid;
 //            public $name;
 //            public $email;
@@ -295,43 +269,38 @@ class local_webservices_external extends external_api {
             }
 
             $student_log['reports'] = $reports;
-            return (object) $student_log;
-            //var_dump($student_log);
+            $return[] = $student_log;
         }
-        else {
-            return (object) array('studentid'=>null,'name'=>null,'email'=>null,'count'=>null,'c'=>0,'b'=>0,'t'=>0,'v'=>0,'reports'=>array());
-        }
+        return $return;
     }
 
-    /**
-     * Parameter description for create_sections().
-     *
-     * @return external_description
-     */
-    public static function get_student_logs_by_course_id_returns() {
-        return new external_single_structure(
-            array(
-                'studentid' => new external_value(PARAM_INT, 'student ID', VALUE_DEFAULT, null),
-                'name' => new external_value(PARAM_TEXT,"student's name", VALUE_DEFAULT,null),
-                'email' => new external_value(PARAM_TEXT,"student's email", VALUE_DEFAULT,null),
-                'count' => new external_value(PARAM_INT,"number of logs", VALUE_DEFAULT,null),
-                'c' => new external_value(PARAM_INT, 'active count', VALUE_DEFAULT, null),
-                'b' => new external_value(PARAM_INT, 'passive count', VALUE_DEFAULT, null),
-                't' => new external_value(PARAM_INT, 'late count', VALUE_DEFAULT, null),
-                'v' => new external_value(PARAM_INT, 'absent count', VALUE_DEFAULT, null),
-                'reports' => new external_multiple_structure(
-                    new external_single_structure(
-                        array(
-                            'sessionid' => new external_value(PARAM_INT, 'session ID', VALUE_DEFAULT, null),
-                            'sessdate' => new external_value(PARAM_INT,'timestamp when the class start',VALUE_DEFAULT,null),
-                            'lesson' => new external_value(PARAM_INT, 'lesson number', VALUE_DEFAULT, null),
-                            'room' => new external_value(PARAM_TEXT, 'room name', VALUE_DEFAULT, null),
-                            'campus' => new external_value(PARAM_TEXT, 'campus location', VALUE_DEFAULT, null),
-                            'timein' => new external_value(PARAM_INT, 'timestamp when the student checkin', VALUE_DEFAULT, null),
-                            'timeout' => new external_value(PARAM_INT, 'timestamp when the student checkout', VALUE_DEFAULT, null),
-                            'statusid' => new external_value(PARAM_INT, 'statusid of the student', VALUE_DEFAULT, null),
-                        )
-                    ),'all reports of a student in a course'
+    public static function get_student_logs_by_course_id_returns(): external_multiple_structure
+    {
+        return new external_multiple_structure(
+            new external_single_structure(
+                array(
+                    'studentid' => new external_value(PARAM_INT, 'student ID', VALUE_DEFAULT, null),
+                    'name' => new external_value(PARAM_TEXT,"student's name", VALUE_DEFAULT,null),
+                    'email' => new external_value(PARAM_TEXT,"student's email", VALUE_DEFAULT,null),
+                    'count' => new external_value(PARAM_INT,"number of logs", VALUE_DEFAULT,null),
+                    'c' => new external_value(PARAM_INT, 'active count', VALUE_DEFAULT, null),
+                    'b' => new external_value(PARAM_INT, 'passive count', VALUE_DEFAULT, null),
+                    't' => new external_value(PARAM_INT, 'late count', VALUE_DEFAULT, null),
+                    'v' => new external_value(PARAM_INT, 'absent count', VALUE_DEFAULT, null),
+                    'reports' => new external_multiple_structure(
+                        new external_single_structure(
+                            array(
+                                'sessionid' => new external_value(PARAM_INT, 'session ID', VALUE_DEFAULT, null),
+                                'sessdate' => new external_value(PARAM_INT,'timestamp when the class start',VALUE_DEFAULT,null),
+                                'lesson' => new external_value(PARAM_INT, 'lesson number', VALUE_DEFAULT, null),
+                                'room' => new external_value(PARAM_TEXT, 'room name', VALUE_DEFAULT, null),
+                                'campus' => new external_value(PARAM_TEXT, 'campus location', VALUE_DEFAULT, null),
+                                'timein' => new external_value(PARAM_INT, 'timestamp when the student checkin', VALUE_DEFAULT, null),
+                                'timeout' => new external_value(PARAM_INT, 'timestamp when the student checkout', VALUE_DEFAULT, null),
+                                'statusid' => new external_value(PARAM_INT, 'statusid of the student', VALUE_DEFAULT, null),
+                            )
+                        ),'all reports of a student in a course'
+                    )
                 )
             )
         );
@@ -600,39 +569,56 @@ class local_webservices_external extends external_api {
         );
     }
 
-    /**
-     * Return roleinformation.
-     *
-     * This function returns roleid, rolename and roleshortname for all roles or for given roles.
-     *
-     * @param array $ids List of roleids.
-     * @param array $shortnames List of role shortnames.
-     * @param array $names List of role names.
-     * @return array Array of arrays with role informations.
-     */
-    public static function get_roles($username) {
+    public static function get_roles(string $username): array
+    {
 
         // Validate parameters passed from web service.
         $params = self::validate_parameters(self::get_roles_parameters(), array(
-            'username' => $username));
+            'username' => $username,
+        ));
 
-            global $DB;
+            global $DB, $PAGE;
 
-            $sql = "SELECT u.id AS id, username, firstname, lastname, roleid, r.name AS role, shortname
+
+
+            $sql = "SELECT ra.*
+                    FROM {role_assignments} ra
+                    LEFT JOIN {user} u ON u.id = ra.userid
+                    WHERE u.username = :username";
+            $roles = $DB->get_records_sql($sql,array('username'=>$username));
+            $min = PHP_INT_MAX;
+
+            foreach ($roles as $role) {
+                if ($role->roleid < $min)
+                {
+                    $min = $role->roleid;
+                }
+            }
+
+
+            $sql1 = "SELECT u.id AS id, username, firstname, lastname, r.id as roleid, r.name AS role, shortname
             FROM {user} u
-            JOIN {role_assignments} ra on ra.userid = u.id
-            JOIN {role} r on r.id = ra.roleid
+            LEFT JOIN {role} r on r.id = $min
             WHERE u.username = :username";
 
-            return $DB->get_records_sql($sql,array('username'=>$username));
+            $return = array();
+
+            $info =  $DB->get_record_sql($sql1,array('username'=>$username));
+            $alternative_user = (object) array('id'=>$info->id);
+            $isadmin = is_siteadmin($info->id);
+            $userpicture = new user_picture($alternative_user);
+            $userpicture->size = 1;
+            $profileimageurl = $userpicture->get_url($PAGE);
+
+            $element = array('id'=>$info->id,'username'=>$info->username,'firstname'=>$info->firstname,'lastname'=>$info->lastname,
+                'roleid'=>$info->roleid,'role'=>$info->role,'shortname'=>$info->shortname,'isadmin'=> $isadmin,
+                'userpictureurl'=>$profileimageurl->out(false));
+            $return[] = $element;
+            return $return;
     }
 
-    /**
-     * Parameter description for create_sections().
-     *
-     * @return external_description
-     */
-    public static function get_roles_returns() {
+    public static function get_roles_returns(): external_multiple_structure
+    {
         return new external_multiple_structure(
             new external_single_structure(
                 array(
@@ -643,6 +629,8 @@ class local_webservices_external extends external_api {
                     'roleid' => new external_value(PARAM_INT, 'id of role', VALUE_DEFAULT, null),
                     'role' => new external_value(PARAM_TEXT, 'name of role', VALUE_DEFAULT, null),
                     'shortname' => new external_value(PARAM_TEXT, 'shortname of role', VALUE_DEFAULT, null),
+                    'isadmin' => new external_value(PARAM_BOOL, 'this is an admin or not', VALUE_DEFAULT, null),
+                    'userpictureurl' => new external_value(PARAM_TEXT, "user's picture url", VALUE_DEFAULT, null),
                 )
             )
         );
