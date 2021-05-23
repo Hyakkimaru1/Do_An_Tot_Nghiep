@@ -214,15 +214,6 @@ class local_webservices_external extends external_api {
         $student =  $DB->get_record_sql($sql1,array('courseid'=>$courseid,'studentid'=>$studentid));
         $return = array();
         if ($student != false) {
-//            public $studentid;
-//            public $name;
-//            public $email;
-//            public $count;
-//            public $c = 0;
-//            public $b = 0;
-//            public $t = 0;
-//            public $v = 0;
-//            public $reports;
 
             $student_log = array('studentid'=>null,'name'=>null,'email'=>null,'count'=>null,'c'=>0,'b'=>0,'t'=>0,'v'=>0,'reports'=>array());
             $student_log['studentid'] = $student->id;
@@ -605,18 +596,15 @@ class local_webservices_external extends external_api {
 
             $info =  $DB->get_record_sql($sql1,array('username'=>$username));
             $alternative_user = (object) array('id'=>$info->id);
-            //$isadmin = is_siteadmin($info->id);
-            //$userpicture = new user_picture($alternative_user);
-            //$userpicture->size = 1;
-            //$profileimageurl = $userpicture->get_url($PAGE);
-
-//            $element = array('id'=>$info->id,'username'=>$info->username,'firstname'=>$info->firstname,'lastname'=>$info->lastname,
-//                'roleid'=>$info->roleid,'role'=>$info->role,'shortname'=>$info->shortname,'isadmin'=> $isadmin,
-//                'userpictureurl'=>$profileimageurl->out(false));
+            $isadmin = is_siteadmin($info->id);
+            $userpicture = new user_picture($alternative_user);
+            $userpicture->size = 1;
+            $profileimageurl = $userpicture->get_url($PAGE);
 
             $element = array('id'=>$info->id,'username'=>$info->username,'firstname'=>$info->firstname,'lastname'=>$info->lastname,
-            'roleid'=>$info->roleid,'role'=>$info->role,'shortname'=>$info->shortname,'isadmin'=> true,
-            'userpictureurl'=>'d');
+                'roleid'=>$info->roleid,'role'=>$info->role,'shortname'=>$info->shortname,'isadmin'=> $isadmin,
+                'userpictureurl'=>$profileimageurl->out(false));
+
             $return[] = $element;
             return $return;
     }

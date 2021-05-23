@@ -649,31 +649,29 @@ class local_webservices_external_write extends external_api {
     {
         return new external_function_parameters(
             array(
-                'usertaken' => new external_value(PARAM_INT, "User's ID that sent the feedback",VALUE_DEFAULT,-1),
+                'usertaken' => new external_value(PARAM_TEXT, "User's username that sent the feedback",VALUE_DEFAULT,''),
                 'roomid' => new external_value(PARAM_INT,"Room ID parameter",VALUE_DEFAULT,-1),
                 'description' => new external_value(PARAM_TEXT,"Description",VALUE_DEFAULT,''),
-                'userbetaken' => new external_value(PARAM_INT,"User's ID that was mistaken",VALUE_DEFAULT,-1),
-                'image_register' => new external_value(PARAM_TEXT,"Register image's base64 string",VALUE_DEFAULT,''),
+                'userbetaken' => new external_value(PARAM_TEXT,"User's username that was mistaken",VALUE_DEFAULT,''),
                 'image' => new external_value(PARAM_TEXT,"Feedback image's base64 string",VALUE_DEFAULT,''),
             )
         );
     }
 
-    public static function create_feedback(int $usertaken, int $roomid, string $description, int $userbetaken,string $image_register,
+    public static function create_feedback(string $usertaken, int $roomid, string $description, string $userbetaken,
                                            string $image) {
         $params = self::validate_parameters(self::create_feedback_parameters(), array(
                 'usertaken' => $usertaken,
                 'roomid' => $roomid,
                 'description'=>$description,
                 'userbetaken'=>$userbetaken,
-                'image_register' => $image_register,
                 'image'=>$image
             )
         );
         $return = array('errorcode' => '', 'message' => '');
-        if ($usertaken == -1) {
+        if ($usertaken == '') {
             $return['errorcode'] = '400';
-            $return['message'] = "The usertaken's ID is missing";
+            $return['message'] = "The usertaken's username is missing";
             return $return;
         }
         if ($roomid == -1) {
@@ -696,20 +694,67 @@ class local_webservices_external_write extends external_api {
                 LEFT JOIN {room} r ON s.roomid = r.id
                 WHERE r.id = $roomid AND (s.sessdate + s.duration) >= $time AND s.sessdate <= $time";
         $attendance = $DB->get_record_sql($sql1);
-        //var_dump($attendance);
+
+
+
+
+
         if ($attendance == false) {
             $return['errorcode'] = '404';
             $return['message'] = "There are not any classes in this room now/There is not any room with this ID";
             return $return;
         }
-        if ($userbetaken == -1)
-            $data = (object) array('timetaken'=>$time,'usertaken'=>$usertaken,'userbetaken' => null,
-                'attendanceid'=> $attendance->id, 'sessionid' => $attendance->sessionid,
-                'description'=>$description,'image_register'=>$image_register, 'image'=> $image);
-        else
-            $data = (object) array('timetaken'=>$time,'usertaken'=>$usertaken,'userbetaken' => $userbetaken,
-                'attendanceid'=> $attendance->id, 'sessionid' => $attendance->sessionid,
-                'description'=>$description,'image_register'=>$image_register, 'image'=> $image);
+
+        $sql2 = "SELECT u.*
+                FROM {user_enrolments} ue
+                LEFT JOIN {enrol} e ON ue.enrolid = e.id
+                LEFT JOIN {role} r ON e.roleid = r.id
+                LEFT JOIN {user} u ON u.id = ue.userid
+                LEFT JOIN {attendance} a ON a.course = e.courseid
+                WHERE a.id = $attendance->id AND u.username = :usertaken AND r.shortname = 'student'";
+        $student = $DB->get_record_sql($sql2,array('usertaken'=>$usertaken));
+
+        if ($student == false) {
+            $return['errorcode'] = '404';
+            $return['message'] = "This student isn't in this class";
+            return $return;
+        }
+
+        $sql3 = "SELECT i.*
+                FROM {attendance_images} i
+                LEFT JOIN {user} u ON i.studentid = u.id
+                WHERE u.username = :usertaken";
+
+        $image_usertaken = $DB->get_record_sql($sql3,array('usertaken'=>$usertaken));
+
+        if ($image_usertaken == false) {
+            $return['errorcode'] = '404';
+            $return['message'] = "This user didn't have any registered images";
+            return $return;
+        }
+        if ($userbetaken == '') {
+            $data = (object)array('timetaken' => $time, 'usertaken' => $student->id, 'userbetaken' => null,
+                'attendanceid' => $attendance->id, 'sessionid' => $attendance->sessionid,
+                'description' => $description, 'image_register' => $image_usertaken->image_front, 'image' => $image);
+        }
+        else {
+
+            $sql4 = "SELECT u.*
+                FROM {user} u
+                WHERE u.username = :userbetaken";
+
+            $student2 = $DB->get_record_sql($sql4,array('userbetaken'=>$userbetaken));
+
+            if ($student2 == false) {
+                $return['errorcode'] = '404';
+                $return['message'] = "The userbetaken's username is wrong";
+                return $return;
+            }
+
+            $data = (object)array('timetaken' => $time, 'usertaken' => $student->id, 'userbetaken' => $student2->id,
+                'attendanceid' => $attendance->id, 'sessionid' => $attendance->sessionid,
+                'description' => $description, 'image_register' => $image_usertaken->image_front, 'image' => $image);
+        }
 
         if ($DB->insert_record('attendance_feedback',$data)) {
             $return['message'] = "Created the record successfully";
@@ -734,7 +779,7 @@ class local_webservices_external_write extends external_api {
     {
         return new external_function_parameters(
             array(
-                'studentid' => new external_value(PARAM_INT, "Student's ID",VALUE_DEFAULT,-1),
+                'username' => new external_value(PARAM_TEXT, "Student's username",VALUE_DEFAULT,''),
                 'image_front' => new external_value(PARAM_TEXT,"Front image's base64 string",VALUE_DEFAULT,''),
                 'image_left' => new external_value(PARAM_TEXT,"Left image's base64 string",VALUE_DEFAULT,''),
                 'image_right' => new external_value(PARAM_TEXT,"Right image's base64 string",VALUE_DEFAULT,''),
@@ -742,10 +787,10 @@ class local_webservices_external_write extends external_api {
         );
     }
 
-    public static function create_images(int $studentid, string $image_front, string $image_left, string $image_right): array
+    public static function create_images(string $username, string $image_front, string $image_left, string $image_right): array
     {
         $params = self::validate_parameters(self::create_images_parameters(), array(
-                'studentid' => $studentid,
+                'username' => $username,
                 'image_front' => $image_front,
                 'image_left' => $image_left,
                 'image_right' => $image_right
@@ -754,10 +799,10 @@ class local_webservices_external_write extends external_api {
 
         global $DB;
         $return = array('errorcode' => '', 'message' => '');
-        $sql = "SELECT u.*
+        $sql1 = "SELECT u.*
                 FROM {user} u
-                WHERE u.id = $studentid";
-        $student = $DB->get_record_sql($sql);
+                WHERE u.username = :username";
+        $student = $DB->get_record_sql($sql1,array('username'=>$username));
         if ($student == false) {
             $return['errorcode'] = '404';
             $return['message'] = "There are not any students with this ID";
@@ -765,10 +810,10 @@ class local_webservices_external_write extends external_api {
         }
         $sql2 = "SELECT i.id
                 FROM {attendance_images} i
-                WHERE i.studentid = $studentid";
+                WHERE i.studentid = $student->id";
         $record = $DB->get_record_sql($sql2);
         if ($record == false) {
-            $data = (object) array('studentid'=>$studentid,'image_front'=>$image_front,'image_left'=>$image_left,'image_right'=>$image_right);
+            $data = (object) array('studentid'=>$student->id,'image_front'=>$image_front,'image_left'=>$image_left,'image_right'=>$image_right);
             if ($DB->insert_record('attendance_images',$data)) {
                 $return['message'] = "Created the record successfully";
             }
@@ -778,7 +823,7 @@ class local_webservices_external_write extends external_api {
             }
         }
         else {
-            $data = (object) array('id'=> $record->id,'studentid'=>$studentid,'image_front'=>$image_front,
+            $data = (object) array('id'=> $record->id,'studentid'=>$student->id,'image_front'=>$image_front,
                 'image_left'=>$image_left,'image_right'=>$image_right);
             if ($DB->update_record('attendance_images',$data)) {
                 $return['message'] = "Updated the record successfully";
