@@ -110,25 +110,22 @@ class local_webservices_frontend extends external_api {
         return $return;
     }
 
-
-    public static function get_image(int $studentid): array
+    public static function get_image_by_course_id(int $courseid): array
     {
 
         global $DB;
-        $sql1 = "SELECT u.*
-                FROM {user} u
-                WHERE u.id = $studentid";
-        $student = $DB->get_record_sql($sql1);
-        if ($student == false) {
-            return array();
-        }
-
-        $sql2 = "SELECT i.studentid, i.image_front
+        $sql = "SELECT i.studentid, i.image_front
                 FROM {attendance_images} i
-                WHERE i.studentid = $student->id";
-
-        return $DB->get_records_sql($sql2);
+                LEFT JOIN {role_assignments} ra ON i.studentid = ra.userid
+                LEFT JOIN {context} con ON con.id = ra.contextid
+                LEFT JOIN {course} c ON c.id = con.instanceid
+                LEFT JOIN {role} r ON ra.roleid = r.id
+                WHERE c.id = :courseid AND r.shortname = 'student'
+                ORDER BY i.studentid ASC";
+        return $DB->get_records_sql($sql,array('courseid'=>$courseid));
     }
+
+
 
     /**
      * @throws dml_exception

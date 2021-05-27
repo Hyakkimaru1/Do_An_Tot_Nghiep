@@ -25,6 +25,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $functions = array(
+
     'local_webservices_frontend_get_action_logs_pagination' => array(
         'classname' => 'local_webservices_frontend',
         'methodname' => 'get_action_logs_pagination',
