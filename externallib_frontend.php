@@ -111,6 +111,25 @@ class local_webservices_frontend extends external_api {
     }
 
 
+    public static function get_image(int $studentid): array
+    {
+
+        global $DB;
+        $sql1 = "SELECT u.*
+                FROM {user} u
+                WHERE u.id = $studentid";
+        $student = $DB->get_record_sql($sql1);
+        if ($student == false) {
+            return array();
+        }
+
+        $sql2 = "SELECT i.studentid, i.image_front
+                FROM {attendance_images} i
+                WHERE i.studentid = $student->id";
+
+        return $DB->get_records_sql($sql2);
+    }
+
     /**
      * @throws dml_exception
      */

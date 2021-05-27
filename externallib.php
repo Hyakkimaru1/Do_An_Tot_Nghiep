@@ -770,6 +770,5 @@ class local_webservices_external extends external_api {
                 )
             )
         );
-    }    
-
+    }
 }
