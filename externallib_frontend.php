@@ -110,7 +110,7 @@ class local_webservices_frontend extends external_api {
         return $return;
     }
 
-    public static function get_image_by_course_id(int $courseid): array
+    public static function get_images_by_course_id(int $courseid): array
     {
 
         global $DB;
