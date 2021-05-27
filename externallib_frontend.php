@@ -110,6 +110,18 @@ class local_webservices_frontend extends external_api {
         return $return;
     }
 
+    public static function get_image(int $studentid): array
+    {
+
+        global $DB;
+
+        $sql = "SELECT i.studentid, i.image_front
+                FROM {attendance_images} i
+                WHERE i.studentid = $studentid";
+
+        return $DB->get_records_sql($sql);
+    }
+
     public static function get_images_by_course_id(int $courseid): array
     {
 
