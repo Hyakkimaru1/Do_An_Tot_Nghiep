@@ -491,16 +491,17 @@ class local_webservices_external_write extends external_api {
         );
         global $CFG;
         global $DB;
-        var_dump($replace);
+
         $return = array('errorcode' => '', 'message' => '');
         $domain = $CFG->wwwroot;
+        var_dump($domain);
         $sql1 = "SELECT u.*
                 FROM {user} u
                 WHERE u.username = :username";
         $student = $DB->get_record_sql($sql1,array('username'=>$username));
         if ($student == false) {
             $return['errorcode'] = '404';
-            $return['message'] = "There are not any students with this ID";
+            $return['message'] = "There are not any students with this username";
             return $return;
         }
         $sql2 = "SELECT i.id
@@ -529,7 +530,7 @@ class local_webservices_external_write extends external_api {
         $front_url = self::upload_image($domain,$image_front,'image_front.jpg',$student->id,
             $auth->userid,$auth->token,'image_front', $replace, true);
 
-        if ($front_url == '') {
+        if ($front_url == '' || $left_url == '' || $right_url == '') {
             $return['errorcode'] = '400';
             $return['message'] = "Couldn't upload the images";
             return $return;
