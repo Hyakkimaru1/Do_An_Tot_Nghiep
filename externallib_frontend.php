@@ -25,7 +25,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot . '/lib/externallib.php');
+require_once('../../lib/externallib.php');
 
 /**
  * Web service API definition.
@@ -36,6 +36,24 @@ require_once($CFG->dirroot . '/lib/externallib.php');
  */
 
 class local_webservices_frontend extends external_api {
+
+    /**
+     * @throws dml_exception
+     */
+    public static function get_teachers_by_course_id(int $courseid): array
+    {
+        global $DB;
+
+        $sql = "SELECT u.*
+                FROM {user} u
+                LEFT JOIN {role_assignments} ra ON ra.userid = u.id
+                LEFT JOIN {context} con ON con.id = ra.contextid
+                LEFT JOIN {course} c ON c.id = con.instanceid
+                LEFT JOIN {role} r ON r.id = ra.roleid
+                WHERE c.id = $courseid AND r.shortname LIKE :string";
+
+        return $DB->get_records_sql($sql, array('string' => '%teacher%'));
+    }
 
     public static function get_student_logs_by_course_id(int $studentid, int $courseid) :array
     {
@@ -182,19 +200,6 @@ class local_webservices_frontend extends external_api {
         return $DB->get_records_sql($sql);
     }
 
-    public static function get_action_logs_pagination_parameters(): external_function_parameters
-    {
-        return new external_function_parameters(
-            array(
-                'attendanceid' => new external_value(PARAM_INT, 'attendance ID'),
-                'page' => new external_value(PARAM_INT, 'page number'),
-                'pagesize'  => new external_value(PARAM_INT, 'page size'),
-                'value' => new external_value(PARAM_TEXT,'search value',VALUE_DEFAULT,''),
-                'filter' => new external_value(PARAM_TEXT, 'filter criteria',VALUE_DEFAULT,''),
-                'order'  => new external_value(PARAM_TEXT, 'order criteria',VALUE_DEFAULT,''),
-            )
-        );
-    }
 
     /**
      * @throws invalid_parameter_exception
@@ -256,44 +261,6 @@ class local_webservices_frontend extends external_api {
         return array('totalrecords' => count($result), 'logs' => $logs);
     }
 
-    public static function get_action_logs_pagination_returns(): external_single_structure
-    {
-        return new external_single_structure(
-            array(
-                'totalrecords' => new external_value(PARAM_INT,'total records',VALUE_DEFAULT,null),
-                'logs' => new external_multiple_structure(
-                    new external_single_structure(
-                        array(
-                            'id' => new external_value(PARAM_INT, 'log ID', VALUE_DEFAULT, null),
-                            'attendanceid' => new external_value(PARAM_INT,'attendance ID',VALUE_DEFAULT,null),
-                            'sessionid' => new external_value(PARAM_INT,'session ID',VALUE_DEFAULT,null),
-                            'usertaken' => new external_value(PARAM_INT, "user taken's ID", VALUE_DEFAULT, null),
-                            'usertaken_name' => new external_value(PARAM_TEXT, "user taken's full name", VALUE_DEFAULT, null),
-                            'userbetaken' => new external_value(PARAM_INT, "user be taken's ID", VALUE_DEFAULT, null),
-                            'userbetaken_name' => new external_value(PARAM_TEXT, "user be taken's full name", VALUE_DEFAULT, null),
-                            'description' => new external_value(PARAM_TEXT, "Description", VALUE_DEFAULT, null),
-                            'timetaken' => new external_value(PARAM_INT, "Time taken timestamp", VALUE_DEFAULT, null),
-                        )
-                    )
-                )
-            )
-        );
-    }
-
-    public static function get_courses_pagination_parameters(): external_function_parameters
-    {
-        return new external_function_parameters(
-            array(
-                'page' => new external_value(PARAM_INT, 'page number'),
-                'pagesize'  => new external_value(PARAM_INT, 'page size'),
-                'value' => new external_value(PARAM_TEXT,'search value',VALUE_DEFAULT,''),
-                'filter' => new external_value(PARAM_TEXT, 'filter criteria',VALUE_DEFAULT,''),
-                'order'  => new external_value(PARAM_TEXT, 'order criteria',VALUE_DEFAULT,''),
-            )
-        );
-    }
-
-
 
     public static function get_courses_pagination(int $page, int $pagesize,
                                                   string $value, string $filter, string $order): array
@@ -305,18 +272,6 @@ class local_webservices_frontend extends external_api {
             'filter' => $filter,
             'order' => $order
         ));
-
-//        $d = DateTime::createFromFormat(
-//            'd/m/Y',
-//            '22/04/2021',
-//            new DateTimeZone('Asia/Ho_Chi_Minh')
-//        );
-//
-//        if ($d === false) {
-//            die("Incorrect date string");
-//        } else {
-//            echo $d->getTimestamp();
-//        }
 
 
         global $DB;
@@ -354,24 +309,6 @@ class local_webservices_frontend extends external_api {
 
         }
         return array('totalrecords' => count($result), 'courses' => $courses);
-    }
-
-    public static function get_courses_pagination_returns(): external_single_structure
-    {
-        return new external_single_structure(
-            array(
-                'totalrecords' => new external_value(PARAM_INT,'total records',VALUE_DEFAULT,null),
-                'courses' => new external_multiple_structure(
-                    new external_single_structure(
-                        array(
-                            'id' => new external_value(PARAM_INT, 'course ID', VALUE_DEFAULT, null),
-                            'fullname' => new external_value(PARAM_TEXT, "course's full name", VALUE_DEFAULT, null),
-                            'shortname' => new external_value(PARAM_TEXT, "course's short name", VALUE_DEFAULT, null),
-                        )
-                    )
-                )
-            )
-        );
     }
 
 }

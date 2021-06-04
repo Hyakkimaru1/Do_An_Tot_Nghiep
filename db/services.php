@@ -26,22 +26,6 @@ defined('MOODLE_INTERNAL') || die();
 
 $functions = array(
 
-    'local_webservices_frontend_get_action_logs_pagination' => array(
-        'classname' => 'local_webservices_frontend',
-        'methodname' => 'get_action_logs_pagination',
-        'classpath' => 'local/webservices/externallib_frontend.php',
-        'description' => 'Get all attendance action logs based on session ID with pagination',
-        'type' => 'read',
-        'capabilities' => '',
-    ),
-    'local_webservices_frontend_get_courses_pagination' => array(
-        'classname' => 'local_webservices_frontend',
-        'methodname' => 'get_courses_pagination',
-        'classpath' => 'local/webservices/externallib_frontend.php',
-        'description' => 'Get all checkin-courses with pagination',
-        'type' => 'read',
-        'capabilities' => '',
-    ),
     'local_webservices_get_a_log_by_ids' => array(
         'classname' => 'local_webservices_external',
         'methodname' => 'get_a_log',
@@ -78,7 +62,15 @@ $functions = array(
         'classname' => 'local_webservices_external',
         'methodname' => 'get_images',
         'classpath' => 'local/webservices/externallib.php',
-        'description' => 'Get images of a student based on username',
+        'description' => 'Get images url of a student based on username',
+        'type' => 'read',
+        'capabilities' => '',
+    ),
+    'local_webservices_get_sessions_by_course_id' => array(
+        'classname' => 'local_webservices_external',
+        'methodname' => 'get_sessions_by_course_id',
+        'classpath' => 'local/webservices/externallib.php',
+        'description' => 'Get sessions infomation by course ID',
         'type' => 'read',
         'capabilities' => '',
     ),
@@ -119,7 +111,7 @@ $functions = array(
         'classname' => 'local_webservices_external_write',
         'methodname' => 'create_images',
         'classpath' => 'local/webservices/externallib_write.php',
-        'description' => "Create a record that contains 3 images of a student",
+        'description' => "Create a record that contains 3 images url of a student",
         'type' => 'write',
         'capabilities' => '',
     ),

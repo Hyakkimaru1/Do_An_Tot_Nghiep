@@ -24,7 +24,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot . '/lib/externallib.php');
+require_once('../../lib/externallib.php');
 /**
  * Web service API definition.
  *
@@ -168,14 +168,58 @@ class local_webservices_external extends external_api {
         );
     }
 
+    public static function get_sessions_by_course_id_parameters(): external_function_parameters
+    {
+        return new external_function_parameters(
+            array(
+                'courseid'  => new external_value(PARAM_INT, 'course ID parameter'),
+            )
+        );
+    }
 
-    public static function get_student_logs_by_course_id_parameters() {
+    /**
+     * @throws dml_exception
+     * @throws invalid_parameter_exception
+     */
+    public static function get_sessions_by_course_id(int $courseid): array
+    {
+        $params = self::validate_parameters(self::get_sessions_by_course_id_parameters(), array('courseid' => $courseid));
+        global $DB;
+
+        $sql = "SELECT s.*, r.name as room, r.campus
+                FROM {attendance_sessions} s 
+                LEFT JOIN {attendance} a ON s.attendanceid = a.id
+                LEFT JOIN {room} r ON r.id = s.roomid
+                WHERE a.course = $courseid
+                ORDER BY s.sessdate ASC";
+        return $DB->get_records_sql($sql);
+    }
+
+    public static function get_sessions_by_course_id_returns(): external_multiple_structure
+    {
+        return new external_multiple_structure(
+            new external_single_structure(
+                array(
+                    'id' => new external_value(PARAM_INT, 'session ID', VALUE_DEFAULT, null),
+                    'sessdate' => new external_value(PARAM_INT, 'session start timestamp', VALUE_DEFAULT, null),
+                    'duration' => new external_value(PARAM_INT, 'session duration', VALUE_DEFAULT, null),
+                    'lesson' => new external_value(PARAM_INT, 'lesson number', VALUE_DEFAULT, null),
+                    'room' => new external_value(PARAM_TEXT, 'room name', VALUE_DEFAULT, null),
+                    'campus' => new external_value(PARAM_TEXT, 'campus location', VALUE_DEFAULT, null),
+                )
+            )
+        );
+    }
+
+    public static function get_student_logs_by_course_id_parameters(): external_function_parameters
+    {
         return new external_function_parameters(
             array(
                 'username' => new external_value(PARAM_TEXT, "student's username parameter"),
                 'courseid'  => new external_value(PARAM_INT, 'course ID parameter'),
             )
         );
+
     }
 
     /**
@@ -469,9 +513,9 @@ class local_webservices_external extends external_api {
             new external_single_structure(
                 array(
                     'studentid' => new external_value(PARAM_INT, "Student's id", VALUE_DEFAULT, null),
-                    'image_front' => new external_value(PARAM_TEXT,"Front image's base64 string",VALUE_DEFAULT,''),
-                    'image_left' => new external_value(PARAM_TEXT,"Left image's base64 string",VALUE_DEFAULT,''),
-                    'image_right' => new external_value(PARAM_TEXT,"Right image's base64 string",VALUE_DEFAULT,''),
+                    'image_front' => new external_value(PARAM_TEXT,"Front image's url",VALUE_DEFAULT,''),
+                    'image_left' => new external_value(PARAM_TEXT,"Left image's url",VALUE_DEFAULT,''),
+                    'image_right' => new external_value(PARAM_TEXT,"Right image's url",VALUE_DEFAULT,''),
                 )
             )
         );
@@ -487,7 +531,7 @@ class local_webservices_external extends external_api {
     }
     public static function get_session_detail(int $sessionid) {
         $params = self::validate_parameters(self::get_session_detail_parameters(), array(
-                'sessionid' => $sessionid
+                'sessionid' => $sessionid,
             )
         );
         global $DB;

@@ -2,7 +2,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot . '/lib/externallib.php');
+require_once('../../lib/filelib.php');
+require_once('../../lib/weblib.php');
 
 class local_webservices_external_write extends external_api {
 
@@ -311,14 +312,27 @@ class local_webservices_external_write extends external_api {
         );
     }
 
+    /**
+     * @param string $usertaken
+     * @param int $roomid
+     * @param string $description
+     * @param string $userbetaken
+     * @param string $image
+     * @return array
+     * @throws coding_exception
+     * @throws dml_exception
+     * @throws invalid_parameter_exception
+     * @throws moodle_exception
+     */
     public static function create_feedback(string $usertaken, int $roomid, string $description, string $userbetaken,
-                                           string $image) {
+                                           string $image): array
+    {
         $params = self::validate_parameters(self::create_feedback_parameters(), array(
                 'usertaken' => $usertaken,
                 'roomid' => $roomid,
-                'description'=>$description,
-                'userbetaken'=>$userbetaken,
-                'image'=>$image
+                'description'=> $description,
+                'userbetaken'=> $userbetaken,
+                'image'=> $image
             )
         );
         $return = array('errorcode' => '', 'message' => '');
@@ -339,7 +353,7 @@ class local_webservices_external_write extends external_api {
             return $return;
         }
         global $DB;
-
+        global $CFG;
         $time = time();
         $sql1 = "SELECT a.*,s.id as sessionid
                 FROM {attendance} a
@@ -348,10 +362,6 @@ class local_webservices_external_write extends external_api {
                 WHERE r.id = $roomid AND (s.sessdate + s.duration) >= $time AND s.sessdate <= $time";
         $attendance = $DB->get_record_sql($sql1);
 
-
-
-
-
         if ($attendance == false) {
             $return['errorcode'] = '404';
             $return['message'] = "There are not any classes in this room now/There is not any room with this ID";
@@ -359,11 +369,11 @@ class local_webservices_external_write extends external_api {
         }
 
         $sql2 = "SELECT u.*
-                FROM {user_enrolments} ue
-                LEFT JOIN {enrol} e ON ue.enrolid = e.id
-                LEFT JOIN {role} r ON e.roleid = r.id
-                LEFT JOIN {user} u ON u.id = ue.userid
-                LEFT JOIN {attendance} a ON a.course = e.courseid
+                FROM {user} u
+                LEFT JOIN {role_assignments} ra ON ra.userid = u.id
+                LEFT JOIN {context} con ON con.id = ra.contextid
+                LEFT JOIN {role} r ON r.id = ra.roleid
+                LEFT JOIN {attendance} a ON a.course = con.instanceid
                 WHERE a.id = $attendance->id AND u.username = :usertaken AND r.shortname = 'student'";
         $student = $DB->get_record_sql($sql2,array('usertaken'=>$usertaken));
 
@@ -385,10 +395,31 @@ class local_webservices_external_write extends external_api {
             $return['message'] = "This user didn't have any registered images";
             return $return;
         }
+
+        $domain = $CFG->wwwroot;
+
+        $sql4 = "SELECT t.userid, t.token
+                FROM {external_tokens} t
+                LEFT JOIN {external_services} s ON s.id = t.externalserviceid
+                WHERE s.name LIKE :string1 OR s.name LIKE :string2 OR s.name LIKE :string3 OR s.name LIKE :string4";
+
+
+        $auth = $DB->get_record_sql($sql4,array('string1'=>'%local_webservices%','string2'=>'%Local_webservices%',
+            'string3'=>'%localWebservices%','string4'=>'%LocalWebservices%'));
+
+        if ($auth == false) {
+            $return['errorcode'] = '404';
+            $return['message'] = "The external service was named incorrectly";
+            return $return;
+        }
+
+        $url = self::upload_image($domain,$image,'image_feedback.jpg',$student->id,
+            $auth->userid,$auth->token,'image_feedback',false, false);
+
         if ($userbetaken == '') {
             $data = (object)array('timetaken' => $time, 'usertaken' => $student->id, 'userbetaken' => null,
                 'attendanceid' => $attendance->id, 'sessionid' => $attendance->sessionid,
-                'description' => $description, 'image_register' => $image_usertaken->image_front, 'image' => $image);
+                'description' => $description, 'image_register' => $image_usertaken->image_front, 'image' => $url);
         }
         else {
 
@@ -406,7 +437,7 @@ class local_webservices_external_write extends external_api {
 
             $data = (object)array('timetaken' => $time, 'usertaken' => $student->id, 'userbetaken' => $student2->id,
                 'attendanceid' => $attendance->id, 'sessionid' => $attendance->sessionid,
-                'description' => $description, 'image_register' => $image_usertaken->image_front, 'image' => $image);
+                'description' => $description, 'image_register' => $image_usertaken->image_front, 'image' => $url);
         }
 
         if ($DB->insert_record('attendance_feedback',$data)) {
@@ -436,22 +467,33 @@ class local_webservices_external_write extends external_api {
                 'image_front' => new external_value(PARAM_TEXT,"Front image's base64 string",VALUE_DEFAULT,''),
                 'image_left' => new external_value(PARAM_TEXT,"Left image's base64 string",VALUE_DEFAULT,''),
                 'image_right' => new external_value(PARAM_TEXT,"Right image's base64 string",VALUE_DEFAULT,''),
+                'replace' => new external_value(PARAM_BOOL, "Decided if this user want to replace to avatar or not",
+                    VALUE_DEFAULT,0),
             )
         );
     }
 
-    public static function create_images(string $username, string $image_front, string $image_left, string $image_right): array
+    /**
+     * @throws coding_exception
+     * @throws dml_exception
+     * @throws invalid_parameter_exception
+     * @throws moodle_exception
+     */
+    public static function create_images(string $username, string $image_front, string $image_left, string $image_right, bool $replace): array
     {
         $params = self::validate_parameters(self::create_images_parameters(), array(
                 'username' => $username,
                 'image_front' => $image_front,
                 'image_left' => $image_left,
-                'image_right' => $image_right
+                'image_right' => $image_right,
+                'replace' => $replace
             )
         );
-
+        global $CFG;
         global $DB;
+        var_dump($replace);
         $return = array('errorcode' => '', 'message' => '');
+        $domain = $CFG->wwwroot;
         $sql1 = "SELECT u.*
                 FROM {user} u
                 WHERE u.username = :username";
@@ -465,8 +507,36 @@ class local_webservices_external_write extends external_api {
                 FROM {attendance_images} i
                 WHERE i.studentid = $student->id";
         $record = $DB->get_record_sql($sql2);
+
+        $sql3 = "SELECT t.userid, t.token
+                FROM {external_tokens} t
+                LEFT JOIN {external_services} s ON s.id = t.externalserviceid
+                WHERE s.name LIKE :string1 OR s.name LIKE :string2 OR s.name LIKE :string3 OR s.name LIKE :string4";
+
+        $auth = $DB->get_record_sql($sql3,array('string1'=>'%local_webservices%','string2'=>'%Local_webservices%',
+            'string3'=>'%localWebservices%','string4'=>'%LocalWebservices%'));
+
+        if ($auth == false) {
+            $return['errorcode'] = '404';
+            $return['message'] = "The external service was named incorrectly";
+            return $return;
+        }
+
+        $left_url = self::upload_image($domain,$image_left,'image_left.jpg',$student->id,
+            $auth->userid,$auth->token,'image_left',false, true);
+        $right_url = self::upload_image($domain,$image_right,'image_right.jpg',$student->id,
+            $auth->userid,$auth->token,'image_right',false, true);
+        $front_url = self::upload_image($domain,$image_front,'image_front.jpg',$student->id,
+            $auth->userid,$auth->token,'image_front', $replace, true);
+
+        if ($front_url == '') {
+            $return['errorcode'] = '400';
+            $return['message'] = "Couldn't upload the images";
+            return $return;
+        }
         if ($record == false) {
-            $data = (object) array('studentid'=>$student->id,'image_front'=>$image_front,'image_left'=>$image_left,'image_right'=>$image_right);
+
+            $data = (object) array('studentid'=>$student->id,'image_front'=>$front_url,'image_left'=>$left_url,'image_right'=>$right_url);
             if ($DB->insert_record('attendance_images',$data)) {
                 $return['message'] = "Created the record successfully";
             }
@@ -474,10 +544,12 @@ class local_webservices_external_write extends external_api {
                 $return['errorcode'] = '400';
                 $return['message'] = "Couldn't create the record";
             }
+
         }
         else {
-            $data = (object) array('id'=> $record->id,'studentid'=>$student->id,'image_front'=>$image_front,
-                'image_left'=>$image_left,'image_right'=>$image_right);
+
+            $data = (object) array('id'=> $record->id,'studentid'=>$student->id,
+                'image_front'=>$front_url,'image_left'=>$left_url,'image_right'=>$right_url);
             if ($DB->update_record('attendance_images',$data)) {
                 $return['message'] = "Updated the record successfully";
             }
@@ -497,5 +569,111 @@ class local_webservices_external_write extends external_api {
                 'message' => new external_value(PARAM_TEXT, 'Message to the back-end'),
             )
         );
+    }
+
+    /**
+     * @throws coding_exception
+     * @throws moodle_exception
+     */
+    public static function upload_image(string $domain, string $image, string $filename, int $userid, int $auth_user,
+                                        string $token, string $filearea, bool $replace, bool $delete): string
+    {
+
+        $curl = new curl;
+        $params = array(
+            'component' => 'user',
+            'filearea' => 'draft',
+            'itemid' => 0,
+            'filepath' => '/',
+            'filename' => $filename,
+            'filecontent' => $image,
+            'contextlevel' => 'user',
+            'instanceid' => $auth_user,
+        );
+        $functionname = 'core_files_upload';
+        $restformat = 'json';
+        $serverurl = $domain . '/webservice/rest/server.php' . '?wstoken=' . $token . '&wsfunction=' . $functionname;
+        $restformat = ($restformat == 'json') ?
+            '&moodlewsrestformat=' . $restformat : '';
+        $json = $curl->post($serverurl . $restformat, $params);
+        $res = json_decode($json);
+        if ($replace == true) {
+            self::update_avatar($domain, $token, $userid, $res->itemid);
+        }
+        $url = '';
+
+
+        global $DB;
+
+        $sql = "SELECT c.*
+                FROM {context} c 
+                WHERE c.contextlevel = 30 AND c.instanceid = $userid ";
+
+        $context = $DB->get_record_sql($sql);
+
+        if ($context == false) {
+            return '';
+        }
+        $fs = get_file_storage();
+        $itemid = rand(100000000,999999999);
+
+        if ($delete == true) {
+
+            //delete files in filearea
+            $fs->delete_area_files($context->id, 'local_webservices', $filearea);
+
+        }
+        else {
+            $files = $fs->get_area_files($context->id, 'local_webservices', $filearea);
+
+            for (;; $itemid = rand(100000000,999999999)) {
+                $flag = true;
+                foreach ($files as $file) {
+                    if ($file->is_directory())
+                        continue;
+                    if ($file->get_itemid() == $itemid) {
+                        $flag = false;
+                        break;
+                    }
+                }
+                if ($flag == true)
+                    break;
+            }
+        }
+
+        file_save_draft_area_files($res->itemid, $context->id, 'local_webservices', $filearea, $itemid);
+
+        $files = $fs->get_area_files($context->id, 'local_webservices', $filearea, $itemid);
+
+        foreach ($files as $file) {
+            if ($file->is_directory())
+                continue;
+            $object = new moodle_url(moodle_url::make_pluginfile_url($file->get_contextid(),$file->get_component(),$file->get_filearea(),
+                $file->get_itemid(),$file->get_filepath(),$file->get_filename()));
+            $url = $object->out();
+        }
+
+        return $url;
+    }
+    public static function update_avatar(string $domain, string $token, string $userid, int $itemid) {
+        $curl = new curl;
+
+        $params = array(
+            'userid' => $userid,
+            'draftitemid' => $itemid
+        );
+        $functionname = 'core_user_update_picture';
+        $restformat = 'json';
+        $serverurl = $domain .'/webservice/rest/server.php' . '?wstoken=' . $token .'&wsfunction=' . $functionname;
+        $restformat = ($restformat == 'json') ?
+            '&moodlewsrestformat=' . $restformat : '';
+        $json = $curl->post($serverurl . $restformat, $params);
+        $res = json_decode($json);
+        if ($res->success == false) {
+            return '';
+        }
+        else {
+            return $res->profileimageurl;
+        }
     }
 }
