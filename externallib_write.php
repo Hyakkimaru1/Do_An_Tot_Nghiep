@@ -604,6 +604,8 @@ class local_webservices_external_write extends external_api {
             '&moodlewsrestformat=' . $restformat : '';
         $json = $curl->post($serverurl . $restformat, $params);
         $res = json_decode($json);
+        var_dump('Called core_files_upload');
+        var_dump($res);
         if ($replace == true) {
             self::update_avatar($domain, $token, $userid, $res->itemid);
         }
