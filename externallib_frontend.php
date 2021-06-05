@@ -202,21 +202,11 @@ class local_webservices_frontend extends external_api {
 
 
     /**
-     * @throws invalid_parameter_exception
      * @throws dml_exception
      */
     public static function get_action_logs_pagination(int $attendanceid, int $page, int $pagesize,
                                                       string $value, string $filter, string $order): array
     {
-        $params = self::validate_parameters(self::get_action_logs_pagination_parameters(), array(
-            'attendanceid' => $attendanceid,
-            'page' => $page,
-            'pagesize' => $pagesize,
-            'value' => $value,
-            'filter' => $filter,
-            'order' => $order
-        ));
-
 
         global $DB;
         $result = null;
@@ -265,15 +255,6 @@ class local_webservices_frontend extends external_api {
     public static function get_courses_pagination(int $page, int $pagesize,
                                                   string $value, string $filter, string $order): array
     {
-        $params = self::validate_parameters(self::get_courses_pagination_parameters(), array(
-            'page' => $page,
-            'pagesize' => $pagesize,
-            'value' => $value,
-            'filter' => $filter,
-            'order' => $order
-        ));
-
-
         global $DB;
         $result = null;
         if ($value != '') {
