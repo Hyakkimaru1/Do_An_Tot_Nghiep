@@ -607,17 +607,25 @@ class local_webservices_external_write extends external_api {
 //        $curl->response;
 //        $res = json_decode($json);
 
-        $curl = curl_init();
-        curl_setopt($curl,CURLOPT_URL,$domain . '/webservice/rest/server.php');
-        curl_setopt($curl,CURLOPT_POST,true);
-        curl_setopt($curl,CURLOPT_POSTFIELDS, $params);
 
-        $json = curl_exec($curl);
-        $res = json_decode($json);
+        $url = $domain . '/webservice/rest/server.php';
+
+        // use key 'http' even if you send the request to https://...
+        $options = array(
+            'http' => array(
+                'header'  => "Content-type: multipart/form-data\r\n",
+                'method'  => 'POST',
+                'content' => http_build_query($params)
+            )
+        );
+        $context  = stream_context_create($options);
+        $json = file_get_contents($url, false, $context);
+        if ($json === FALSE) { /* Handle error */ return 'error';}
 
         var_dump('Called core_files_upload');
-        var_dump($res);
-        curl_close($curl);
+        var_dump($json);
+        $res = json_decode($json);
+
         if ($replace == true) {
             self::update_avatar($domain, $token, $userid, $res->itemid);
         }
