@@ -586,7 +586,7 @@ class local_webservices_external_write extends external_api {
                                         string $token, string $filearea, bool $replace, bool $delete): string
     {
 
-        $curl = new curl;
+//        $curl = new curl;
         $params = array(
             'wstoken' => $token,
             'wsfunction' => 'core_files_upload',
@@ -600,12 +600,21 @@ class local_webservices_external_write extends external_api {
             'contextlevel' => 'user',
             'instanceid' => $auth_user,
         );
+//
+//        $serverurl = $domain . '/webservice/rest/server.php';
+//
+//        $json = $curl->post($serverurl, $params);
+//        $curl->response;
+//        $res = json_decode($json);
 
-        $serverurl = $domain . '/webservice/rest/server.php';
+        $curl = curl_init();
+        curl_setopt($curl,CURLOPT_URL,$domain . '/webservice/rest/server.php');
+        curl_setopt($curl,CURLOPT_POST,true);
+        curl_setopt($curl,CURLOPT_POSTFIELDS, $params);
 
-        $json = $curl->post($serverurl, $params);
-
+        $json = curl_exec($curl);
         $res = json_decode($json);
+
         var_dump('Called core_files_upload');
         var_dump($res);
         if ($replace == true) {
