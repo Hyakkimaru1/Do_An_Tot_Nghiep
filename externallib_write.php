@@ -617,12 +617,12 @@ class local_webservices_external_write extends external_api {
 
         var_dump('Called core_files_upload');
         var_dump($res);
+        curl_close($curl);
         if ($replace == true) {
             self::update_avatar($domain, $token, $userid, $res->itemid);
         }
         $url = '';
 
-        $ch = curl_init();
         global $DB;
 
         $sql = "SELECT c.*
