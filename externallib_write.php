@@ -500,7 +500,7 @@ class local_webservices_external_write extends external_api {
 
         $return = array('errorcode' => '', 'message' => '');
         $domain = $CFG->wwwroot;
-        var_dump($domain);
+
         $sql1 = "SELECT u.*
                 FROM {user} u
                 WHERE u.username = :username";
@@ -531,16 +531,31 @@ class local_webservices_external_write extends external_api {
 
         $left_url = self::upload_image($domain,$image_left,'image_left.jpg',$student->id,
             $auth->userid,$auth->token,'image_left',false, true);
-        $right_url = self::upload_image($domain,$image_right,'image_right.jpg',$student->id,
-            $auth->userid,$auth->token,'image_right',false, true);
-        $front_url = self::upload_image($domain,$image_front,'image_front.jpg',$student->id,
-            $auth->userid,$auth->token,'image_front', $replace, true);
 
-        if ($front_url == '' || $left_url == '' || $right_url == '') {
+        if ($left_url == '') {
             $return['errorcode'] = '400';
             $return['message'] = "Couldn't upload the images";
             return $return;
         }
+
+        $right_url = self::upload_image($domain,$image_right,'image_right.jpg',$student->id,
+            $auth->userid,$auth->token,'image_right',false, true);
+
+        if ($right_url == '') {
+            $return['errorcode'] = '400';
+            $return['message'] = "Couldn't upload the images";
+            return $return;
+        }
+
+        $front_url = self::upload_image($domain,$image_front,'image_front.jpg',$student->id,
+            $auth->userid,$auth->token,'image_front', $replace, true);
+
+        if ($front_url == '') {
+            $return['errorcode'] = '400';
+            $return['message'] = "Couldn't upload the images";
+            return $return;
+        }
+
         if ($record == false) {
 
             $data = (object) array('studentid'=>$student->id,'image_front'=>$front_url,'image_left'=>$left_url,'image_right'=>$right_url);
@@ -586,7 +601,6 @@ class local_webservices_external_write extends external_api {
                                         string $token, string $filearea, bool $replace, bool $delete): string
     {
 
-//        $curl = new curl;
         $params = array(
             'wstoken' => $token,
             'wsfunction' => 'core_files_upload',
@@ -600,16 +614,12 @@ class local_webservices_external_write extends external_api {
             'contextlevel' => 'user',
             'instanceid' => $auth_user,
         );
-//
-//        $serverurl = $domain . '/webservice/rest/server.php';
-//
-//        $json = $curl->post($serverurl, $params);
-//        $curl->response;
-//        $res = json_decode($json);
+        $test = new curl;
+        $json_test = $test->get('https://official-joke-api.appspot.com/random_joke');
+        var_dump(json_decode($json_test));
 
         $url = $domain . '/webservice/rest/server.php';
-        var_dump($url);
-        $curl = new curl();
+        $curl = new curl;
         $json = $curl->post($url,$params);
         $res = json_decode($json);
 
