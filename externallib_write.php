@@ -607,23 +607,10 @@ class local_webservices_external_write extends external_api {
 //        $curl->response;
 //        $res = json_decode($json);
 
-
         $url = $domain . '/webservice/rest/server.php';
-
-        // use key 'http' even if you send the request to https://...
-        $options = array(
-            'http' => array(
-                'header'  => "Content-type: multipart/form-data\r\n",
-                'method'  => 'POST',
-                'content' => http_build_query($params)
-            )
-        );
-        $context  = stream_context_create($options);
-        $json = file_get_contents($url, false, $context);
-        if ($json === FALSE) { /* Handle error */ return 'error';}
-
-        var_dump('Called core_files_upload');
-        var_dump($json);
+        var_dump($url);
+        $curl = new curl();
+        $json = $curl->post($url,$params);
         $res = json_decode($json);
 
         if ($replace == true) {
