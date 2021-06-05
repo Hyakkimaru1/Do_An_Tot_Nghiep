@@ -600,11 +600,10 @@ class local_webservices_external_write extends external_api {
             'contextlevel' => 'user',
             'instanceid' => $auth_user,
         );
-        $functionname = 'core_files_upload';
-        $restformat = 'json';
+
         $serverurl = $domain . '/webservice/rest/server.php';
 
-        $json = $curl->post($serverurl . $restformat, $params);
+        $json = $curl->post($serverurl, $params);
 
         $res = json_decode($json);
         var_dump('Called core_files_upload');
