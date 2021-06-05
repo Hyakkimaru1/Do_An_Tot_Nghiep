@@ -588,6 +588,9 @@ class local_webservices_external_write extends external_api {
 
         $curl = new curl;
         $params = array(
+            'wstoken' => $token,
+            'wsfunction' => 'core_files_upload',
+            'moodlewsrestformat' => 'json',
             'component' => 'user',
             'filearea' => 'draft',
             'itemid' => 0,
@@ -599,10 +602,10 @@ class local_webservices_external_write extends external_api {
         );
         $functionname = 'core_files_upload';
         $restformat = 'json';
-        $serverurl = $domain . '/webservice/rest/server.php' . '?wstoken=' . $token . '&wsfunction=' . $functionname;
-        $restformat = ($restformat == 'json') ?
-            '&moodlewsrestformat=' . $restformat : '';
+        $serverurl = $domain . '/webservice/rest/server.php';
+
         $json = $curl->post($serverurl . $restformat, $params);
+
         $res = json_decode($json);
         var_dump('Called core_files_upload');
         var_dump($res);
@@ -611,7 +614,7 @@ class local_webservices_external_write extends external_api {
         }
         $url = '';
 
-
+        $ch = curl_init();
         global $DB;
 
         $sql = "SELECT c.*
