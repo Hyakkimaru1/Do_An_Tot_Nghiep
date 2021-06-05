@@ -416,6 +416,12 @@ class local_webservices_external_write extends external_api {
         $url = self::upload_image($domain,$image,'image_feedback.jpg',$student->id,
             $auth->userid,$auth->token,'image_feedback',false, false);
 
+        if ($url == '') {
+            $return['errorcode'] = '400';
+            $return['message'] = "Couldn't upload the images";
+            return $return;
+        }
+
         if ($userbetaken == '') {
             $data = (object)array('timetaken' => $time, 'usertaken' => $student->id, 'userbetaken' => null,
                 'attendanceid' => $attendance->id, 'sessionid' => $attendance->sessionid,
@@ -427,7 +433,7 @@ class local_webservices_external_write extends external_api {
                 FROM {user} u
                 WHERE u.username = :userbetaken";
 
-            $student2 = $DB->get_record_sql($sql4,array('userbetaken'=>$userbetaken));
+            $student2 = $DB->get_record_sql($sql4,array('userbetaken' => $userbetaken));
 
             if ($student2 == false) {
                 $return['errorcode'] = '404';
