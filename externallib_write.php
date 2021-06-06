@@ -4,6 +4,8 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once('../../lib/filelib.php');
 require_once('../../lib/weblib.php');
+require_once('../../files/externallib.php');
+require_once('../../user/externallib.php');
 
 class local_webservices_external_write extends external_api {
 
@@ -396,9 +398,7 @@ class local_webservices_external_write extends external_api {
             return $return;
         }
 
-        $domain = $CFG->wwwroot;
-
-        $sql4 = "SELECT t.userid, t.token
+        $sql4 = "SELECT t.userid
                 FROM {external_tokens} t
                 LEFT JOIN {external_services} s ON s.id = t.externalserviceid
                 WHERE s.name LIKE :string1 OR s.name LIKE :string2 OR s.name LIKE :string3 OR s.name LIKE :string4";
@@ -413,8 +413,8 @@ class local_webservices_external_write extends external_api {
             return $return;
         }
 
-        $url = self::upload_image($domain,$image,'image_feedback.jpg',$student->id,
-            $auth->userid,$auth->token,'image_feedback',false, false);
+        $url = self::upload_image($image,'image_feedback.jpg',$student->id,
+            $auth->userid,'image_feedback',false, false);
 
         if ($url == '') {
             $return['errorcode'] = '400';
@@ -495,11 +495,10 @@ class local_webservices_external_write extends external_api {
                 'replace' => $replace
             )
         );
-        global $CFG;
         global $DB;
 
         $return = array('errorcode' => '', 'message' => '');
-        $domain = $CFG->wwwroot;
+
 
         $sql1 = "SELECT u.*
                 FROM {user} u
@@ -515,10 +514,12 @@ class local_webservices_external_write extends external_api {
                 WHERE i.studentid = $student->id";
         $record = $DB->get_record_sql($sql2);
 
-        $sql3 = "SELECT t.userid, t.token
+
+        $sql3 = "SELECT t.userid
                 FROM {external_tokens} t
                 LEFT JOIN {external_services} s ON s.id = t.externalserviceid
                 WHERE s.name LIKE :string1 OR s.name LIKE :string2 OR s.name LIKE :string3 OR s.name LIKE :string4";
+
 
         $auth = $DB->get_record_sql($sql3,array('string1'=>'%local_webservices%','string2'=>'%Local_webservices%',
             'string3'=>'%localWebservices%','string4'=>'%LocalWebservices%'));
@@ -529,8 +530,7 @@ class local_webservices_external_write extends external_api {
             return $return;
         }
 
-        $left_url = self::upload_image($domain,$image_left,'image_left.jpg',$student->id,
-            $auth->userid,$auth->token,'image_left',false, true);
+        $left_url = self::upload_image($image_left,'image_left.jpg',$student->id,$auth->userid, 'image_left',false, true);
 
         if ($left_url == '') {
             $return['errorcode'] = '400';
@@ -538,8 +538,7 @@ class local_webservices_external_write extends external_api {
             return $return;
         }
 
-        $right_url = self::upload_image($domain,$image_right,'image_right.jpg',$student->id,
-            $auth->userid,$auth->token,'image_right',false, true);
+        $right_url = self::upload_image($image_right,'image_right.jpg',$student->id,$auth->userid, 'image_right',false, true);
 
         if ($right_url == '') {
             $return['errorcode'] = '400';
@@ -547,8 +546,7 @@ class local_webservices_external_write extends external_api {
             return $return;
         }
 
-        $front_url = self::upload_image($domain,$image_front,'image_front.jpg',$student->id,
-            $auth->userid,$auth->token,'image_front', $replace, true);
+        $front_url = self::upload_image($image_front,'image_front.jpg',$student->id,$auth->userid, 'image_front', $replace, true);
 
         if ($front_url == '') {
             $return['errorcode'] = '400';
@@ -597,34 +595,17 @@ class local_webservices_external_write extends external_api {
      * @throws coding_exception
      * @throws moodle_exception
      */
-    public static function upload_image(string $domain, string $image, string $filename, int $userid, int $auth_user,
-                                        string $token, string $filearea, bool $replace, bool $delete): string
+    public static function upload_image(string $image, string $filename, int $userid, int $auth_user,
+                                        string $filearea, bool $replace, bool $delete): string
     {
 
-        $params = array(
-            'wstoken' => $token,
-            'wsfunction' => 'core_files_upload',
-            'moodlewsrestformat' => 'json',
-            'component' => 'user',
-            'filearea' => 'draft',
-            'itemid' => 0,
-            'filepath' => '/',
-            'filename' => $filename,
-            'filecontent' => $image,
-            'contextlevel' => 'user',
-            'instanceid' => $auth_user,
-        );
-        $test = new curl;
-        $json_test = $test->get('https://official-joke-api.appspot.com/random_joke');
-        var_dump(json_decode($json_test));
+        $res = core_files_external::upload(null ,'user','draft',0,'/',$filename,
+        $image,'user',$auth_user);
 
-        $url = $domain . '/webservice/rest/server.php';
-        $curl = new curl;
-        $json = $curl->post($url,$params);
-        $res = json_decode($json);
+        $res = (object) $res;
 
         if ($replace == true) {
-            self::update_avatar($domain, $token, $userid, $res->itemid);
+            self::update_avatar($userid, $res->itemid);
         }
         $url = '';
 
@@ -676,24 +657,19 @@ class local_webservices_external_write extends external_api {
             $object = new moodle_url(moodle_url::make_pluginfile_url($file->get_contextid(),$file->get_component(),$file->get_filearea(),
                 $file->get_itemid(),$file->get_filepath(),$file->get_filename()));
             $url = $object->out();
+
         }
 
         return $url;
     }
-    public static function update_avatar(string $domain, string $token, string $userid, int $itemid) {
-        $curl = new curl;
 
-        $params = array(
-            'userid' => $userid,
-            'draftitemid' => $itemid
-        );
-        $functionname = 'core_user_update_picture';
-        $restformat = 'json';
-        $serverurl = $domain .'/webservice/rest/server.php' . '?wstoken=' . $token .'&wsfunction=' . $functionname;
-        $restformat = ($restformat == 'json') ?
-            '&moodlewsrestformat=' . $restformat : '';
-        $json = $curl->post($serverurl . $restformat, $params);
-        $res = json_decode($json);
+    /**
+     * @throws moodle_exception
+     */
+    public static function update_avatar(string $userid, int $itemid) {
+
+        $res = core_user_external::update_picture($itemid,false,$userid);
+
         if ($res->success == false) {
             return '';
         }
