@@ -215,7 +215,12 @@ class local_webservices_external_write extends external_api {
         );
     }
 
-    public static function checkin(string $username, int $roomid) {
+    /**
+     * @throws dml_exception
+     * @throws invalid_parameter_exception
+     */
+    public static function checkin(string $username, int $roomid): array
+    {
         $params = self::validate_parameters(self::checkin_parameters(), array(
                 'username' => $username,
                 'roomid' => $roomid
@@ -250,7 +255,7 @@ class local_webservices_external_write extends external_api {
         }
 
         $username = '"'.$username.'"';
-        //var_dump($username);
+
         $sql2 = "SELECT u.*
                 FROM {user_enrolments} ue
                 LEFT JOIN {enrol} e ON ue.enrolid = e.id
@@ -258,8 +263,6 @@ class local_webservices_external_write extends external_api {
                 LEFT JOIN {attendance} a ON a.course = e.courseid
                 LEFT JOIN {attendance_sessions} s ON s.attendanceid = a.id
                 WHERE u.username = $username AND s.id = :sessionid";
-
-        //var_dump($sql2);
 
         $user = $DB->get_record_sql($sql2,array('sessionid'=>$session->id));
         if ($user == false) {
@@ -278,8 +281,16 @@ class local_webservices_external_write extends external_api {
             $return['message'] = "This student already checked in";
             return $return;
         }
-        $data = (object) array('studentid'=>$user->id,'sessionid'=>$session->id,
+
+        $max_time = 60*30;
+
+        if ($session->sessdate + $max_time >= $time)
+            $data = (object) array('studentid'=>$user->id,'sessionid'=>$session->id,
             'statusid'=> 1,'timein'=>$time, 'timeout'=>null);
+        else
+            $data = (object) array('studentid'=>$user->id,'sessionid'=>$session->id,
+                'statusid'=> 3,'timein'=>$time, 'timeout'=>null);
+
         if ($DB->insert_record('attendance_log',$data)) {
             $update_session = (object)array('id' => $session->id, 'lasttaken' => $time, 'lasttakenby' => 1);
             $DB->update_record('attendance_sessions',$update_session);
@@ -292,7 +303,8 @@ class local_webservices_external_write extends external_api {
         return $return;
     }
 
-    public static function checkin_returns() {
+    public static function checkin_returns(): external_single_structure
+    {
         return new external_single_structure(
             array(
                 'errorcode' => new external_value(PARAM_TEXT,'Error code'),
