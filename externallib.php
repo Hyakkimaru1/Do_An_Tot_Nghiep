@@ -35,14 +35,17 @@ require_once('../../lib/externallib.php');
 
 class student_object {
     public $id;
+    public $username;
     public $name;
     public $timein;
     public $timeout;
     public $statusid;
+
 }
 
 class student_log {
     public $studentid;
+    public $username;
     public $name;
     public $email;
     public $count;
@@ -258,10 +261,10 @@ class local_webservices_external extends external_api {
         $return = array();
         if ($student != false) {
 
-            $student_log = array('studentid'=>null,'name'=>null,'email'=>null,'count'=>null,'c'=>0,'b'=>0,'t'=>0,'v'=>0,
+            $student_log = array('studentid'=>null,'username'=>null,'name'=>null,'email'=>null,'count'=>null,'c'=>0,'b'=>0,'t'=>0,'v'=>0,
                 'reports'=>array());
             $student_log['studentid'] = $student->id;
-
+            $student_log["username"] = $student->username;
             $student_log['name'] = $student->lastname . ' ' . $student->firstname;
             $student_log['email'] = $student->email;
             $sql2 = "SELECT l.*, r.name as room, r.campus, s.lesson, s.sessdate
@@ -315,6 +318,7 @@ class local_webservices_external extends external_api {
             new external_single_structure(
                 array(
                     'studentid' => new external_value(PARAM_INT, 'student ID', VALUE_DEFAULT, null),
+                    'username' => new external_value(PARAM_TEXT, "student's username", VALUE_DEFAULT, null),
                     'name' => new external_value(PARAM_TEXT,"student's name", VALUE_DEFAULT,null),
                     'email' => new external_value(PARAM_TEXT,"student's email", VALUE_DEFAULT,null),
                     'count' => new external_value(PARAM_INT,"number of logs", VALUE_DEFAULT,null),
@@ -390,7 +394,7 @@ class local_webservices_external extends external_api {
 
                 $student_log = new student_log();
                 $student_log->studentid = $student->id;
-
+                $student_log->username = $student->username;
                 $student_log->name = $student->lastname . ' ' . $student->firstname;
                 $student_log->email = $student->email;
                 $sql2 = "SELECT l.*, r.name as room, r.campus, s.sessdate, s.duration
@@ -462,6 +466,7 @@ class local_webservices_external extends external_api {
             new external_single_structure(
                 array(
                     'studentid' => new external_value(PARAM_INT, 'student ID', VALUE_DEFAULT, null),
+                    'username' => new external_value(PARAM_TEXT, "student's username", VALUE_DEFAULT, null),
                     'name' => new external_value(PARAM_TEXT,"student's name", VALUE_DEFAULT,null),
                     'email' => new external_value(PARAM_TEXT,"student's email", VALUE_DEFAULT,null),
                     'count' => new external_value(PARAM_INT,"number of logs", VALUE_DEFAULT,null),
@@ -567,7 +572,7 @@ class local_webservices_external extends external_api {
         $data = $DB->get_record_sql($sql1,array('sessionid' => $sessionid));
 
 
-        $sql2 = "SELECT l.*, u.lastname, u.firstname
+        $sql2 = "SELECT l.*, u.lastname, u.firstname, u.username
                 FROM {attendance_log} l
                 LEFT JOIN {user} u ON l.studentid = u.id
                 LEFT JOIN {attendance_sessions} s ON l.sessionid = s.id
@@ -579,6 +584,7 @@ class local_webservices_external extends external_api {
             if (!empty($student)) {
                 $student_object = new student_object();
                 $student_object->id = $student->studentid;
+                $student_object->username = $student->username;
                 $student_object->name = $student->lastname. ' ' .$student->firstname;
                 $student_object->timein = $student->timein;
                 $student_object->timeout = $student->timeout;
@@ -589,7 +595,8 @@ class local_webservices_external extends external_api {
         return array('courseid'=>$data->courseid,'name'=>$data->fullname,'sessdate'=>
             $data->sessdate,'duration'=>$data->duration, 'room'=>$data->name, 'campus'=>$data->campus, 'students'=>$students_array);
     }
-    public static function get_session_detail_returns() {
+    public static function get_session_detail_returns(): external_single_structure
+    {
         return new external_single_structure(
             array(
                 'courseid' => new external_value(PARAM_INT, 'course ID', VALUE_DEFAULT, null),
@@ -602,6 +609,7 @@ class local_webservices_external extends external_api {
                     new external_single_structure(
                         array(
                             'id' => new external_value(PARAM_INT, 'student ID', VALUE_DEFAULT, null),
+                            'username' => new external_value(PARAM_TEXT, "student's username", VALUE_DEFAULT, null),
                             'name' => new external_value(PARAM_TEXT, 'student name', VALUE_DEFAULT, null),
                             'timein' => new external_value(PARAM_INT, 'checkin time', VALUE_DEFAULT, null),
                             'timeout' => new external_value(PARAM_INT, 'checkout time', VALUE_DEFAULT, null),
