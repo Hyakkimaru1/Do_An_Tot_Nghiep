@@ -50,6 +50,7 @@ class student_log {
     public $b = 0;
     public $t = 0;
     public $v = 0;
+    public $presentStatusid = null;
     public $reports;
 }
 
@@ -133,7 +134,7 @@ class local_webservices_external extends external_api {
     }
     public static function get_logs($attendanceid) {
         $params = self::validate_parameters(self::get_logs_parameters(), array(
-            'attendanceid' => $attendanceid
+                'attendanceid' => $attendanceid
             )
         );
         global $DB;
@@ -203,7 +204,6 @@ class local_webservices_external extends external_api {
                     'id' => new external_value(PARAM_INT, 'session ID', VALUE_DEFAULT, null),
                     'sessdate' => new external_value(PARAM_INT, 'session start timestamp', VALUE_DEFAULT, null),
                     'duration' => new external_value(PARAM_INT, 'session duration', VALUE_DEFAULT, null),
-                    'lesson' => new external_value(PARAM_INT, 'lesson number', VALUE_DEFAULT, null),
                     'room' => new external_value(PARAM_TEXT, 'room name', VALUE_DEFAULT, null),
                     'campus' => new external_value(PARAM_TEXT, 'campus location', VALUE_DEFAULT, null),
                 )
@@ -223,7 +223,7 @@ class local_webservices_external extends external_api {
     }
 
     /**
- *
+     *
      * This function returns student's logs in this course.
      *
      * @param string $username Student's username.
@@ -258,7 +258,8 @@ class local_webservices_external extends external_api {
         $return = array();
         if ($student != false) {
 
-            $student_log = array('studentid'=>null,'name'=>null,'email'=>null,'count'=>null,'c'=>0,'b'=>0,'t'=>0,'v'=>0,'reports'=>array());
+            $student_log = array('studentid'=>null,'name'=>null,'email'=>null,'count'=>null,'c'=>0,'b'=>0,'t'=>0,'v'=>0,
+                'reports'=>array());
             $student_log['studentid'] = $student->id;
 
             $student_log['name'] = $student->lastname . ' ' . $student->firstname;
@@ -350,6 +351,11 @@ class local_webservices_external extends external_api {
             )
         );
     }
+
+    /**
+     * @throws dml_exception
+     * @throws invalid_parameter_exception
+     */
     public static function get_logs_by_course_id(int $courseid): array
     {
         $params = self::validate_parameters(self::get_logs_by_course_id_parameters(), array(
@@ -378,25 +384,29 @@ class local_webservices_external extends external_api {
 
         $students =  $DB->get_records_sql($sql1,array('courseid'=>$courseid));
         $return = array();
+        $time = time();
         foreach ($students as $student) {
             if (!empty($student)) {
-                //var_dump($student);
+
                 $student_log = new student_log();
                 $student_log->studentid = $student->id;
 
                 $student_log->name = $student->lastname . ' ' . $student->firstname;
                 $student_log->email = $student->email;
-                $sql2 = "SELECT l.*, r.name as room, r.campus, s.lesson, s.sessdate
+                $sql2 = "SELECT l.*, r.name as room, r.campus, s.sessdate, s.duration
                     FROM {attendance_log} l
                     LEFT JOIN {attendance_sessions} s ON l.sessionid = s.id
                     LEFT JOIN {room} r ON r.id = s.roomid
                     LEFT JOIN {attendance} a ON s.attendanceid = a.id
-                    WHERE a.course = :courseid AND l.studentid = :studentid";
+                    WHERE a.course = :courseid AND l.studentid = :studentid
+                    ORDER BY s.sessdate ASC";
+
                 $datas = $DB->get_records_sql($sql2, array('courseid' => $courseid,
                     'studentid' => $student_log->studentid));
 
                 $student_log->count = count($datas);
                 foreach ($datas as $log) {
+
                     if ($log->statusid == 1) {
                         $student_log->c++;
                     }
@@ -411,31 +421,38 @@ class local_webservices_external extends external_api {
                     }
                 }
                 $reports = array();
+                $now = false;
                 foreach ($sessions as $session) {
+                    if ($session->sessdate - 3600 <= $time && $session->sessdate + $session->duration + 3600 >= $time) {
+                        $now = true;
+                    }
+
                     $flag = false;
                     foreach ($datas as $log) {
                         if ($session->id == $log->sessionid)
                         {
+                            $student_log->presentStatusid = $log->statusid;
                             $flag = true;
                             $reports[] = $log;
                             break;
                         }
                     }
                     if ($flag == false) {
+                        if ($now == true) {
+                            $student_log->presentStatusid = 0;
+                        }
                         $data = (object) array('sessionid'=>$session->id,'sessdate'=>$session->sessdate,
-                            'lesson'=>$session->lesson,'room'=>$session->room,'campus'=>$session->campus,
+                            'room'=>$session->room,'campus'=>$session->campus,
                             'timein'=>null,'timeout'=>null, 'statusid'=>null);
                         $reports[] = $data;
                     }
                 }
 
-
-
                 $student_log->reports = $reports;
                 $return[] = $student_log;
             }
         }
-        //var_dump($return);
+
         return $return;
     }
 
@@ -452,12 +469,12 @@ class local_webservices_external extends external_api {
                     'b' => new external_value(PARAM_INT, 'passive count', VALUE_DEFAULT, null),
                     't' => new external_value(PARAM_INT, 'late count', VALUE_DEFAULT, null),
                     'v' => new external_value(PARAM_INT, 'absent count', VALUE_DEFAULT, null),
+                    'presentStatusid' => new external_value(PARAM_INT, 'present status ID', VALUE_DEFAULT, null),
                     'reports' => new external_multiple_structure(
                         new external_single_structure(
                             array(
                                 'sessionid' => new external_value(PARAM_INT, 'session ID', VALUE_DEFAULT, null),
                                 'sessdate' => new external_value(PARAM_INT,'timestamp when the class start',VALUE_DEFAULT,null),
-                                'lesson' => new external_value(PARAM_INT, 'lesson number', VALUE_DEFAULT, null),
                                 'room' => new external_value(PARAM_TEXT, 'room name', VALUE_DEFAULT, null),
                                 'campus' => new external_value(PARAM_TEXT, 'campus location', VALUE_DEFAULT, null),
                                 'timein' => new external_value(PARAM_INT, 'timestamp when the student checkin', VALUE_DEFAULT, null),
@@ -529,7 +546,13 @@ class local_webservices_external extends external_api {
             )
         );
     }
-    public static function get_session_detail(int $sessionid) {
+
+    /**
+     * @throws dml_exception
+     * @throws invalid_parameter_exception
+     */
+    public static function get_session_detail(int $sessionid): array
+    {
         $params = self::validate_parameters(self::get_session_detail_parameters(), array(
                 'sessionid' => $sessionid,
             )
@@ -564,32 +587,30 @@ class local_webservices_external extends external_api {
             }
         }
         return array('courseid'=>$data->courseid,'name'=>$data->fullname,'sessdate'=>
-            $data->sessdate,'duration'=>$data->duration,'lesson'=>$data->lesson,
-            'room'=>$data->name, 'campus'=>$data->campus, 'students'=>$students_array);
+            $data->sessdate,'duration'=>$data->duration, 'room'=>$data->name, 'campus'=>$data->campus, 'students'=>$students_array);
     }
     public static function get_session_detail_returns() {
-           return new external_single_structure(
-                array(
-                    'courseid' => new external_value(PARAM_INT, 'course ID', VALUE_DEFAULT, null),
-                    'name' => new external_value(PARAM_TEXT, 'course name', VALUE_DEFAULT, null),
-                    'sessdate' => new external_value(PARAM_INT, 'session start timestamp', VALUE_DEFAULT, null),
-                    'duration' => new external_value(PARAM_INT, 'session duration', VALUE_DEFAULT, null),
-                    'lesson' => new external_value(PARAM_INT, 'lesson number', VALUE_DEFAULT, null),
-                    'room' => new external_value(PARAM_TEXT, 'room name', VALUE_DEFAULT, null),
-                    'campus' => new external_value(PARAM_TEXT, 'campus location', VALUE_DEFAULT, null),
-                    'students' => new external_multiple_structure(
-                        new external_single_structure(
-                            array(
-                                'id' => new external_value(PARAM_INT, 'student ID', VALUE_DEFAULT, null),
-                                'name' => new external_value(PARAM_TEXT, 'student name', VALUE_DEFAULT, null),
-                                'timein' => new external_value(PARAM_INT, 'checkin time', VALUE_DEFAULT, null),
-                                'timeout' => new external_value(PARAM_INT, 'checkout time', VALUE_DEFAULT, null),
-                                'statusid' => new external_value(PARAM_INT, 'statusid number', VALUE_DEFAULT, null),
-                            )
+        return new external_single_structure(
+            array(
+                'courseid' => new external_value(PARAM_INT, 'course ID', VALUE_DEFAULT, null),
+                'name' => new external_value(PARAM_TEXT, 'course name', VALUE_DEFAULT, null),
+                'sessdate' => new external_value(PARAM_INT, 'session start timestamp', VALUE_DEFAULT, null),
+                'duration' => new external_value(PARAM_INT, 'session duration', VALUE_DEFAULT, null),
+                'room' => new external_value(PARAM_TEXT, 'room name', VALUE_DEFAULT, null),
+                'campus' => new external_value(PARAM_TEXT, 'campus location', VALUE_DEFAULT, null),
+                'students' => new external_multiple_structure(
+                    new external_single_structure(
+                        array(
+                            'id' => new external_value(PARAM_INT, 'student ID', VALUE_DEFAULT, null),
+                            'name' => new external_value(PARAM_TEXT, 'student name', VALUE_DEFAULT, null),
+                            'timein' => new external_value(PARAM_INT, 'checkin time', VALUE_DEFAULT, null),
+                            'timeout' => new external_value(PARAM_INT, 'checkout time', VALUE_DEFAULT, null),
+                            'statusid' => new external_value(PARAM_INT, 'statusid number', VALUE_DEFAULT, null),
                         )
-                    ),
-                )
-            );
+                    )
+                ),
+            )
+        );
     }
 
 
@@ -611,52 +632,52 @@ class local_webservices_external extends external_api {
             'username' => $username,
         ));
 
-            global $DB, $PAGE;
+        global $DB, $PAGE;
 
-            $sql1 = "SELECT u.*
+        $sql1 = "SELECT u.*
                     FROM {user} u
                     WHERE u.username = :username";
 
-            $user = $DB->get_records_sql($sql1,array('username'=>$username));
-            if ($user == false) {
-                return array();
-            }
+        $user = $DB->get_records_sql($sql1,array('username'=>$username));
+        if ($user == false) {
+            return array();
+        }
 
-            $sql2 = "SELECT ra.*
+        $sql2 = "SELECT ra.*
                     FROM {role_assignments} ra
                     LEFT JOIN {user} u ON u.id = ra.userid
                     WHERE u.username = :username";
-            $roles = $DB->get_records_sql($sql2,array('username'=>$username));
-            $min = PHP_INT_MAX;
+        $roles = $DB->get_records_sql($sql2,array('username'=>$username));
+        $min = PHP_INT_MAX;
 
-            foreach ($roles as $role) {
-                if ($role->roleid < $min)
-                {
-                    $min = $role->roleid;
-                }
+        foreach ($roles as $role) {
+            if ($role->roleid < $min)
+            {
+                $min = $role->roleid;
             }
+        }
 
 
-            $sql1 = "SELECT u.id AS id, username, firstname, lastname, r.id as roleid, r.name AS role, shortname
+        $sql1 = "SELECT u.id AS id, username, firstname, lastname, r.id as roleid, r.name AS role, shortname
             FROM {user} u
             LEFT JOIN {role} r on r.id = $min
             WHERE u.username = :username";
 
-            $return = array();
+        $return = array();
 
-            $info =  $DB->get_record_sql($sql1,array('username'=>$username));
-            $alternative_user = (object) array('id'=>$info->id);
-            $isadmin = is_siteadmin($info->id);
-            $userpicture = new user_picture($alternative_user);
-            $userpicture->size = 1;
-            $profileimageurl = $userpicture->get_url($PAGE);
+        $info =  $DB->get_record_sql($sql1,array('username'=>$username));
+        $alternative_user = (object) array('id'=>$info->id);
+        $isadmin = is_siteadmin($info->id);
+        $userpicture = new user_picture($alternative_user);
+        $userpicture->size = 1;
+        $profileimageurl = $userpicture->get_url($PAGE);
 
-            $element = array('id'=>$info->id,'username'=>$info->username,'firstname'=>$info->firstname,'lastname'=>$info->lastname,
-                'roleid'=>$info->roleid,'role'=>$info->role,'shortname'=>$info->shortname,'isadmin'=> $isadmin,
-                'userpictureurl'=>$profileimageurl->out(false));
+        $element = array('id'=>$info->id,'username'=>$info->username,'firstname'=>$info->firstname,'lastname'=>$info->lastname,
+            'roleid'=>$info->roleid,'role'=>$info->role,'shortname'=>$info->shortname,'isadmin'=> $isadmin,
+            'userpictureurl'=>$profileimageurl->out(false));
 
-            $return[] = $element;
-            return $return;
+        $return[] = $element;
+        return $return;
     }
 
     public static function get_roles_returns(): external_multiple_structure
