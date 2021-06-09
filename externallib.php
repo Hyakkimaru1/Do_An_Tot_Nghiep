@@ -632,6 +632,11 @@ class local_webservices_external extends external_api {
         );
     }
 
+    /**
+     * @throws dml_exception
+     * @throws invalid_parameter_exception
+     * @throws coding_exception
+     */
     public static function get_roles(string $username): array
     {
 
@@ -666,23 +671,26 @@ class local_webservices_external extends external_api {
         }
 
 
-        $sql1 = "SELECT u.id AS id, username, firstname, lastname, r.id as roleid, r.name AS role, shortname
+        $sql1 = "SELECT u.id AS id, username, firstname, lastname, r.id as roleid, r.name AS role, shortname, i.image_front
             FROM {user} u
             LEFT JOIN {role} r on r.id = $min
+            LEFT JOIN {attendance_images} i ON i.studentid = u.id
             WHERE u.username = :username";
 
         $return = array();
 
         $info =  $DB->get_record_sql($sql1,array('username'=>$username));
-        $alternative_user = (object) array('id'=>$info->id);
         $isadmin = is_siteadmin($info->id);
-        $userpicture = new user_picture($alternative_user);
-        $userpicture->size = 1;
-        $profileimageurl = $userpicture->get_url($PAGE);
+
+//        $alternative_user = (object) array('id'=>$info->id);
+//        $userpicture = new user_picture($alternative_user);
+//        $userpicture->size = 1;
+//        $profileimageurl = $userpicture->get_url($PAGE);
+
 
         $element = array('id'=>$info->id,'username'=>$info->username,'firstname'=>$info->firstname,'lastname'=>$info->lastname,
             'roleid'=>$info->roleid,'role'=>$info->role,'shortname'=>$info->shortname,'isadmin'=> $isadmin,
-            'userpictureurl'=>$profileimageurl->out(false));
+            'userpictureurl'=>$info->image_front);
 
         $return[] = $element;
         return $return;
@@ -701,7 +709,7 @@ class local_webservices_external extends external_api {
                     'role' => new external_value(PARAM_TEXT, 'name of role', VALUE_DEFAULT, null),
                     'shortname' => new external_value(PARAM_TEXT, 'shortname of role', VALUE_DEFAULT, null),
                     'isadmin' => new external_value(PARAM_BOOL, 'this is an admin or not', VALUE_DEFAULT, null),
-                    'userpictureurl' => new external_value(PARAM_TEXT, "user's picture url", VALUE_DEFAULT, null),
+                    'userpictureurl' => new external_value(PARAM_TEXT, "user's front image url", VALUE_DEFAULT, null),
                 )
             )
         );
