@@ -16,7 +16,7 @@ function local_webservices_pluginfile($course, $cm, $context, $filearea, $args, 
     }
 
     // Make sure the user is logged in and has access to the module (plugins that are not course modules should leave out the 'cm' part).
-    require_login($course, true, $cm);
+    //require_login($course, true, $cm);
 
     // Check the relevant capabilities - these may vary depending on the filearea being accessed.
 //    if (!has_capability('mod/MYPLUGIN:view', $context)) {
