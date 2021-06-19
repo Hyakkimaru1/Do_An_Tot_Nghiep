@@ -470,15 +470,14 @@ class local_webservices_external_write extends external_api {
                 WHERE a.id = $attendance->id AND m.name = 'attendance'";
 
             $id = $DB->get_record_sql($sql5);
-            $a = new local_webservices_external();
-            $userfrom = $a->get_roles($userbetaken);
+            $userfrom = get_admin();
             $b = new local_webservices_frontend();
             $teachers = $b->get_teachers_by_course_id((int)$attendance->course);
             $url_t = new moodle_url('/mod/attendance/take.php?id='.$id->id.'&sessionid='.$attendance->sessionid.'&grouptype=0');
             $course = (object) array('id'=> null);
             $course->id = $attendance->course;
             foreach ($teachers as $teacher){
-                send_notification($userfrom,$teacher,0,$course,'attendance',$description,$url_t);
+                send_notification($userfrom,$teacher,$id->id,$course,'attendance',$description,$url_t);
             }
 
             $return['message'] = "Created the record successfully";
