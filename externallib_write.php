@@ -6,6 +6,9 @@ require_once('../../lib/filelib.php');
 require_once('../../lib/weblib.php');
 require_once('../../files/externallib.php');
 require_once('../../user/externallib.php');
+require_once('../../mod/attendance/locallib.php');
+require_once('externallib.php');
+require_once('externallib_frontend.php');
 
 class local_webservices_external_write extends external_api {
 
@@ -286,7 +289,7 @@ class local_webservices_external_write extends external_api {
 
         if ($session->sessdate + $max_time >= $time)
             $data = (object) array('studentid'=>$user->id,'sessionid'=>$session->id,
-            'statusid'=> 1,'timein'=>$time, 'timeout'=>null);
+                'statusid'=> 1,'timein'=>$time, 'timeout'=>null);
         else
             $data = (object) array('studentid'=>$user->id,'sessionid'=>$session->id,
                 'statusid'=> 3,'timein'=>$time, 'timeout'=>null);
@@ -459,6 +462,25 @@ class local_webservices_external_write extends external_api {
         }
 
         if ($DB->insert_record('attendance_feedback',$data)) {
+
+            $sql5 = "SELECT cm.id
+                FROM {course_modules} cm
+                LEFT JOIN {attendance} a ON a.course = cm.course
+                LEFT JOIN {modules} m ON cm.module = m.id
+                WHERE a.id = $attendance->id AND m.name = 'attendance'";
+
+            $id = $DB->get_record_sql($sql5);
+            $a = new local_webservices_external();
+            $userfrom = $a->get_roles($userbetaken);
+            $b = new local_webservices_frontend();
+            $teachers = $b->get_teachers_by_course_id((int)$attendance->course);
+            $url_t = new moodle_url('/mod/attendance/take.php?id='.$id->id.'&sessionid='.$attendance->sessionid.'&grouptype=0');
+            $course = (object) array('id'=> null);
+            $course->id = $attendance->course;
+            foreach ($teachers as $teacher){
+                send_notification($userfrom,$teacher,0,$course,'attendance',$description,$url_t);
+            }
+
             $return['message'] = "Created the record successfully";
         }
         else {
@@ -467,6 +489,7 @@ class local_webservices_external_write extends external_api {
         }
         return $return;
     }
+
     public static function create_feedback_returns(): external_single_structure
     {
         return new external_single_structure(
@@ -612,7 +635,7 @@ class local_webservices_external_write extends external_api {
     {
 
         $res = core_files_external::upload(null ,'user','draft',0,'/',$filename,
-        $image,'user',$auth_user);
+            $image,'user',$auth_user);
 
         $res = (object) $res;
 
