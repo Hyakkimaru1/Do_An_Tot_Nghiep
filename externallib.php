@@ -852,4 +852,31 @@ class local_webservices_external extends external_api {
             )
         );
     }
+
+    public static function get_campus_parameters() {
+         return new external_function_parameters(
+                array()
+         );
+    }
+
+    public static function get_campus(){
+        $params = self::validate_parameters(self::get_campus_parameters(), array(
+        ));
+        global $DB;
+
+        $sql = "SELECT DISTINCT r.campus
+                FROM {room} r";
+        return $DB->get_records_sql($sql);
+    }
+
+    public static function get_campus_returns() {
+        return new external_multiple_structure(
+            new external_single_structure(
+                array(
+                    'campus' => new external_value(PARAM_TEXT, 'campus', VALUE_DEFAULT, null),
+                )
+            )
+        );
+    }
 }
+

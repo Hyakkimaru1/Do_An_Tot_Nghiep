@@ -11,7 +11,8 @@ function local_webservices_pluginfile($course, $cm, $context, $filearea, $args, 
 {
 
     // Make sure the filearea is one of those used by the plugin.
-    if ($filearea !== 'image_left' && $filearea !== 'image_right' && $filearea !== 'image_front' && $filearea !== 'image_feedback') {
+    if ($filearea !== 'image_left' && $filearea !== 'image_right' && $filearea !== 'image_front' && $filearea !== 'image_feedback'
+        && $filearea !== 'checkin') {
         return false;
     }
 

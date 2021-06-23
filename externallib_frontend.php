@@ -128,6 +128,9 @@ class local_webservices_frontend extends external_api {
         return $return;
     }
 
+    /**
+     * @throws dml_exception
+     */
     public static function get_image(int $studentid): array
     {
 
@@ -140,6 +143,9 @@ class local_webservices_frontend extends external_api {
         return $DB->get_records_sql($sql);
     }
 
+    /**
+     * @throws dml_exception
+     */
     public static function get_images_by_course_id(int $courseid): array
     {
 
@@ -153,6 +159,20 @@ class local_webservices_frontend extends external_api {
                 WHERE c.id = :courseid AND r.shortname = 'student'
                 ORDER BY i.studentid ASC";
         return $DB->get_records_sql($sql,array('courseid'=>$courseid));
+    }
+
+    /**
+     * @throws dml_exception
+     */
+    public static function get_images_checkin(int $studentid, int $sessionid): array
+    {
+        global $DB;
+
+        $sql = "SELECT i.*
+                FROM {attendance_checkin_images} i
+                WHERE i.studentid = $studentid AND i.sessionid = $sessionid";
+
+        return $DB->get_records_sql($sql);
     }
 
 

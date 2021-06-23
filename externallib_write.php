@@ -208,6 +208,175 @@ class local_webservices_external_write extends external_api {
         );
     }
 
+    public static function checkin_online_parameters(): external_function_parameters
+    {
+        return new external_function_parameters(
+            array(
+                'username' => new external_value(PARAM_TEXT, "Student's username parameter",VALUE_DEFAULT,''),
+                'sessionid' => new external_value(PARAM_INT,"Session ID",VALUE_DEFAULT,-1),
+                'image_front' => new external_value(PARAM_TEXT,"Front image's base64 string",VALUE_DEFAULT,''),
+                'image_left' => new external_value(PARAM_TEXT,"Left image's base64 string",VALUE_DEFAULT,''),
+                'image_right' => new external_value(PARAM_TEXT,"Right image's base64 string",VALUE_DEFAULT,''),
+                'result' => new external_value(PARAM_INT,"Detect result number",VALUE_DEFAULT,-1),
+            )
+        );
+    }
+
+    /**
+     * @throws coding_exception
+     * @throws dml_exception
+     * @throws moodle_exception
+     * @throws invalid_parameter_exception
+     */
+    public static function checkin_online(string $username, int $sessionid, string $image_front, string $image_left, string $image_right,
+    int $result): array
+    {
+        $params = self::validate_parameters(self::checkin_online_parameters(), array(
+                'username' => $username,
+                'sessionid' => $sessionid,
+                'image_front' => $image_front,
+                'image_left' => $image_left,
+                'image_right' => $image_right,
+                'result' => $result
+            )
+        );
+        $return = array('errorcode' => '', 'message' => '');
+        if ($username == '') {
+            $return['errorcode'] = '400';
+            $return['message'] = "The student's username is missing";
+            return $return;
+        }
+
+        if ($sessionid == -1) {
+            $return['errorcode'] = '400';
+            $return['message'] = "The session ID is missing";
+            return $return;
+        }
+        if ($image_front == '' || $image_left == '' || $image_right == '') {
+            $return['errorcode'] = '400';
+            $return['message'] = "The images are missing";
+            return $return;
+        }
+        if ($result == -1) {
+            $return['errorcode'] = '400';
+            $return['message'] = "Result is missing";
+            return $return;
+        }
+        global $DB;
+
+        $time = time();
+
+        $sql1 = "SELECT s.*
+                    FROM {attendance_sessions} s 
+                    WHERE s.id = $sessionid";
+
+        $session = $DB->get_record_sql($sql1);
+        if ($session == false) {
+            $return['errorcode'] = '404';
+            $return['message'] = "There are not any sessions with this ID";
+            return $return;
+        }
+        if ($session->onlinetime == null || $session->onlineduration == null) {
+            $return['errorcode'] = '400';
+            $return['message'] = "This session is not available online";
+            return $return;
+        }
+        $sql2 = "SELECT u.*
+                FROM {user} u
+                LEFT JOIN {role_assignments} ra ON ra.userid = u.id
+                LEFT JOIN {context} con ON con.id = ra.contextid
+                LEFT JOIN {role} r ON r.id = ra.roleid
+                LEFT JOIN {attendance} a ON a.course = con.instanceid
+                LEFT JOIN {attendance_sessions} s ON s.attendanceid = a.id
+                WHERE u.username = :username AND s.id = $sessionid AND r.shortname = 'student'";
+
+        $user = $DB->get_record_sql($sql2,array('username'=>$username));
+        if ($user == false) {
+            $return['errorcode'] = '404';
+            $return['message'] = "This student isn't in this course";
+            return $return;
+        }
+
+        $sql3 = "SELECT l.*
+                FROM {attendance_log} l 
+                LEFT JOIN {user} u ON l.studentid = u.id
+                WHERE u.username = :username AND l.sessionid = $sessionid";
+        $log = $DB->get_record_sql($sql3,array('username'=>$username));
+        if ($log) {
+            $return['errorcode'] = '400';
+            $return['message'] = "This student already checked in";
+            return $return;
+        }
+        $data = null;
+        if ($session->onlinetime <= $time && $session->onlinetime + $session->onlineduration >= $time) {
+            if ($result == 1)
+                $data = (object)array('studentid' => $user->id, 'sessionid' => $session->id,
+                    'statusid' => 1, 'timein' => $time, 'timeout' => null, 'isonlinecheckin' => 1);
+            else {
+                $data = (object)array('studentid' => $user->id, 'sessionid' => $session->id,
+                    'statusid' => 4, 'timein' => $time, 'timeout' => null, 'isonlinecheckin' => 1);
+            }
+        }
+        else {
+            $return['errorcode'] = '400';
+            $return['message'] = "Checkin outside the time allowed";
+            return $return;
+        }
+        if ($DB->insert_record('attendance_log',$data)) {
+            $update_session = (object)array('id' => $session->id, 'lasttaken' => $time, 'lasttakenby' => 1);
+            $DB->update_record('attendance_sessions',$update_session);
+
+            $sql4 = "SELECT t.userid
+                FROM {external_tokens} t
+                LEFT JOIN {external_services} s ON s.id = t.externalserviceid
+                WHERE s.name LIKE :string1 OR s.name LIKE :string2 OR s.name LIKE :string3 OR s.name LIKE :string4";
+
+
+            $auth = $DB->get_record_sql($sql4,array('string1'=>'%local_webservices%','string2'=>'%Local_webservices%',
+                'string3'=>'%localWebservices%','string4'=>'%LocalWebservices%'));
+
+            if ($auth == false) {
+                $return['errorcode'] = '404';
+                $return['message'] = "The external service was named incorrectly";
+                return $return;
+            }
+            $url_front = self::upload_image($image_front,'image_front_checkin.jpg',
+                $user->id,$auth->userid,'checkin',false,false);
+
+            $url_left = self::upload_image($image_left,'image_left_checkin.jpg',
+                $user->id,$auth->userid,'checkin',false,false);
+
+            $url_right = self::upload_image($image_right,'image_right_checkin.jpg',
+                $user->id,$auth->userid,'checkin',false,false);
+
+            if ($url_front == '' || $url_left == '' || $url_right == '')
+            {
+                $return['errorcode'] = '400';
+                $return['message'] = "Couldn't upload the images";
+                return $return;
+            }
+            $data_url = (object) array('studentid'=>$user->id,'sessionid'=>$session->id,'image_front'=>$url_front,
+                'image_left'=>$url_left,'image_right'=>$url_right);
+            $DB->insert_record('attendance_checkin_images',$data_url);
+            $return['message'] = "Checkin successfully";
+        }
+        else {
+            $return['errorcode'] = '400';
+            $return['message'] = "Couldn't create the log";
+        }
+        return $return;
+    }
+
+    public static function checkin_online_returns(): external_single_structure
+    {
+        return new external_single_structure(
+            array(
+                'errorcode' => new external_value(PARAM_TEXT,'Error code'),
+                'message' => new external_value(PARAM_TEXT, 'Message to the back-end'),
+            )
+        );
+    }
+
     public static function checkin_parameters(): external_function_parameters
     {
         return new external_function_parameters(
@@ -289,7 +458,7 @@ class local_webservices_external_write extends external_api {
 
         if ($session->sessdate + $max_time >= $time)
             $data = (object) array('studentid'=>$user->id,'sessionid'=>$session->id,
-                'statusid'=> 1,'timein'=>$time, 'timeout'=>null);
+                'statusid'=> 2,'timein'=>$time, 'timeout'=>null);
         else
             $data = (object) array('studentid'=>$user->id,'sessionid'=>$session->id,
                 'statusid'=> 3,'timein'=>$time, 'timeout'=>null);
