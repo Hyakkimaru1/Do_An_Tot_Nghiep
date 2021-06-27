@@ -457,7 +457,7 @@ class local_webservices_external_write extends external_api {
 
         if ($session->sessdate + $max_time >= $time)
             $data = (object) array('studentid'=>$user->id,'sessionid'=>$session->id,
-                'statusid'=> 2,'timein'=>$time, 'timeout'=>null);
+                'statusid'=> 1,'timein'=>$time, 'timeout'=>null);
         else
             $data = (object) array('studentid'=>$user->id,'sessionid'=>$session->id,
                 'statusid'=> 3,'timein'=>$time, 'timeout'=>null);
