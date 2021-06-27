@@ -281,7 +281,8 @@ class local_webservices_external_write extends external_api {
             $return['message'] = "This session is not available online";
             return $return;
         }
-        if ($session->onlinetime > $time || $session->onlinetime + $session->onlineduration < $time) {
+        if ($session->onlinetime > $time || $session->onlinetime + $session->onlineduration < $time ||
+        $session->sessdate > $time || $session->sessdate + $session->duration < $time) {
             $return['errorcode'] = '400';
             $return['message'] = "Checkin outside the time allowed";
             return $return;
