@@ -281,6 +281,11 @@ class local_webservices_external_write extends external_api {
             $return['message'] = "This session is not available online";
             return $return;
         }
+        if ($session->onlinetime > $time || $session->onlinetime + $session->onlineduration < $time) {
+            $return['errorcode'] = '400';
+            $return['message'] = "Checkin outside the time allowed";
+            return $return;
+        }
         $sql2 = "SELECT u.*
                 FROM {user} u
                 LEFT JOIN {role_assignments} ra ON ra.userid = u.id
@@ -302,68 +307,62 @@ class local_webservices_external_write extends external_api {
                 LEFT JOIN {user} u ON l.studentid = u.id
                 WHERE u.username = :username AND l.sessionid = $sessionid";
         $log = $DB->get_record_sql($sql3,array('username'=>$username));
-        if ($log) {
-            $return['errorcode'] = '400';
-            $return['message'] = "This student already checked in";
-            return $return;
-        }
         $data = null;
-        if ($session->onlinetime <= $time && $session->onlinetime + $session->onlineduration >= $time) {
+        if ($log) {
+            if ($result == 1)
+                $data = (object)array('id' => $log->id, 'timeout' => $time, 'timetaken' => $time);
+            else {
+                $data = (object)array('id' =>$log->id,'statusid' => 4, 'timeout' => null, 'timetaken' => $time);
+            }
+            $DB->update_record('attendance_log',$data);
+        }
+        else {
             if ($result == 1)
                 $data = (object)array('studentid' => $user->id, 'sessionid' => $session->id,
-                    'statusid' => 1, 'timein' => $time, 'timeout' => null, 'isonlinecheckin' => 1);
+                    'statusid' => 1, 'timein' => $time, 'timeout' => null, 'isonlinecheckin' => 1, 'timetaken' => $time);
             else {
                 $data = (object)array('studentid' => $user->id, 'sessionid' => $session->id,
-                    'statusid' => 4, 'timein' => $time, 'timeout' => null, 'isonlinecheckin' => 1);
+                    'statusid' => 4, 'timein' => $time, 'timeout' => null, 'isonlinecheckin' => 1, 'timetaken' => $time);
             }
+            $DB->insert_record('attendance_log',$data);
         }
-        else {
-            $return['errorcode'] = '400';
-            $return['message'] = "Checkin outside the time allowed";
+        $update_session = (object)array('id' => $session->id, 'lasttaken' => $time, 'lasttakenby' => 1);
+        $DB->update_record('attendance_sessions',$update_session);
+
+        $sql4 = "SELECT t.userid
+            FROM {external_tokens} t
+            LEFT JOIN {external_services} s ON s.id = t.externalserviceid
+            WHERE s.name LIKE :string1 OR s.name LIKE :string2 OR s.name LIKE :string3 OR s.name LIKE :string4";
+
+
+        $auth = $DB->get_record_sql($sql4,array('string1'=>'%local_webservices%','string2'=>'%Local_webservices%',
+            'string3'=>'%localWebservices%','string4'=>'%LocalWebservices%'));
+
+        if ($auth == false) {
+            $return['errorcode'] = '404';
+            $return['message'] = "The external service was named incorrectly";
             return $return;
         }
-        if ($DB->insert_record('attendance_log',$data)) {
-            $update_session = (object)array('id' => $session->id, 'lasttaken' => $time, 'lasttakenby' => 1);
-            $DB->update_record('attendance_sessions',$update_session);
+        $url_front = self::upload_image($image_front,'image_front_checkin.jpg',
+            $user->id,$auth->userid,'checkin',false,false);
 
-            $sql4 = "SELECT t.userid
-                FROM {external_tokens} t
-                LEFT JOIN {external_services} s ON s.id = t.externalserviceid
-                WHERE s.name LIKE :string1 OR s.name LIKE :string2 OR s.name LIKE :string3 OR s.name LIKE :string4";
+        $url_left = self::upload_image($image_left,'image_left_checkin.jpg',
+            $user->id,$auth->userid,'checkin',false,false);
 
+        $url_right = self::upload_image($image_right,'image_right_checkin.jpg',
+            $user->id,$auth->userid,'checkin',false,false);
 
-            $auth = $DB->get_record_sql($sql4,array('string1'=>'%local_webservices%','string2'=>'%Local_webservices%',
-                'string3'=>'%localWebservices%','string4'=>'%LocalWebservices%'));
-
-            if ($auth == false) {
-                $return['errorcode'] = '404';
-                $return['message'] = "The external service was named incorrectly";
-                return $return;
-            }
-            $url_front = self::upload_image($image_front,'image_front_checkin.jpg',
-                $user->id,$auth->userid,'checkin',false,false);
-
-            $url_left = self::upload_image($image_left,'image_left_checkin.jpg',
-                $user->id,$auth->userid,'checkin',false,false);
-
-            $url_right = self::upload_image($image_right,'image_right_checkin.jpg',
-                $user->id,$auth->userid,'checkin',false,false);
-
-            if ($url_front == '' || $url_left == '' || $url_right == '')
-            {
-                $return['errorcode'] = '400';
-                $return['message'] = "Couldn't upload the images";
-                return $return;
-            }
-            $data_url = (object) array('studentid'=>$user->id,'sessionid'=>$session->id,'image_front'=>$url_front,
-                'image_left'=>$url_left,'image_right'=>$url_right);
-            $DB->insert_record('attendance_checkin_images',$data_url);
-            $return['message'] = "Checkin successfully";
-        }
-        else {
+        if ($url_front == '' || $url_left == '' || $url_right == '')
+        {
             $return['errorcode'] = '400';
-            $return['message'] = "Couldn't create the log";
+            $return['message'] = "Couldn't upload the images";
+            return $return;
         }
+        $data_url = (object) array('studentid'=>$user->id,'sessionid'=>$session->id,'image_front'=>$url_front,
+            'image_left'=>$url_left,'image_right'=>$url_right,'timetaken'=>$time);
+        $DB->insert_record('attendance_checkin_images',$data_url);
+        $return['message'] = "Checkin successfully";
+
         return $return;
     }
 
