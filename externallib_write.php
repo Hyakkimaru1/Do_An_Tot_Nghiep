@@ -576,11 +576,11 @@ class local_webservices_external_write extends external_api {
 
         $image_usertaken = $DB->get_record_sql($sql3,array('usertaken'=>$usertaken));
 
-        if ($image_usertaken == false) {
-            $return['errorcode'] = '404';
-            $return['message'] = "This user didn't have any registered images";
-            return $return;
-        }
+//        if ($image_usertaken == false) {
+//            $return['errorcode'] = '404';
+//            $return['message'] = "This user didn't have any registered images";
+//            return $return;
+//        }
 
         $sql4 = "SELECT t.userid
                 FROM {external_tokens} t
@@ -607,9 +607,14 @@ class local_webservices_external_write extends external_api {
         }
 
         if ($userbetaken == '') {
-            $data = (object)array('timetaken' => $time, 'usertaken' => $student->id, 'userbetaken' => null,
+            if ($image_usertaken == false)
+                $data = (object)array('timetaken' => $time, 'usertaken' => $student->id, 'userbetaken' => null,
                 'attendanceid' => $attendance->id, 'sessionid' => $attendance->sessionid,
-                'description' => $description, 'image_register' => $image_usertaken->image_front, 'image' => $url);
+                'description' => $description, 'image_register' => null, 'image' => $url);
+            else
+                $data = (object)array('timetaken' => $time, 'usertaken' => $student->id, 'userbetaken' => null,
+                    'attendanceid' => $attendance->id, 'sessionid' => $attendance->sessionid,
+                    'description' => $description, 'image_register' => $image_usertaken->image_front, 'image' => $url);
         }
         else {
 
