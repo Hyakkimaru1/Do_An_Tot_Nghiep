@@ -24,7 +24,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 global $CFG;
-require_once($CFG->libdir.'/externallib.php');
+require_once($CFG->libdir . '/externallib.php');
+require_once($CFG->libdir . '/filelib.php');
 /**
  * Web service API definition.
  *
