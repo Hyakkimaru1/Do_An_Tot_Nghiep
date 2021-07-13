@@ -2,7 +2,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 global $CFG;
-require_once($CFG->libdir.'/filelib.php');
+require_once(_DIR_.'../../lib/filelib.php');
 require_once($CFG->libdir.'/weblib.php');
 require_once($CFG->dirroot.'/files/externallib.php');
 require_once($CFG->dirroot.'/user/externallib.php');
