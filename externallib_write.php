@@ -2,11 +2,11 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once('../../lib/filelib.php');
-require_once('../../lib/weblib.php');
-require_once('../../files/externallib.php');
-require_once('../../user/externallib.php');
-require_once('../../mod/attendance/locallib.php');
+require_once('lib/filelib.php');
+require_once('lib/weblib.php');
+require_once('files/externallib.php');
+require_once('user/externallib.php');
+require_once('mod/attendance/locallib.php');
 require_once('externallib.php');
 require_once('externallib_frontend.php');
 
