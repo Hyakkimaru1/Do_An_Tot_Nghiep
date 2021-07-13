@@ -164,3 +164,19 @@ $functions = array(
         'capabilities' => '',
     ),
 );
+$services = array(
+    'Attendance' => array(
+        'functions' => array(
+            'mod_attendance_add_attendance',
+            'mod_attendance_remove_attendance',
+            'mod_attendance_add_session',
+            'mod_attendance_remove_session',
+            'mod_attendance_get_courses_with_today_sessions',
+            'mod_attendance_get_session',
+            'mod_attendance_update_user_status'
+        ),
+        'restrictedusers' => 0,
+        'enabled' => 1,
+        'shortname' => 'mod_attendance'
+    )
+);
