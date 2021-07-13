@@ -605,7 +605,6 @@ class local_webservices_external_write extends external_api {
             $return['message'] = "Couldn't upload the images";
             return $return;
         }
-
         if ($userbetaken == '') {
             if ($image_usertaken == false)
                 $data = (object)array('timetaken' => $time, 'usertaken' => $student->id, 'userbetaken' => null,
@@ -629,10 +628,14 @@ class local_webservices_external_write extends external_api {
                 $return['message'] = "The userbetaken's username is wrong";
                 return $return;
             }
-
-            $data = (object)array('timetaken' => $time, 'usertaken' => $student->id, 'userbetaken' => $student2->id,
-                'attendanceid' => $attendance->id, 'sessionid' => $attendance->sessionid,
-                'description' => $description, 'image_register' => $image_usertaken->image_front, 'image' => $url);
+            if ($image_usertaken == false)
+                $data = (object)array('timetaken' => $time, 'usertaken' => $student->id, 'userbetaken' => $student2->id,
+                    'attendanceid' => $attendance->id, 'sessionid' => $attendance->sessionid,
+                    'description' => $description, 'image_register' => null, 'image' => $url);
+            else
+                $data = (object)array('timetaken' => $time, 'usertaken' => $student->id, 'userbetaken' => $student2->id,
+                    'attendanceid' => $attendance->id, 'sessionid' => $attendance->sessionid,
+                    'description' => $description, 'image_register' => $image_usertaken->image_front, 'image' => $url);
         }
 
         if ($DB->insert_record('attendance_feedback',$data)) {
@@ -651,7 +654,7 @@ class local_webservices_external_write extends external_api {
             $course = (object) array('id'=> null);
             $course->id = $attendance->course;
             foreach ($teachers as $teacher){
-                send_notification($userfrom,$teacher,$id->id,$course,'attendance',$description,$url_t);
+                    send_notification($userfrom, $teacher, $id->id, $course, 'attendance', $description, $url_t);
             }
 
             $return['message'] = "Created the record successfully";
