@@ -165,18 +165,28 @@ $functions = array(
     ),
 );
 $services = array(
-    'Attendance' => array(
+    'webservices' => array(
         'functions' => array(
-            'mod_attendance_add_attendance',
-            'mod_attendance_remove_attendance',
-            'mod_attendance_add_session',
-            'mod_attendance_remove_session',
-            'mod_attendance_get_courses_with_today_sessions',
-            'mod_attendance_get_session',
-            'mod_attendance_update_user_status'
+            'local_webservices_get_a_log_by_ids',
+            'local_webservices_get_logs_by_id',
+            'local_webservices_get_student_logs_by_course_id',
+            'local_webservices_get_logs_by_course_id',
+            'local_webservices_get_images',
+            'local_webservices_get_sessions_by_course_id',
+            'local_webservices_get_session_detail',
+            'local_webservices_update_log',
+            'local_webservices_checkin_online',
+            'local_webservices_checkin',
+            'local_webservices_create_feedback',
+            'local_webservices_create_images',
+            'local_webservices_get_roles',
+            'local_webservices_get_schedules',
+            'local_webservices_get_teacher_courses',
+            'local_webservices_get_rooms',
+            'local_webservices_get_campus'
         ),
         'restrictedusers' => 0,
         'enabled' => 1,
-        'shortname' => 'mod_attendance'
+        'shortname' => 'local_webservices'
     )
 );
