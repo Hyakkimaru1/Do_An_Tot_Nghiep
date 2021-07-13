@@ -7,8 +7,8 @@ require_once($CFG->libdir.'/weblib.php');
 require_once($CFG->dirroot.'/files/externallib.php');
 require_once($CFG->dirroot.'/user/externallib.php');
 require_once($CFG->dirroot.'/mod/attendance/locallib.php');
-require_once('externallib.php');
-require_once('externallib_frontend.php');
+require_once($CFG->dirroot.'/local/webservices/externallib.php');
+require_once($CFG->dirroot.'/local/webservices/externallib_frontend.php');
 
 class local_webservices_external_write extends external_api {
 
