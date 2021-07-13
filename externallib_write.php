@@ -1,12 +1,12 @@
 <?php
 
 defined('MOODLE_INTERNAL') || die();
-
-require_once('lib/filelib.php');
-require_once('lib/weblib.php');
-require_once('files/externallib.php');
-require_once('user/externallib.php');
-require_once('mod/attendance/locallib.php');
+global $CFG;
+require_once($CFG->libdir.'/filelib.php');
+require_once($CFG->libdir.'/weblib.php');
+require_once($CFG->dirroot.'/files/externallib.php');
+require_once($CFG->dirroot.'/user/externallib.php');
+require_once($CFG->dirroot.'/mod/attendance/locallib.php');
 require_once('externallib.php');
 require_once('externallib_frontend.php');
 
